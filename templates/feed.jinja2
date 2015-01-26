@@ -1,0 +1,26 @@
+{% extends "base.jinja2" %}
+{% block body %}
+
+  <main>
+    {% for entry in entries %}
+      <article>
+        <header>
+          <img src="{{entry.author_photo}}"/>
+          {{ entry.author_name }} - {{ entry.feed.name }}
+        </header>
+        {% if entry.title %}
+        <h1>{{ entry.title }}</h1>
+        {% endif %}
+        {% if entry.content %}
+        <div>
+          {{ entry.content_cleaned() }}
+        </div>
+        {% endif %}
+        <div>
+          <a href="{{ entry.permalink }}">{{ entry.published }}</a>
+        </div>
+      </article>
+    {% endfor %}
+  </main>
+
+{% endblock body %}

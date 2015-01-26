@@ -1,0 +1,62 @@
+@import "normalize";
+
+
+$title-font: Helvetica, Arial, sans-serif;
+/*$body-font: Georgia, Times New Roman, serif;*/
+$body-font: $title-font;
+
+/* Subtlety of Hue */
+$lunar-green: #484A47;
+$pine-glade: #C1CE96;
+$athens-gray: #ECEBF0;
+$sirocco: #687D77;
+$armadillo: #353129;
+
+$box-shadow: 0 0 2px $sirocco;
+
+
+body {
+    font: 12pt/1.5em $body-font;
+    background: $athens-gray;
+}
+
+
+main {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+article {
+    margin-bottom: 2em;
+    box-shadow: $box-shadow;
+    background-color: white;
+    padding: 0.5em;
+
+    img  {
+        max-width: 100%;
+    }
+
+    header {
+        img {
+            max-width: 64px;
+            max-height: 64px;
+            margin-left: -85px;
+            float: left;
+            border-radius: 4px;
+        }
+    }
+}
+
+@media screen and (max-width: 640px) {
+    article {
+        header {
+            img {
+                vertical-align: text-middle;
+                margin: inherit;
+                display: inline;
+                max-width: 1.2em;
+                max-height: 1.2em;
+            }
+        }
+    }
+}
