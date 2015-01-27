@@ -1,0 +1,18 @@
+{% extends "base.jinja2" %}
+{% block body %}
+
+  <main>
+    {% for feed in feeds %}
+
+      <form action="{{ url_for('.edit_feed', id=feed.id) }}" method="POST">
+        <input type="hidden" name="id" value="{{ feed.id }}"/>
+        <input type="text" name="name" value="{{  feed.name }}"/>
+        <input type="text" name="feed" value="{{ feed.feed }}"/>
+        <button type="submit">Save</button>
+      </form>
+
+
+{% endfor %}
+  </main>
+
+{% endblock body %}

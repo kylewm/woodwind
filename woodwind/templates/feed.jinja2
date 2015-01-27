@@ -5,8 +5,13 @@
     {% for entry in entries %}
       <article>
         <header>
-          <img src="{{entry.author_photo}}"/>
-          {{ entry.author_name }} - {{ entry.feed.name }}
+          {% if entry.author_photo %}
+            <img src="{{entry.author_photo}}"/>
+          {% endif %}
+          {% if entry.author_name %}
+            {{ entry.author_name }} -
+          {% endif %}
+          {{ entry.feed.name }}
         </header>
         {% if entry.title %}
         <h1>{{ entry.title }}</h1>

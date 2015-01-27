@@ -1,0 +1,213 @@
+from . import tasks
+from .extensions import db, login_mgr, micropub
+from .models import Feed, Entry, User
+import flask.ext.login as flask_login
+import bs4
+import feedparser
+import flask
+import mf2py
+import mf2util
+import requests
+import urllib
+
+ui = flask.Blueprint('ui', __name__)
+
+
+@ui.route('/')
+def index():
+    if flask_login.current_user.is_authenticated():
+        feed_ids = [f.id for f in flask_login.current_user.feeds]
+        entries = Entry.query.filter(
+            Entry.feed_id.in_(feed_ids)).order_by(
+                Entry.published.desc()).limit(100).all()
+    else:
+        entries = []
+    return flask.render_template('feed.jinja2', entries=entries)
+
+
+@ui.route('/install')
+def install():
+    db.drop_all()
+    db.create_all()
+
+    user = User(domain='kylewm.com',)
+    db.session.add(user)
+    db.session.commit()
+
+    flask_login.login_user(user)
+
+    return 'Success!'
+
+
+@ui.route('/feeds')
+def feeds():
+    feeds = Feed.query.filter(Feed.user == flask_login.current_user).all()
+    return flask.render_template('feeds.jinja2', feeds=feeds)
+
+
+@ui.route('/update_feed')
+def update_feed():
+    feed_id = flask.request.args.get('id')
+    tasks.update_feed.delay(feed_id)
+
+
+@ui.route('/delete_feed')
+def delete_feed():
+    feed_id = flask.request.args.get('id')
+    feed = Feed.query.get(feed_id)
+    db.session.delete(feed)
+    db.session.commit()
+    flask.flash('Deleted {} ({})'.format(feed.name, feed.feed))
+    return flask.redirect(flask.url_for('.feeds'))
+
+
+@ui.route('/edit_feed', methods=['POST'])
+def edit_feed():
+    feed_id = flask.request.form.get('id')
+    feed_name = flask.request.form.get('name')
+    feed_url = flask.request.form.get('feed')
+
+    feed = Feed.query.get(feed_id)
+    if feed_name:
+        feed.name = feed_name
+    if feed_url:
+        feed.feed = feed_url
+
+    db.session.commit()
+    flask.flash('Edited {} ({})'.format(feed.name, feed.feed))
+    return flask.redirect(flask.url_for('.feeds'))
+
+
+@ui.route('/login')
+def login():
+    if True:
+        flask_login.login_user(User.query.all()[0], remember=True)
+
+    me = flask.request.args.get('me')
+    if me:
+        return micropub.authorize(
+            me, flask.url_for('.login_callback', _external=True),
+            next_url=flask.request.args.get('next'),
+            scope='write')
+    return flask.render_template('login.jinja2')
+
+
+@ui.route('/login-callback')
+@micropub.authorized_handler
+def login_callback(resp):
+    if not resp.me:
+        flask.flash('Login error: ' + resp.error)
+        return flask.redirect(flask.url_for('.login'))
+
+    domain = urllib.parse.urlparse(resp.me).netloc
+    user = load_user(domain)
+    if not user:
+        user = User()
+        user.domain = domain
+        db.session.add(user)
+
+    user.micropub_endpoint = resp.micropub_endpoint
+    user.access_token = resp.access_token
+    db.session.commit()
+
+    flask_login.login_user(user, remember=True)
+    return flask.redirect(resp.next_url or flask.url_for('.index'))
+
+
+@login_mgr.user_loader
+def load_user(domain):
+    return User.query.filter_by(domain=domain).first()
+
+
+@ui.route('/subscribe', methods=['GET', 'POST'])
+def subscribe():
+    if flask.request.method == 'POST':
+        origin = flask.request.form.get('origin')
+        if origin:
+            type = None
+            feed = None
+            typed_feed = flask.request.form.get('feed')
+            if typed_feed:
+                type, feed = typed_feed.split('|', 1)
+            else:
+                feeds = find_possible_feeds(origin)
+                if not feeds:
+                    flask.flash('No feeds found for: ' + origin)
+                    return flask.redirect(flask.url_for('.subscribe'))
+                if len(feeds) > 1:
+                    return flask.render_template(
+                        'select-feed.jinja2', origin=origin, feeds=feeds)
+                feed = feeds[0]['feed']
+                type = feeds[0]['type']
+            new_feed = add_subscription(origin, feed, type)
+            flask.flash('Successfully subscribed to: {}'.format(new_feed.name))
+            return flask.redirect(flask.url_for('.index'))
+        else:
+            flask.abort(400)
+
+    return flask.render_template('subscribe.jinja2')
+
+
+def add_subscription(origin, feed, type):
+    if type == 'html':
+        parsed = mf2util.interpret_feed(mf2py.parse(url=feed), feed)
+        name = parsed.get('name')
+        if not name or len(name) > 140:
+            p = urllib.parse.urlparse(origin)
+            name = p.netloc + p.path
+
+        feed = Feed(user=flask_login.current_user, name=name,
+                    origin=origin, feed=feed, type=type)
+
+        db.session.add(feed)
+        db.session.commit()
+        return feed
+
+    elif type == 'xml':
+        parsed = feedparser.parse(feed)
+        feed = Feed(user=flask_login.current_user,
+                    name=parsed.feed.title, origin=origin, feed=feed,
+                    type=type)
+
+        db.session.add(feed)
+        db.session.commit()
+        return feed
+
+
+def find_possible_feeds(origin):
+    # scrape an origin source to find possible alternative feeds
+    resp = requests.get(origin)
+
+    feeds = []
+    xml_feed_types = [
+        'application/rss+xml',
+        'application/atom+xml',
+        'application/rdf+xml',
+    ]
+
+    content_type = resp.headers['content-type']
+    content_type = content_type.split(';', 1)[0].strip()
+    if content_type in xml_feed_types:
+        feeds.append({
+            'origin': origin,
+            'feed': origin,
+            'type': 'xml',
+        })
+
+    elif content_type == 'text/html':
+        # if text/html, then parse and look for rel="alternate"
+        soup = bs4.BeautifulSoup(resp.text)
+        for link in soup.find_all('link', {'rel': 'alternate'}):
+            if link.get('type') in xml_feed_types:
+                feeds.append({
+                    'origin': origin,
+                    'feed': link.get('href'),
+                    'type': 'xml',
+                })
+        feeds.append({
+            'origin': origin,
+            'feed': origin,
+            'type': 'html',
+        })
+
+    return feeds
