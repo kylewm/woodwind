@@ -30,15 +30,7 @@ def index():
 
 @ui.route('/install')
 def install():
-    db.drop_all()
     db.create_all()
-
-    user = User(domain='kylewm.com',)
-    db.session.add(user)
-    db.session.commit()
-
-    flask_login.login_user(user)
-
     return 'Success!'
 
 
