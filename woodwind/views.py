@@ -15,6 +15,9 @@ ui = flask.Blueprint('ui', __name__)
 
 @ui.route('/')
 def index():
+    import os
+    print('cwd', os.getcwd(), 'db', db)
+
     if flask_login.current_user.is_authenticated():
         feed_ids = [f.id for f in flask_login.current_user.feeds]
         entries = Entry.query.filter(
@@ -149,28 +152,25 @@ def subscribe():
 
 
 def add_subscription(origin, feed, type):
+    feed = None
     if type == 'html':
         parsed = mf2util.interpret_feed(mf2py.parse(url=feed), feed)
         name = parsed.get('name')
         if not name or len(name) > 140:
             p = urllib.parse.urlparse(origin)
             name = p.netloc + p.path
-
         feed = Feed(user=flask_login.current_user, name=name,
                     origin=origin, feed=feed, type=type)
-
-        db.session.add(feed)
-        db.session.commit()
-        return feed
-
     elif type == 'xml':
         parsed = feedparser.parse(feed)
         feed = Feed(user=flask_login.current_user,
                     name=parsed.feed.title, origin=origin, feed=feed,
                     type=type)
-
+    if feed:
         db.session.add(feed)
         db.session.commit()
+        # go ahead and update the fed
+        tasks.update_feed.delay(feed.id)
         return feed
 
 

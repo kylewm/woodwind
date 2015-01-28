@@ -1,30 +1,31 @@
-from woodwind.extensions import db
 from woodwind.models import Feed, Entry
-
+from config import Config
 import celery
-import requests
 import celery.utils.log
 import feedparser
 import mf2py
 import mf2util
-import requests
 import time
 import urllib.parse
 import datetime
+import sqlalchemy
+import sqlalchemy.orm
 
 UPDATE_INTERVAL = datetime.timedelta(hours=1)
 
-queue = celery.Celery('woodwind')
-queue.config_from_object('celeryconfig')
+app = celery.Celery('woodwind')
+app.config_from_object('celeryconfig')
 
 logger = celery.utils.log.get_task_logger(__name__)
+engine = sqlalchemy.create_engine(Config.SQLALCHEMY_DATABASE_URI)
+session = sqlalchemy.orm.Session(bind=engine)
 
 
-@queue.task
+@app.task
 def tick():
     now = datetime.datetime.utcnow()
     logger.debug('Tick {}'.format(now))
-    for feed in Feed.query.all():
+    for feed in session.query(Feed).all():
         logger.debug('Feed {} last checked {}'.format(
             feed, feed.last_checked))
         if (not feed.last_checked
@@ -32,9 +33,9 @@ def tick():
             update_feed.delay(feed.id)
 
 
-@queue.task
+@app.task
 def update_feed(feed_id):
-    feed = Feed.query.get(feed_id)
+    feed = session.query(Feed).get(feed_id)
     logger.info('Updating {}'.format(feed))
     new_entries = process_feed_for_new_entries(feed)
     for entry in new_entries:
@@ -55,7 +56,7 @@ def process_feed_for_new_entries(feed):
         feed.last_checked = now
         if result:
             feed.last_updated = now
-        db.session.commit()
+        session.commit()
 
 
 def process_xml_feed_for_new_entries(feed):
@@ -70,7 +71,7 @@ def process_xml_feed_for_new_entries(feed):
     default_author_photo = feed_props.get('logo')
 
     all_uids = [e.id or e.link for e in parsed.entries]
-    preexisting = set(row[0] for row in db.session.query(Entry.uid)
+    preexisting = set(row[0] for row in session.query(Entry.uid)
                       .filter(Entry.uid.in_(all_uids))
                       .filter(Entry.feed == feed))
 
@@ -118,8 +119,8 @@ def process_xml_feed_for_new_entries(feed):
             author_photo=default_author_photo
             or fallback_photo(feed.origin))
 
-        db.session.add(entry)
-        db.session.commit()
+        session.add(entry)
+        session.commit()
         yield entry
 
 
@@ -132,7 +133,7 @@ def process_html_feed_for_new_entries(feed):
     hfeed = parsed.get('entries', [])
 
     all_uids = [e.get('uid') or e.get('url') for e in hfeed]
-    preexisting = set(row[0] for row in db.session.query(Entry.uid)
+    preexisting = set(row[0] for row in session.query(Entry.uid)
                       .filter(Entry.uid.in_(all_uids))
                       .filter(Entry.feed == feed))
 
@@ -161,8 +162,8 @@ def process_html_feed_for_new_entries(feed):
             author_photo=hentry.get('author', {}).get('photo')
             or fallback_photo(feed.origin),
             author_url=hentry.get('author', {}).get('url'))
-        db.session.add(entry)
-        db.session.commit()
+        session.add(entry)
+        session.commit()
         logger.debug('saved entry: %s', entry.permalink)
         yield entry
 

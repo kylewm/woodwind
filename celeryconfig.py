@@ -7,7 +7,9 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERYBEAT_SCHEDULE = {
     'tick-every-5-minutes': {
-        'task': 'tasks.tick',
-        'schedule': datetime.timedelta(minutes=5),
+        'task': 'woodwind.tasks.tick',
+        'schedule': datetime.timedelta(seconds=30),
     }
 }
+# recommended to disable if not using -- introduces a lot of complexity
+CELERY_DISABLE_RATE_LIMITS = True
