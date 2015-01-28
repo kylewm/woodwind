@@ -1,4 +1,6 @@
 *.css
 *.css.map
 *~
+.sass-cacheconfig.py
+celerybeat-schedule
 .sass-cache
