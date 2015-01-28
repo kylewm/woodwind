@@ -1,4 +1,26 @@
 {% extends "base.jinja2" %}
+{% block head %}
+
+<script src="http://code.jquery.com/jquery-2.1.3.min.js"></script>
+<script>
+
+function attachListener() {
+    $("#older-link").click(function(evt) {
+        evt.preventDefault();
+        $.get(this.href, function(result) {
+            $(".pager").replaceWith(
+              $("article,.pager", $(result)));
+            attachListener();
+        });
+    });
+}
+
+$(attachListener);
+
+</script>
+
+{% endblock head %}
+
 {% block header %}
   {% if current_user.is_authenticated() %}
     <form action="{{ url_for('.subscribe') }}" method="POST">
@@ -7,8 +29,8 @@
     </form>
   {% endif %}
 {% endblock header %}
-{% block body %}
 
+{% block body %}
 
   {% for entry in entries %}
     <article>
@@ -39,22 +61,22 @@
           <button type="submit">Like</button>
         </form>
         <!--
-           <form action="{{ current_user.micropub_endpoint }}" method="POST">
-             <input type="hidden" name="access_token" value="{{current_user.access_token}}"/>
-             <input type="hidden" name="h" value="entry"/>
-             <input type="hidden" name="in-reply-to" value="{{ entry.permalink }}"/>
-             <textarea name="content"></textarea>
-             <button type="submit">Reply</button>
-           </form>
-           -->
-
+            <form action="{{ current_user.micropub_endpoint }}" method="POST">
+              <input type="hidden" name="access_token" value="{{current_user.access_token}}"/>
+              <input type="hidden" name="h" value="entry"/>
+              <input type="hidden" name="in-reply-to" value="{{ entry.permalink }}"/>
+              <textarea name="content"></textarea>
+              <button type="submit">Reply</button>
+            </form>
+            -->
       </footer>
-
-      
     </article>
   {% endfor %}
 
   {% if entries %}
-    <a href="{{ url_for(request.endpoint, page=page+1)}}">Older</a>
+    <div class="pager">
+      <a id="older-link" href="{{ url_for(request.endpoint, page=page+1)}}">Older</a>
+    </div>
   {% endif %}
+
 {% endblock body %}

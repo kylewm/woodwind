@@ -369,6 +369,17 @@ header, main {
 header {
   margin-bottom: 1em; }
 
+.pager {
+  text-align: center;
+  margin: 1em 0; }
+  .pager a {
+    padding: 0.5em;
+    background-color: #353129;
+    color: #ECEBF0;
+    border: 1px solid #ECEBF0;
+    border-radius: 4px;
+    display: inline-block; }
+
 article {
   margin-bottom: 2em;
   box-shadow: 0 0 2px #687D77;
@@ -376,18 +387,19 @@ article {
   padding: 0.5em; }
   article img {
     max-width: 100%; }
-  article > header {
+  article header {
     color: #484A47;
     border-bottom: 1px solid #687D77;
     margin-bottom: 0.5em; }
-    article > header img {
+    article header img {
       max-width: 64px;
       max-height: 64px;
       margin-left: -85px;
       float: left;
       border-radius: 4px; }
   article footer {
-    margin-top: 0.5em; }
+    margin-top: 0.5em;
+    margin-bottom: 0; }
   article h1 {
     font-size: 1.2em;
     font-weight: bold; }

@@ -30,6 +30,20 @@ header {
     margin-bottom: 1em;
 }
 
+.pager {
+    text-align: center;
+    margin: 1em 0;
+
+    a {
+        padding: 0.5em;
+        background-color: $armadillo;
+        color: $athens-gray;
+        border: 1px solid $athens-gray;
+        border-radius: 4px;
+        display: inline-block;
+    }
+}
+
 
 article {
     margin-bottom: 2em;
@@ -41,7 +55,7 @@ article {
         max-width: 100%;
     }
 
-    &> header {
+    header {
         img {
             max-width: 64px;
             max-height: 64px;
@@ -56,6 +70,7 @@ article {
 
     footer {
         margin-top: 0.5em;
+        margin-bottom: 0;
     }
 
     h1 {
