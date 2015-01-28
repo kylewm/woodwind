@@ -15,14 +15,17 @@ ui = flask.Blueprint('ui', __name__)
 
 @ui.route('/')
 def index():
+    page = int(flask.request.args.get('page', 1))
     if flask_login.current_user.is_authenticated():
-        feed_ids = [f.id for f in flask_login.current_user.feeds]
-        entries = Entry.query.filter(
-            Entry.feed_id.in_(feed_ids)).order_by(
-                Entry.published.desc()).limit(100).all()
+        per_page = flask.current_app.config.get('PER_PAGE', 30)
+        offset = (page - 1) * per_page
+        feed_ids = set(f.id for f in flask_login.current_user.feeds)
+        entries = Entry.query.filter(Entry.feed_id.in_(feed_ids))\
+                             .order_by(Entry.published.desc())\
+                             .offset(offset).limit(per_page).all()
     else:
         entries = []
-    return flask.render_template('feed.jinja2', entries=entries)
+    return flask.render_template('feed.jinja2', entries=entries, page=page)
 
 
 @ui.route('/install')

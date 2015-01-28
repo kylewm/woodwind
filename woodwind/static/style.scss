@@ -21,10 +21,15 @@ body {
 }
 
 
-main {
+header, main {
     max-width: 600px;
     margin: 0 auto;
 }
+
+header {
+    margin-bottom: 1em;
+}
+
 
 article {
     margin-bottom: 2em;
@@ -36,7 +41,7 @@ article {
         max-width: 100%;
     }
 
-    header {
+    &> header {
         img {
             max-width: 64px;
             max-height: 64px;
@@ -44,8 +49,13 @@ article {
             float: left;
             border-radius: 4px;
         }
-        color: $armadillo;
-        border-bottom: 1px solid $armadillo;
+        color: $lunar-green;
+        border-bottom: 1px solid $sirocco;
+        margin-bottom: 0.5em;
+    }
+
+    footer {
+        margin-top: 0.5em;
     }
 
     h1 {

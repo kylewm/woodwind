@@ -7,7 +7,8 @@
   {% block head %}{% endblock %}
 </head>
 <body>
-  <main>
+
+  <header>
     {% if current_user.is_authenticated() %}
       <div class="logged-in">{{ current_user.domain }}</div>
     {% else %}
@@ -16,9 +17,13 @@
         <button type="submit">Login</button>
       </form>
     {% endif %}
+    {% block header %}{% endblock %}
     {% for message in get_flashed_messages() %}
       <div class="flash">{{ message | safe }}</div>
     {% endfor %}
+  </header>
+
+  <main>
     {% block body %}{% endblock %}
   </main>
 </body>
