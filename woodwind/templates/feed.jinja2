@@ -1,31 +1,51 @@
 {% extends "base.jinja2" %}
 {% block body %}
 
-  <main>
-    {% for entry in entries %}
-      <article>
-        <header>
-          {% if entry.author_photo %}
-            <img src="{{entry.author_photo}}"/>
-          {% endif %}
-          {% if entry.author_name %}
-            {{ entry.author_name }} -
-          {% endif %}
-          {{ entry.feed.name }}
-        </header>
-        {% if entry.title %}
-        <h1>{{ entry.title }}</h1>
+  <form action="{{ url_for('.subscribe') }}" method="POST">
+    <input type="text" id="origin" name="origin" placeholder="Feed URL" />
+    <button type="submit" id="subscribe">Subscribe</button>
+  </form>
+
+  {% for entry in entries %}
+    <article>
+      <header>
+        {% if entry.author_photo %}
+          <img src="{{entry.author_photo}}"/>
         {% endif %}
-        {% if entry.content %}
+        {% if entry.author_name %}
+          {{ entry.author_name }} -
+        {% endif %}
+        {{ entry.feed.name }}
+      </header>
+      {% if entry.title %}
+        <h1>{{ entry.title }}</h1>
+      {% endif %}
+      {% if entry.content %}
         <div>
           {{ entry.content_cleaned() }}
         </div>
-        {% endif %}
-        <div>
-          <a href="{{ entry.permalink }}">{{ entry.published }}</a>
-        </div>
-      </article>
-    {% endfor %}
-  </main>
+      {% endif %}
+      <div>
+        <a href="{{ entry.permalink }}">{{ entry.published }}</a>
+      </div>
 
+      <form action="{{ current_user.micropub_endpoint }}" method="POST">
+        <input type="hidden" name="access_token" value="{{current_user.access_token}}"/>
+        <input type="hidden" name="h" value="entry"/>
+        <input type="hidden" name="like-of" value="{{ entry.permalink }}"/>
+        <button type="submit">Like</button>
+      </form>
+
+      <!--
+      <form action="{{ current_user.micropub_endpoint }}" method="POST">
+        <input type="hidden" name="access_token" value="{{current_user.access_token}}"/>
+        <input type="hidden" name="h" value="entry"/>
+        <input type="hidden" name="in-reply-to" value="{{ entry.permalink }}"/>
+        <textarea name="content"></textarea>
+        <button type="submit">Reply</button>
+      </form>
+      -->
+
+    </article>
+  {% endfor %}
 {% endblock body %}

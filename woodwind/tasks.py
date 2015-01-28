@@ -60,7 +60,7 @@ def process_feed_for_new_entries(feed):
 
 
 def process_xml_feed_for_new_entries(feed):
-    logger.debug('updating feed: %s', feed)
+    logger.debug('fetching xml feed: %s', feed)
 
     now = datetime.datetime.utcnow()
     parsed = feedparser.parse(feed.feed)
@@ -71,11 +71,16 @@ def process_xml_feed_for_new_entries(feed):
     default_author_photo = feed_props.get('logo')
 
     all_uids = [e.id or e.link for e in parsed.entries]
-    preexisting = set(row[0] for row in session.query(Entry.uid)
-                      .filter(Entry.uid.in_(all_uids))
-                      .filter(Entry.feed == feed))
+    if all_uids:
+        preexisting = set(row[0] for row in session.query(Entry.uid)
+                          .filter(Entry.uid.in_(all_uids))
+                          .filter(Entry.feed == feed))
+    else:
+        preexisting = set()
 
+    logger.debug('found {} entries'.format(len(parsed.entries)))
     for p_entry in parsed.entries:
+        logger.debug('processing entry {}'.format(p_entry))
         permalink = p_entry.link
         uid = p_entry.id or permalink
 
@@ -84,10 +89,10 @@ def process_xml_feed_for_new_entries(feed):
 
         updated = datetime.datetime.fromtimestamp(
             time.mktime(p_entry.updated_parsed)
-        ) if p_entry.updated_parsed else None
+        ) if 'updated_parsed' in p_entry else None
         published = datetime.datetime.fromtimestamp(
             time.mktime(p_entry.published_parsed)
-        ) if p_entry.published_parsed else None
+        ) if 'published_parsed' in p_entry else now
 
         title = p_entry.get('title')
 
@@ -125,7 +130,7 @@ def process_xml_feed_for_new_entries(feed):
 
 
 def process_html_feed_for_new_entries(feed):
-    logger.debug('updating feed: %s', feed)
+    logger.debug('fetching html feed: %s', feed)
 
     now = datetime.datetime.utcnow()
     parsed = mf2util.interpret_feed(
@@ -133,9 +138,12 @@ def process_html_feed_for_new_entries(feed):
     hfeed = parsed.get('entries', [])
 
     all_uids = [e.get('uid') or e.get('url') for e in hfeed]
-    preexisting = set(row[0] for row in session.query(Entry.uid)
-                      .filter(Entry.uid.in_(all_uids))
-                      .filter(Entry.feed == feed))
+    if all_uids:
+        preexisting = set(row[0] for row in session.query(Entry.uid)
+                          .filter(Entry.uid.in_(all_uids))
+                          .filter(Entry.feed == feed))
+    else:
+        preexisting = set()
 
     # logger.debug('preexisting urls: %r', preexisting)
 
@@ -151,7 +159,7 @@ def process_html_feed_for_new_entries(feed):
         # uid = hentry.get('uid') or uid
         entry = Entry(
             feed=feed,
-            published=hentry.get('published'),
+            published=hentry.get('published') or now,
             updated=hentry.get('updated'),
             uid=uid,
             permalink=permalink,

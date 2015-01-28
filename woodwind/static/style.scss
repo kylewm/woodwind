@@ -44,6 +44,13 @@ article {
             float: left;
             border-radius: 4px;
         }
+        color: $armadillo;
+        border-bottom: 1px solid $armadillo;
+    }
+
+    h1 {
+        font-size: 1.2em;
+        font-weight: bold;
     }
 }
 

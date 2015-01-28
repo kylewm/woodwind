@@ -8,7 +8,7 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERYBEAT_SCHEDULE = {
     'tick-every-5-minutes': {
         'task': 'woodwind.tasks.tick',
-        'schedule': datetime.timedelta(seconds=30),
+        'schedule': datetime.timedelta(minutes=5),
     }
 }
 # recommended to disable if not using -- introduces a lot of complexity

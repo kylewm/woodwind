@@ -1,7 +1,7 @@
 {% extends "base.jinja2" %}
 {% block body %}
   <main>
-    <form action="{{ url_for('subscribe') }}" method="POST">
+    <form action="{{ url_for('.subscribe') }}" method="POST">
       <input type="hidden" id="origin" name="origin" value="{{ origin }}" />
 
       {% for feed in feeds %}

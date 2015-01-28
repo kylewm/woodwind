@@ -15,9 +15,6 @@ ui = flask.Blueprint('ui', __name__)
 
 @ui.route('/')
 def index():
-    import os
-    print('cwd', os.getcwd(), 'db', db)
-
     if flask_login.current_user.is_authenticated():
         feed_ids = [f.id for f in flask_login.current_user.feeds]
         entries = Entry.query.filter(
@@ -52,11 +49,12 @@ def feeds():
 def update_feed():
     feed_id = flask.request.args.get('id')
     tasks.update_feed.delay(feed_id)
+    return flask.redirect(flask.url_for('.feeds'))
 
 
-@ui.route('/delete_feed')
+@ui.route('/delete_feed', methods=['POST'])
 def delete_feed():
-    feed_id = flask.request.args.get('id')
+    feed_id = flask.request.form.get('id')
     feed = Feed.query.get(feed_id)
     db.session.delete(feed)
     db.session.commit()
@@ -83,9 +81,6 @@ def edit_feed():
 
 @ui.route('/login')
 def login():
-    if True:
-        flask_login.login_user(User.query.all()[0], remember=True)
-
     me = flask.request.args.get('me')
     if me:
         return micropub.authorize(
@@ -151,27 +146,29 @@ def subscribe():
     return flask.render_template('subscribe.jinja2')
 
 
-def add_subscription(origin, feed, type):
+def add_subscription(origin, feed_url, type):
     feed = None
     if type == 'html':
-        parsed = mf2util.interpret_feed(mf2py.parse(url=feed), feed)
+        flask.current_app.logger.debug('mf2py parsing %s', feed_url)
+        parsed = mf2util.interpret_feed(mf2py.parse(url=feed_url), feed_url)
         name = parsed.get('name')
         if not name or len(name) > 140:
             p = urllib.parse.urlparse(origin)
             name = p.netloc + p.path
         feed = Feed(user=flask_login.current_user, name=name,
-                    origin=origin, feed=feed, type=type)
+                    origin=origin, feed=feed_url, type=type)
     elif type == 'xml':
-        parsed = feedparser.parse(feed)
+        flask.current_app.logger.debug('feedparser parsing %s', feed_url)
+        parsed = feedparser.parse(feed_url)
         feed = Feed(user=flask_login.current_user,
-                    name=parsed.feed.title, origin=origin, feed=feed,
-                    type=type)
+                    name=parsed.feed and parsed.feed.title,
+                    origin=origin, feed=feed_url, type=type)
     if feed:
         db.session.add(feed)
         db.session.commit()
         # go ahead and update the fed
         tasks.update_feed.delay(feed.id)
-        return feed
+    return feed
 
 
 def find_possible_feeds(origin):
