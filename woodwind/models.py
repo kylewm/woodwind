@@ -8,12 +8,19 @@ bleach.ALLOWED_ATTRIBUTES.update({
 })
 
 
+
+users_to_feeds = db.Table(
+    'users_to_feeds', db.Model.metadata,
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), index=True),
+    db.Column('feed_id', db.Integer, db.ForeignKey('feed.id'), index=True))
+
+
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     domain = db.Column(db.String(256))
     micropub_endpoint = db.Column(db.String(512))
     access_token = db.Column(db.String(512))
-
+    
     # Flask-Login integration
     def is_authenticated(self):
         return True
@@ -38,8 +45,7 @@ class User(db.Model):
 
 class Feed(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey(User.id))
-    user = db.relationship(User, backref='feeds')
+    users = db.relationship(User, secondary='users_to_feeds', backref='feeds')
     # the name of this feed
     name = db.Column(db.String(256))
     # url that we subscribed to; periodically check if the feed url

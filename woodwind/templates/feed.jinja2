@@ -32,7 +32,7 @@ $(attachListeners);
 {% block header %}
   {% if current_user.is_authenticated() %}
     <form action="{{ url_for('.subscribe') }}" method="POST">
-      <input type="text" id="origin" name="origin" placeholder="Feed URL" />
+      <input type="url" id="origin" name="origin" placeholder="Feed URL" />
       <button type="submit" id="subscribe">Subscribe</button>
     </form>
   {% endif %}

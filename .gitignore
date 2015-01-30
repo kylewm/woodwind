@@ -2,3 +2,4 @@
 .sass-cacheconfig.py
 celerybeat-schedule
 .sass-cache
+__pycache__

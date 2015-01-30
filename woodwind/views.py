@@ -36,7 +36,7 @@ def install():
 
 @ui.route('/feeds')
 def feeds():
-    feeds = Feed.query.filter(Feed.user == flask_login.current_user).all()
+    feeds = flask_login.current_user.feeds
     return flask.render_template('feeds.jinja2', feeds=feeds)
 
 
@@ -142,24 +142,24 @@ def subscribe():
 
 
 def add_subscription(origin, feed_url, type):
-    feed = None
-    if type == 'html':
-        flask.current_app.logger.debug('mf2py parsing %s', feed_url)
-        parsed = mf2util.interpret_feed(mf2py.parse(url=feed_url), feed_url)
-        name = parsed.get('name')
-        if not name or len(name) > 140:
-            p = urllib.parse.urlparse(origin)
-            name = p.netloc + p.path
-        feed = Feed(user=flask_login.current_user, name=name,
-                    origin=origin, feed=feed_url, type=type)
-    elif type == 'xml':
-        flask.current_app.logger.debug('feedparser parsing %s', feed_url)
-        parsed = feedparser.parse(feed_url)
-        feed = Feed(user=flask_login.current_user,
-                    name=parsed.feed and parsed.feed.title,
-                    origin=origin, feed=feed_url, type=type)
+    feed = Feed.query.filter_by(feed=feed_url, type=type).first()
+    if not feed:
+        if type == 'html':
+            flask.current_app.logger.debug('mf2py parsing %s', feed_url)
+            parsed = mf2util.interpret_feed(mf2py.parse(url=feed_url), feed_url)
+            name = parsed.get('name')
+            if not name or len(name) > 140:
+                p = urllib.parse.urlparse(origin)
+                name = p.netloc + p.path
+            feed = Feed(name=name, origin=origin, feed=feed_url, type=type)
+        elif type == 'xml':
+            flask.current_app.logger.debug('feedparser parsing %s', feed_url)
+            parsed = feedparser.parse(feed_url)
+            feed = Feed(name=parsed.feed and parsed.feed.title,
+                        origin=origin, feed=feed_url, type=type)
     if feed:
         db.session.add(feed)
+        flask_login.current_user.feeds.append(feed)
         db.session.commit()
         # go ahead and update the fed
         tasks.update_feed.delay(feed.id)
