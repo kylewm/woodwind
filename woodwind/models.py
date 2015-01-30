@@ -2,9 +2,12 @@ import bleach
 from .extensions import db
 
 
-bleach.ALLOWED_TAGS += ['a', 'img', 'p', 'br', 'marquee', 'blink']
+bleach.ALLOWED_TAGS += ['a', 'img', 'p', 'br', 'marquee', 'blink',
+                        'audio', 'video']
 bleach.ALLOWED_ATTRIBUTES.update({
-    'img': ['src', 'alt', 'title']
+    'img': ['src', 'alt', 'title'],
+    'audio': ['preload', 'controls', 'src'],
+    'video': ['preload', 'controls', 'src'],
 })
 
 

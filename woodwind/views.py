@@ -171,15 +171,22 @@ def find_possible_feeds(origin):
     resp = requests.get(origin)
 
     feeds = []
+
     xml_feed_types = [
         'application/rss+xml',
         'application/atom+xml',
         'application/rdf+xml',
+        'application/xml',
+    ]
+    xml_mime_types = xml_feed_types + [
+        'text/xml',
+        'text/rss+xml',
+        'text/atom+xml',
     ]
 
     content_type = resp.headers['content-type']
     content_type = content_type.split(';', 1)[0].strip()
-    if content_type in xml_feed_types:
+    if content_type in xml_mime_types:
         feeds.append({
             'origin': origin,
             'feed': origin,
@@ -191,15 +198,19 @@ def find_possible_feeds(origin):
         soup = bs4.BeautifulSoup(resp.text)
         for link in soup.find_all('link', {'rel': 'alternate'}):
             if link.get('type') in xml_feed_types:
+                feed_url = urllib.parse.urljoin(origin, link.get('href'))
                 feeds.append({
                     'origin': origin,
-                    'feed': link.get('href'),
+                    'feed': feed_url,
                     'type': 'xml',
                 })
-        feeds.append({
-            'origin': origin,
-            'feed': origin,
-            'type': 'html',
-        })
+
+        hfeed = mf2util.interpret_feed(mf2py.parse(doc=resp.text), origin)
+        if hfeed.get('entries'):
+            feeds.append({
+                'origin': origin,
+                'feed': origin,
+                'type': 'html',
+            })
 
     return feeds
