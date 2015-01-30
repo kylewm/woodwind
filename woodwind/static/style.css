@@ -356,8 +356,6 @@ td,
 th {
   padding: 0; }
 
-/*$body-font: Georgia, Times New Roman, serif;*/
-/* Subtlety of Hue */
 body {
   font: 12pt Helvetica, Arial, sans-serif;
   background: #ECEBF0; }
@@ -404,7 +402,7 @@ article {
     font-size: 1.2em;
     font-weight: bold; }
 
-@media screen and (max-width: 640px) {
+@media only screen and (max-width: 800px) {
   article header img {
     vertical-align: text-middle;
     margin: inherit;
