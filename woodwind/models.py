@@ -3,11 +3,12 @@ from .extensions import db
 
 
 bleach.ALLOWED_TAGS += ['a', 'img', 'p', 'br', 'marquee', 'blink',
-                        'audio', 'video']
+                        'audio', 'video', 'table', 'tbody', 'td', 'tr']
 bleach.ALLOWED_ATTRIBUTES.update({
     'img': ['src', 'alt', 'title'],
     'audio': ['preload', 'controls', 'src'],
     'video': ['preload', 'controls', 'src'],
+    'td': ['colspan'],
 })
 
 

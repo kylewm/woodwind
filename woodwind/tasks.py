@@ -104,12 +104,17 @@ def process_xml_feed_for_new_entries(session, feed):
         if not uid or uid in preexisting:
             continue
 
-        updated = datetime.datetime.fromtimestamp(
-            time.mktime(p_entry.updated_parsed)
-        ) if 'updated_parsed' in p_entry else None
-        published = datetime.datetime.fromtimestamp(
-            time.mktime(p_entry.published_parsed)
-        ) if 'published_parsed' in p_entry else now
+        if 'updated_parsed' in p_entry:
+            updated = datetime.datetime.fromtimestamp(
+                time.mktime(p_entry.updated_parsed)) 
+        else:
+            updated = None
+
+        if 'published_parsed' in p_entry:
+            published = datetime.datetime.fromtimestamp(
+                time.mktime(p_entry.published_parsed))
+        else:
+            published = updated or now
 
         title = p_entry.get('title')
 

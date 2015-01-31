@@ -62,14 +62,14 @@ $(attachListeners);
       <footer>
         <a href="{{ entry.permalink }}">{{ entry.published }}</a>
 
-        <form action="{{ current_user.micropub_endpoint }}" method="POST">
+        <form action="{{ current_user.micropub_endpoint }}" method="POST" style="display:inline">
           <input type="hidden" name="access_token" value="{{current_user.access_token}}"/>
           <input type="hidden" name="h" value="entry"/>
           <input type="hidden" name="like-of" value="{{ entry.permalink }}"/>
           <button type="submit">Like</button>
         </form>
 
-        <a href="#" class="show-reply-form">Reply</a>
+        <button class="show-reply-form">Reply</button>
         
         <form class="reply-form" action="{{ current_user.micropub_endpoint }}" method="POST">
           <input type="hidden" name="access_token" value="{{current_user.access_token}}"/>
