@@ -10,10 +10,10 @@ import mf2util
 import requests
 import urllib
 
-ui = flask.Blueprint('ui', __name__)
+views = flask.Blueprint('views', __name__)
 
 
-@ui.route('/')
+@views.route('/')
 def index():
     page = int(flask.request.args.get('page', 1))
     if flask_login.current_user.is_authenticated():
@@ -28,26 +28,26 @@ def index():
     return flask.render_template('feed.jinja2', entries=entries, page=page)
 
 
-@ui.route('/install')
+@views.route('/install')
 def install():
     db.create_all()
     return 'Success!'
 
 
-@ui.route('/feeds')
+@views.route('/feeds')
 def feeds():
     feeds = flask_login.current_user.feeds
     return flask.render_template('feeds.jinja2', feeds=feeds)
 
 
-@ui.route('/update_feed')
+@views.route('/update_feed')
 def update_feed():
     feed_id = flask.request.args.get('id')
     tasks.update_feed.delay(feed_id)
     return flask.redirect(flask.url_for('.feeds'))
 
 
-@ui.route('/delete_feed', methods=['POST'])
+@views.route('/delete_feed', methods=['POST'])
 def delete_feed():
     feed_id = flask.request.form.get('id')
     feed = Feed.query.get(feed_id)
@@ -57,7 +57,7 @@ def delete_feed():
     return flask.redirect(flask.url_for('.feeds'))
 
 
-@ui.route('/edit_feed', methods=['POST'])
+@views.route('/edit_feed', methods=['POST'])
 def edit_feed():
     feed_id = flask.request.form.get('id')
     feed_name = flask.request.form.get('name')
@@ -74,7 +74,7 @@ def edit_feed():
     return flask.redirect(flask.url_for('.feeds'))
 
 
-@ui.route('/login')
+@views.route('/login')
 def login():
     me = flask.request.args.get('me')
     if me:
@@ -85,7 +85,7 @@ def login():
     return flask.render_template('login.jinja2')
 
 
-@ui.route('/login-callback')
+@views.route('/login-callback')
 @micropub.authorized_handler
 def login_callback(resp):
     if not resp.me:
@@ -112,7 +112,7 @@ def load_user(domain):
     return User.query.filter_by(domain=domain).first()
 
 
-@ui.route('/subscribe', methods=['GET', 'POST'])
+@views.route('/subscribe', methods=['GET', 'POST'])
 def subscribe():
     if flask.request.method == 'POST':
         origin = flask.request.form.get('origin')
