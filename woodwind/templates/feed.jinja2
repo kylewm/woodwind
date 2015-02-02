@@ -37,24 +37,26 @@
       <footer>
         <a href="{{ entry.permalink }}">{{ entry.published }}</a>
 
-        <form class="like-form" action="{{ current_user.micropub_endpoint }}" method="POST" style="display:inline">
-          <input type="hidden" name="access_token" value="{{current_user.access_token}}"/>
-          <input type="hidden" name="h" value="entry"/>
-          <input type="hidden" name="like-of" value="{{ entry.permalink }}"/>
-          <button type="submit" class="like-button">Like</button>
-          <span class="submit-response"></span>
-        </form>
+        {% if current_user.micropub_endpoint %}
+          <form class="like-form" action="{{ current_user.micropub_endpoint }}" method="POST" style="display:inline">
+            <input type="hidden" name="access_token" value="{{current_user.access_token}}"/>
+            <input type="hidden" name="h" value="entry"/>
+            <input type="hidden" name="like-of" value="{{ entry.permalink }}"/>
+            <button type="submit" class="like-button">Like</button>
+            <span class="submit-response"></span>
+          </form>
 
-        <button class="show-reply-form">Reply</button>
+          <button class="show-reply-form">Reply</button>
 
-        <form class="reply-form" action="{{ current_user.micropub_endpoint }}" method="POST">
-          <input type="hidden" name="access_token" value="{{current_user.access_token}}"/>
-          <input type="hidden" name="h" value="entry"/>
-          <input type="hidden" name="in-reply-to" value="{{ entry.permalink }}"/>
-          <textarea name="content"></textarea>
-          <button type="submit" class="reply-button">Reply</button>
-          <span class="submit-response"></span>
-        </form>
+          <form class="reply-form" action="{{ current_user.micropub_endpoint }}" method="POST">
+            <input type="hidden" name="access_token" value="{{current_user.access_token}}"/>
+            <input type="hidden" name="h" value="entry"/>
+            <input type="hidden" name="in-reply-to" value="{{ entry.permalink }}"/>
+            <textarea name="content"></textarea>
+            <button type="submit" class="reply-button">Reply</button>
+            <span class="submit-response"></span>
+          </form>
+        {% endif %}
 
       </footer>
     </article>

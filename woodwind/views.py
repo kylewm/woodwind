@@ -16,15 +16,15 @@ views = flask.Blueprint('views', __name__)
 @views.route('/')
 def index():
     page = int(flask.request.args.get('page', 1))
+    entries = []
     if flask_login.current_user.is_authenticated():
         per_page = flask.current_app.config.get('PER_PAGE', 30)
         offset = (page - 1) * per_page
         feed_ids = set(f.id for f in flask_login.current_user.feeds)
-        entries = Entry.query.filter(Entry.feed_id.in_(feed_ids))\
-                             .order_by(Entry.published.desc())\
-                             .offset(offset).limit(per_page).all()
-    else:
-        entries = []
+        if feed_ids:
+            entries = Entry.query.filter(Entry.feed_id.in_(feed_ids))\
+                                 .order_by(Entry.published.desc())\
+                                 .offset(offset).limit(per_page).all()
     return flask.render_template('feed.jinja2', entries=entries, page=page)
 
 
@@ -91,6 +91,9 @@ def login_callback(resp):
     if not resp.me:
         flask.flash('Login error: ' + resp.error)
         return flask.redirect(flask.url_for('.login'))
+
+    if resp.error:
+        flask.flash('Warning: ' + resp.error)
 
     domain = urllib.parse.urlparse(resp.me).netloc
     user = load_user(domain)
