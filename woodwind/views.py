@@ -204,7 +204,16 @@ def find_possible_feeds(origin):
         })
 
     elif content_type == 'text/html':
-        # if text/html, then parse and look for rel="alternate"
+        # if text/html, then parse and look for h-entries
+        hfeed = mf2util.interpret_feed(mf2py.parse(doc=resp.text), origin)
+        if hfeed.get('entries'):
+            feeds.append({
+                'origin': origin,
+                'feed': origin,
+                'type': 'html',
+            })
+
+        # then look for link rel="alternate"
         soup = bs4.BeautifulSoup(resp.text)
         for link in soup.find_all('link', {'rel': 'alternate'}):
             if link.get('type') in xml_feed_types:
@@ -214,13 +223,5 @@ def find_possible_feeds(origin):
                     'feed': feed_url,
                     'type': 'xml',
                 })
-
-        hfeed = mf2util.interpret_feed(mf2py.parse(doc=resp.text), origin)
-        if hfeed.get('entries'):
-            feeds.insert(0,{
-                'origin': origin,
-                'feed': origin,
-                'type': 'html',
-            })
 
     return feeds
