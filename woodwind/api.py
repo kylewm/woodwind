@@ -19,5 +19,5 @@ def forward_request():
         'code': result.status_code,
         'content': result.text,
         'content-type': result.headers.get('content-type'),
-        'location': result.url,
+        'location': result.headers.get('location'),
     })

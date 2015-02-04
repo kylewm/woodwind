@@ -62,9 +62,9 @@ def update_feed(feed_id):
 def process_feed_for_new_entries(session, feed):
     try:
         if feed.type == 'xml':
-            result = process_xml_feed_for_new_entries(session, feed)
+            result = list(process_xml_feed_for_new_entries(session, feed))
         elif feed.type == 'html':
-            result = process_html_feed_for_new_entries(session, feed)
+            result = list(process_html_feed_for_new_entries(session, feed))
         else:
             result = None
         return result

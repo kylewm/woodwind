@@ -3,15 +3,19 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title></title>
+  <title>Woodwind</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"/>
   {% block head %}{% endblock %}
 </head>
 <body>
 
   <header>
+    <h1 class="h-x-app">Woodwind</h1>
+
     {% if current_user.is_authenticated() %}
-      <div class="logged-in">{{ current_user.domain }}</div>
+      <div class="logged-in">{{ current_user.domain }}
+        (<a href="{{ url_for('.logout') }}">Logout</a>)
+      </div>
     {% else %}
       <form action="{{ url_for('.login') }}" method="GET">
         <input type="text" name="me" placeholder="mydomain.com" />

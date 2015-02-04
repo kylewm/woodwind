@@ -26,7 +26,7 @@ $(function(){
             '/_forward',
             '_url=' + encodeURIComponent(endpoint) + '&' + form.serialize(),
             function(result) {
-                if (result.code == 200) {
+                if (Math.floor(result.code / 100) == 2) {
                     responseArea.html('<a target="_blank" href="' + result.location + '">Success!</a>');
                 } else {
                     responseArea.html('Failure');

@@ -4,7 +4,7 @@ from flask.ext.sqlalchemy import SQLAlchemy
 
 
 db = SQLAlchemy()
-micropub = MicropubClient(client_id='redwind-reader')
+micropub = MicropubClient(client_id='http://reader.kylewm.com')
 login_mgr = LoginManager()
 login_mgr.login_view = 'login'
 

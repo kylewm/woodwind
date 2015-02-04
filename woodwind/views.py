@@ -9,6 +9,7 @@ import mf2py
 import mf2util
 import requests
 import urllib
+import cgi
 
 views = flask.Blueprint('views', __name__)
 
@@ -74,6 +75,12 @@ def edit_feed():
     return flask.redirect(flask.url_for('.feeds'))
 
 
+@views.route('/logout')
+def logout():
+    flask_login.logout_user()
+    return flask.redirect(flask.url_for('.index'))
+    
+
 @views.route('/login')
 def login():
     me = flask.request.args.get('me')
@@ -81,7 +88,7 @@ def login():
         return micropub.authorize(
             me, flask.url_for('.login_callback', _external=True),
             next_url=flask.request.args.get('next'),
-            scope='write')
+            scope='post')
     return flask.render_template('login.jinja2')
 
 
@@ -89,11 +96,11 @@ def login():
 @micropub.authorized_handler
 def login_callback(resp):
     if not resp.me:
-        flask.flash('Login error: ' + resp.error)
+        flask.flash(cgi.escape('Login error: ' + resp.error))
         return flask.redirect(flask.url_for('.login'))
 
     if resp.error:
-        flask.flash('Warning: ' + resp.error)
+        flask.flash(cgi.escape('Warning: ' + resp.error))
 
     domain = urllib.parse.urlparse(resp.me).netloc
     user = load_user(domain)
@@ -129,7 +136,7 @@ def subscribe():
                 feeds = find_possible_feeds(origin)
                 if not feeds:
                     flask.flash('No feeds found for: ' + origin)
-                    return flask.redirect(flask.url_for('.subscribe'))
+                    return flask.redirect(flask.url_for('.index'))
                 if len(feeds) > 1:
                     return flask.render_template(
                         'select-feed.jinja2', origin=origin, feeds=feeds)

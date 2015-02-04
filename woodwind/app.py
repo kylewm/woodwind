@@ -3,6 +3,7 @@ from .views import views
 from .api import api
 from config import Config
 import flask
+import logging
 
 
 def create_app():
