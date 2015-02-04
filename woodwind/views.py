@@ -217,7 +217,7 @@ def find_possible_feeds(origin):
 
         hfeed = mf2util.interpret_feed(mf2py.parse(doc=resp.text), origin)
         if hfeed.get('entries'):
-            feeds.append({
+            feeds.insert(0,{
                 'origin': origin,
                 'feed': origin,
                 'type': 'html',
