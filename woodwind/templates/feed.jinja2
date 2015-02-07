@@ -1,14 +1,12 @@
 {% extends "base.jinja2" %}
 {% block head %}
-<script src="http://code.jquery.com/jquery-2.1.3.min.js"></script>
 <script src="{{url_for('static', filename='feed.js')}}"></script>
 {% endblock head %}
 
 {% block header %}
   {% if current_user.is_authenticated() %}
     <form action="{{ url_for('.subscribe') }}" method="POST">
-      <input type="url" id="origin" name="origin" placeholder="Feed URL" />
-      <button type="submit" id="subscribe">Subscribe</button>
+      <input type="url" id="origin" name="origin" placeholder="Subscribe to URL" />
     </form>
   {% endif %}
 {% endblock header %}

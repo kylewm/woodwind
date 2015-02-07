@@ -12,7 +12,6 @@ bleach.ALLOWED_ATTRIBUTES.update({
 })
 
 
-
 users_to_feeds = db.Table(
     'users_to_feeds', db.Model.metadata,
     db.Column('user_id', db.Integer, db.ForeignKey('user.id'), index=True),
@@ -21,10 +20,11 @@ users_to_feeds = db.Table(
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    url = db.Column(db.String(256))
     domain = db.Column(db.String(256))
     micropub_endpoint = db.Column(db.String(512))
     access_token = db.Column(db.String(512))
-    
+
     # Flask-Login integration
     def is_authenticated(self):
         return True

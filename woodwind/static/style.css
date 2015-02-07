@@ -369,6 +369,15 @@ header, main {
 header {
   margin-bottom: 1em; }
 
+ul#navigation {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  float: right; }
+  ul#navigation li {
+    display: inline-block;
+    padding: 3px; }
+
 .pager {
   text-align: center;
   margin: 1em 0; }
@@ -404,8 +413,19 @@ article {
     font-size: 1.2em;
     font-weight: bold; }
 
-form textarea {
-  width: 90%; }
+label {
+  font-weight: bold;
+  display: block; }
+
+textarea, input[type="text"], input[type="url"] {
+  width: 100%;
+  margin: 0.25em 0; }
+
+button {
+  padding: 0.25em; }
+
+form {
+  margin: 1em 0; }
 
 @media only screen and (max-width: 800px) {
   article header img {

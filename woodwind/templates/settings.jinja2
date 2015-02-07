@@ -1,0 +1,46 @@
+{% extends "base.jinja2" %}
+{% block body %}
+  <main>
+
+    <!-- reply via micropub -->
+
+    {% if current_user.micropub_endpoint or current_user.access_token %}
+      <form>
+        <label>Micropub Endpoint</label>
+        <input type="text" value="{{ current_user.micropub_endpoint }}" readonly />
+
+        <label>Access Token</label>
+        <input type="text" value="{{ current_user.access_token }}" readonly />
+      </form>
+
+      <form action="{{ url_for('.authorize') }}" method="POST">
+        <button type="submit">
+          Reauthorize Micropub
+        </button>
+        <input type="hidden" name="next" value="{{ request.path }}" />
+      </form>
+
+      <form action="{{ url_for('.deauthorize') }}" method="POST">
+        <button type="submit">Revoke Credentials</button>
+        <input type="hidden" name="next" value="{{ request.path }}" />
+      </form>
+
+{% else %}
+  <form action="{{ url_for('.authorize') }}" method="POST">
+    <button type="submit">
+          Authorize Micropub
+        </button>
+        <input type="hidden" name="next" value="{{ request.path }}" />
+      </form>
+    {% endif %}
+
+    <!-- reply via indie-config -->
+
+
+
+    <!-- configure endpoints manually -->
+
+
+
+  </main>
+{% endblock body %}

@@ -5,23 +5,38 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Woodwind</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"/>
+  <script src="http://code.jquery.com/jquery-2.1.3.min.js"></script>
   {% block head %}{% endblock %}
 </head>
 <body>
 
   <header>
-    <h1 class="h-x-app">Woodwind</h1>
-
     {% if current_user.is_authenticated() %}
-      <div class="logged-in">{{ current_user.domain }}
-        (<a href="{{ url_for('.logout') }}">Logout</a>)
-      </div>
+      <ul id="navigation">
+        <li>
+          <a href="{{ url_for('.index') }}">Home</a>
+        </li>
+        <li>
+          <a href="{{ url_for('.feeds') }}">Feeds</a>
+        </li>
+        <li>
+          <a href="{{ url_for('.settings') }}">Settings</a>
+        </li>
+        <li>
+          {{ current_user.domain }}
+          (<a href="{{ url_for('.logout') }}">Logout</a>)
+        </li>
+      </ul>
+      <h1 class="h-x-app">Woodwind</h1>
     {% else %}
-      <form action="{{ url_for('.login') }}" method="GET">
+      <h1 class="h-x-app">Woodwind</h1>
+      <form action="{{ url_for('.login') }}" method="POST">
         <input type="text" name="me" placeholder="mydomain.com" />
+        <input type="hidden" name="next" placeholder="{{ request.path }}" />
         <button type="submit">Login</button>
       </form>
     {% endif %}
+
     {% block header %}{% endblock %}
     {% for message in get_flashed_messages() %}
       <div class="flash">{{ message | safe }}</div>

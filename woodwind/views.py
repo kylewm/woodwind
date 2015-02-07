@@ -36,9 +36,17 @@ def install():
 
 
 @views.route('/feeds')
+@flask_login.login_required
 def feeds():
     feeds = flask_login.current_user.feeds
-    return flask.render_template('feeds.jinja2', feeds=feeds)
+    sorted_feeds = sorted(feeds, key=lambda f: f.name and f.name.lower())
+    return flask.render_template('feeds.jinja2', feeds=sorted_feeds)
+
+
+@views.route('/settings')
+@flask_login.login_required
+def settings():
+    return flask.render_template('settings.jinja2')
 
 
 @views.route('/update_feed')
@@ -79,21 +87,19 @@ def edit_feed():
 def logout():
     flask_login.logout_user()
     return flask.redirect(flask.url_for('.index'))
-    
 
-@views.route('/login')
+
+@views.route('/login', methods=['GET', 'POST'])
 def login():
-    me = flask.request.args.get('me')
-    if me:
-        return micropub.authorize(
-            me, flask.url_for('.login_callback', _external=True),
-            next_url=flask.request.args.get('next'),
-            scope='post')
+    if flask.request.method == 'POST':
+        return micropub.authenticate(
+            flask.request.form.get('me'),
+            next_url=flask.request.form.get('next'))
     return flask.render_template('login.jinja2')
 
 
 @views.route('/login-callback')
-@micropub.authorized_handler
+@micropub.authenticated_handler
 def login_callback(resp):
     if not resp.me:
         flask.flash(cgi.escape('Login error: ' + resp.error))
@@ -109,12 +115,48 @@ def login_callback(resp):
         user.domain = domain
         db.session.add(user)
 
+    user.url = resp.me
+    db.session.commit()
+    flask_login.login_user(user, remember=True)
+    return flask.redirect(resp.next_url or flask.url_for('.index'))
+
+
+@views.route('/authorize', methods=['POST'])
+@flask_login.login_required
+def authorize():
+    return micropub.authorize(
+        me=flask_login.current_user.url,
+        next_url=flask.request.form.get('next'),
+        scope='post')
+
+
+@views.route('/micropub-callback')
+@micropub.authorized_handler
+def micropub_callback(resp):
+    if not resp.me or resp.error:
+        flask.flash(cgi.escape('Authorize error: ' + resp.error))
+        return flask.redirect(flask.url_for('.login'))
+
+    domain = urllib.parse.urlparse(resp.me).netloc
+    user = load_user(domain)
+    if not user:
+        flask.flash(cgi.escape('Unknown user for domain: ' + domain))
+        return flask.redirect(flask.url_for('.login'))
+
     user.micropub_endpoint = resp.micropub_endpoint
     user.access_token = resp.access_token
     db.session.commit()
-
-    flask_login.login_user(user, remember=True)
     return flask.redirect(resp.next_url or flask.url_for('.index'))
+
+
+@views.route('/deauthorize', methods=['POST'])
+@flask_login.login_required
+def deauthorize():
+    flask_login.current_user.micropub_endpoint = None
+    flask_login.current_user.access_token = None
+    db.session.commit()
+    return flask.redirect(flask.request.form.get('next')
+                          or flask.url_for('.index'))
 
 
 @login_mgr.user_loader
@@ -156,7 +198,8 @@ def add_subscription(origin, feed_url, type):
     if not feed:
         if type == 'html':
             flask.current_app.logger.debug('mf2py parsing %s', feed_url)
-            parsed = mf2util.interpret_feed(mf2py.parse(url=feed_url), feed_url)
+            parsed = mf2util.interpret_feed(
+                mf2py.Parse(url=feed_url).to_dict(), feed_url)
             name = parsed.get('name')
             if not name or len(name) > 140:
                 p = urllib.parse.urlparse(origin)
@@ -215,7 +258,8 @@ def find_possible_feeds(origin):
                     'type': 'xml',
                 })
 
-        hfeed = mf2util.interpret_feed(mf2py.parse(doc=resp.text), origin)
+        hfeed = mf2util.interpret_feed(
+            mf2py.Parser(doc=resp.text).to_dict(), origin)
         if hfeed.get('entries'):
             feeds.append({
                 'origin': origin,
