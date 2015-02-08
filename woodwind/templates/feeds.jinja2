@@ -9,7 +9,11 @@
 {% endblock header %}
 
 {% block body %}
-
+  <form style="display:inline;"
+        action="{{ url_for('.update_all') }}" method="POST">
+        <button type="submit">Update All</button>
+  </form>
+  
   {% for feed in feeds %}
     <article>
       <form style="display:inline"
@@ -22,7 +26,7 @@
             <button type="submit">Save</button>
       </form>
       <form style="display:inline;"
-            action="{{ url_for('.update_feed') }}" method="GET">
+            action="{{ url_for('.update_feed') }}" method="POST">
             <input type="hidden" name="id" value="{{ feed.id }}"/>
             <button type="submit">Update</button>
       </form>

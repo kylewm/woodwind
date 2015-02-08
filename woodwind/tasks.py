@@ -60,20 +60,20 @@ def update_feed(feed_id):
 
 
 def process_feed_for_new_entries(session, feed):
+    result = None
     try:
         if feed.type == 'xml':
             result = list(process_xml_feed_for_new_entries(session, feed))
         elif feed.type == 'html':
             result = list(process_html_feed_for_new_entries(session, feed))
-        else:
-            result = None
-        return result
     finally:
         now = datetime.datetime.utcnow()
         feed.last_checked = now
         if result:
             feed.last_updated = now
         session.commit()
+    return result
+
 
 
 def process_xml_feed_for_new_entries(session, feed):
@@ -156,7 +156,7 @@ def process_html_feed_for_new_entries(session, feed):
 
     now = datetime.datetime.utcnow()
     parsed = mf2util.interpret_feed(
-        mf2py.parse(url=feed.feed), feed.feed)
+        mf2py.Parser(url=feed.feed).to_dict(), feed.feed)
     hfeed = parsed.get('entries', [])
 
     all_uids = [e.get('uid') or e.get('url') for e in hfeed]
@@ -176,7 +176,7 @@ def process_html_feed_for_new_entries(session, feed):
         if not uid or uid in preexisting:
             continue
 
-        # hentry = mf2util.interpret(mf2py.parse(url=url), url)
+        # hentry = mf2util.interpret(mf2py.Parser(url=url).to_dict(), url)
         # permalink = hentry.get('url') or url
         # uid = hentry.get('uid') or uid
         entry = Entry(

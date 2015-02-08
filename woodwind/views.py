@@ -49,14 +49,24 @@ def settings():
     return flask.render_template('settings.jinja2')
 
 
-@views.route('/update_feed')
+@views.route('/update_feed', methods=['POST'])
+@flask_login.login_required
 def update_feed():
     feed_id = flask.request.args.get('id')
     tasks.update_feed.delay(feed_id)
     return flask.redirect(flask.url_for('.feeds'))
 
 
+@views.route('/update_all', methods=['POST'])
+@flask_login.login_required
+def update_all():
+    for feed in flask_login.current_user.feeds:
+        tasks.update_feed.delay(feed.id)
+    return flask.redirect(flask.url_for('.feeds'))
+
+
 @views.route('/delete_feed', methods=['POST'])
+@flask_login.login_required
 def delete_feed():
     feed_id = flask.request.form.get('id')
     feed = Feed.query.get(feed_id)
@@ -67,6 +77,7 @@ def delete_feed():
 
 
 @views.route('/edit_feed', methods=['POST'])
+@flask_login.login_required
 def edit_feed():
     feed_id = flask.request.form.get('id')
     feed_name = flask.request.form.get('name')
@@ -165,6 +176,7 @@ def load_user(domain):
 
 
 @views.route('/subscribe', methods=['GET', 'POST'])
+@flask_login.login_required
 def subscribe():
     if flask.request.method == 'POST':
         origin = flask.request.form.get('origin')
@@ -199,7 +211,7 @@ def add_subscription(origin, feed_url, type):
         if type == 'html':
             flask.current_app.logger.debug('mf2py parsing %s', feed_url)
             parsed = mf2util.interpret_feed(
-                mf2py.Parse(url=feed_url).to_dict(), feed_url)
+                mf2py.Parser(url=feed_url).to_dict(), feed_url)
             name = parsed.get('name')
             if not name or len(name) > 140:
                 p = urllib.parse.urlparse(origin)
