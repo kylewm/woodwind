@@ -43,10 +43,31 @@ def feeds():
     return flask.render_template('feeds.jinja2', feeds=sorted_feeds)
 
 
-@views.route('/settings')
+@views.route('/settings', methods=['GET', 'POST'])
 @flask_login.login_required
 def settings():
-    return flask.render_template('settings.jinja2')
+    settings = flask_login.current_user.settings or {}
+    if flask.request.method == 'GET':
+        return flask.render_template('settings.jinja2', settings=settings)
+
+    settings = dict(settings)
+    reply_method = flask.request.form.get('reply-method')
+    settings['reply-method'] = reply_method
+
+    if reply_method == 'micropub':
+        pass
+    elif reply_method == 'indie-config':
+        settings['indie-config-actions'] = flask.request.form.getlist(
+            'indie-config-action')
+    elif reply_method == 'action-urls':
+        zipped = zip(
+            flask.request.form.getlist('action'),
+            flask.request.form.getlist('action-url'))
+        settings['action-urls'] = [[k, v] for k, v in zipped if k and v]
+
+    flask_login.current_user.settings = settings
+    db.session.commit()
+    return flask.render_template('settings.jinja2', settings=settings)
 
 
 @views.route('/update_feed', methods=['POST'])
@@ -114,7 +135,7 @@ def login():
 def login_callback(resp):
     if not resp.me:
         flask.flash(cgi.escape('Login error: ' + resp.error))
-        return flask.redirect(flask.url_for('.login'))
+        return flask.redirect(flask.url_for('.index'))
 
     if resp.error:
         flask.flash(cgi.escape('Warning: ' + resp.error))
@@ -132,12 +153,12 @@ def login_callback(resp):
     return flask.redirect(resp.next_url or flask.url_for('.index'))
 
 
-@views.route('/authorize', methods=['POST'])
+@views.route('/authorize')
 @flask_login.login_required
 def authorize():
     return micropub.authorize(
         me=flask_login.current_user.url,
-        next_url=flask.request.form.get('next'),
+        next_url=flask.request.args.get('next'),
         scope='post')
 
 
@@ -146,13 +167,13 @@ def authorize():
 def micropub_callback(resp):
     if not resp.me or resp.error:
         flask.flash(cgi.escape('Authorize error: ' + resp.error))
-        return flask.redirect(flask.url_for('.login'))
+        return flask.redirect(flask.url_for('.index'))
 
     domain = urllib.parse.urlparse(resp.me).netloc
     user = load_user(domain)
     if not user:
         flask.flash(cgi.escape('Unknown user for domain: ' + domain))
-        return flask.redirect(flask.url_for('.login'))
+        return flask.redirect(flask.url_for('.index'))
 
     user.micropub_endpoint = resp.micropub_endpoint
     user.access_token = resp.access_token
@@ -160,13 +181,13 @@ def micropub_callback(resp):
     return flask.redirect(resp.next_url or flask.url_for('.index'))
 
 
-@views.route('/deauthorize', methods=['POST'])
+@views.route('/deauthorize')
 @flask_login.login_required
 def deauthorize():
     flask_login.current_user.micropub_endpoint = None
     flask_login.current_user.access_token = None
     db.session.commit()
-    return flask.redirect(flask.request.form.get('next')
+    return flask.redirect(flask.request.args.get('next')
                           or flask.url_for('.index'))
 
 

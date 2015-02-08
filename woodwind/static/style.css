@@ -415,11 +415,32 @@ article {
 
 label {
   font-weight: bold;
-  display: block; }
+  display: inline-block;
+  margin-bottom: 5px;
+  max-width: 100%; }
 
 textarea, input[type="text"], input[type="url"] {
   width: 100%;
   margin: 0.25em 0; }
+  textarea.input-25, input[type="text"].input-25, input[type="url"].input-25 {
+    width: 23%; }
+  textarea.input-50, input[type="text"].input-50, input[type="url"].input-50 {
+    width: 48%; }
+  textarea.input-75, input[type="text"].input-75, input[type="url"].input-75 {
+    width: 73%; }
+
+.reply-area {
+  text-align: center; }
+  .reply-area a {
+    display: inline-block;
+    padding: 0.2em;
+    border: 1px solid #687D77;
+    border-radius: 4px;
+    background-color: #ECEBF0;
+    text-decoration: none;
+    color: #484A47;
+    min-width: 50px;
+    text-align: center; }
 
 button {
   padding: 0.25em; }

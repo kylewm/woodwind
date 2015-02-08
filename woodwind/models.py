@@ -1,4 +1,5 @@
 import bleach
+import json
 from .extensions import db
 
 
@@ -10,6 +11,24 @@ bleach.ALLOWED_ATTRIBUTES.update({
     'video': ['preload', 'controls', 'src'],
     'td': ['colspan'],
 })
+
+
+class JsonType(db.TypeDecorator):
+    """Represents an immutable structure as a json-encoded string.
+    http://docs.sqlalchemy.org/en/rel_0_9/core/types.html#marshal-json-strings
+    """
+    impl = db.Text
+
+    def process_bind_param(self, value, dialect):
+        if value is not None:
+            value = json.dumps(value)
+
+        return value
+
+    def process_result_value(self, value, dialect):
+        if value is not None:
+            value = json.loads(value)
+        return value
 
 
 users_to_feeds = db.Table(
@@ -24,6 +43,7 @@ class User(db.Model):
     domain = db.Column(db.String(256))
     micropub_endpoint = db.Column(db.String(512))
     access_token = db.Column(db.String(512))
+    settings = db.Column(JsonType)
 
     # Flask-Login integration
     def is_authenticated(self):
