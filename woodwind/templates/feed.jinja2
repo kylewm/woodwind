@@ -1,6 +1,13 @@
 {% extends "base.jinja2" %}
 {% block head %}
-<script src="{{url_for('static', filename='feed.js')}}"></script>
+  <script src="{{url_for('static', filename='feed.js')}}"></script>
+
+  {% if current_user and current_user.settings
+        and current_user.settings.get('reply-method') == 'indie-config' %}
+    <script src="{{url_for('static', filename='indieconfig.js')}}"></script>
+    <script src="{{url_for('static', filename='webaction.js')}}"></script>
+  {% endif %}
+
 {% endblock head %}
 
 {% block header %}
@@ -34,28 +41,9 @@
       {% endif %}
       <footer>
         <a href="{{ entry.permalink }}">{{ entry.published }}</a>
-
-        {% if current_user.micropub_endpoint %}
-          <form class="like-form" action="{{ current_user.micropub_endpoint }}" method="POST" style="display:inline">
-            <input type="hidden" name="access_token" value="{{current_user.access_token}}"/>
-            <input type="hidden" name="h" value="entry"/>
-            <input type="hidden" name="like-of" value="{{ entry.permalink }}"/>
-            <button type="submit" class="like-button">Like</button>
-            <span class="submit-response"></span>
-          </form>
-
-          <button class="show-reply-form">Reply</button>
-
-          <form class="reply-form" action="{{ current_user.micropub_endpoint }}" method="POST">
-            <input type="hidden" name="access_token" value="{{current_user.access_token}}"/>
-            <input type="hidden" name="h" value="entry"/>
-            <input type="hidden" name="in-reply-to" value="{{ entry.permalink }}"/>
-            <textarea name="content"></textarea>
-            <button type="submit" class="reply-button">Reply</button>
-            <span class="submit-response"></span>
-          </form>
-        {% endif %}
-
+        <div class="reply-area">
+          {% include '_reply.jinja2' with context %}
+        </div>
       </footer>
     </article>
   {% endfor %}

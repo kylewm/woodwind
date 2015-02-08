@@ -92,12 +92,39 @@ article {
 
 label {
     font-weight: bold;
-    display: block;
+    display: inline-block;
+    margin-bottom: 5px;
+    max-width: 100%;
 }
 
 textarea, input[type="text"], input[type="url"] {
     width: 100%;
-    margin: 0.25em 0 ;
+    margin: 0.25em 0;
+
+    &.input-25 {
+        width: 23%;
+    }
+    &.input-50 {
+        width: 48%;
+    }
+    &.input-75 {
+        width: 73%;
+    }
+}
+
+.reply-area {
+    text-align: center;
+    a {
+        display: inline-block;
+        padding: 0.2em;
+        border: 1px solid $sirocco;
+        border-radius: 4px;
+        background-color: $athens-gray;
+        text-decoration: none;
+        color: $lunar-green;
+        min-width: 50px;
+        text-align: center;
+    }
 }
 
 button {

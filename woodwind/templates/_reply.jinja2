@@ -1,0 +1,34 @@
+{% set settings = current_user.settings or {} %}
+{% set replyMethod = settings.get('reply-method') %}
+
+{% if replyMethod == 'micropub' and current_user.micropub_endpoint %}
+  <form class="like-form" action="{{ current_user.micropub_endpoint }}" method="POST" style="display:inline">
+    <input type="hidden" name="access_token" value="{{current_user.access_token}}"/>
+    <input type="hidden" name="h" value="entry"/>
+    <input type="hidden" name="like-of" value="{{ entry.permalink }}"/>
+    <button type="submit" class="like-button">Like</button>
+    <span class="submit-response"></span>
+  </form>
+
+  <button class="show-reply-form">Reply</button>
+
+  <form class="reply-form" action="{{ current_user.micropub_endpoint }}" method="POST">
+    <input type="hidden" name="access_token" value="{{current_user.access_token}}"/>
+    <input type="hidden" name="h" value="entry"/>
+    <input type="hidden" name="in-reply-to" value="{{ entry.permalink }}"/>
+    <textarea name="content"></textarea>
+    <button type="submit" class="reply-button">Reply</button>
+    <span class="submit-response"></span>
+  </form>
+
+{% elif replyMethod == 'indie-config' %}
+  {% for action in settings.get('indie-config-actions', []) %}
+    <indie-action with="{{ entry.permalink }}" do="{{ action }}">
+      <a class="reply-link" href="#">{{ action | capitalize }}</a>
+    </indie-action>
+  {% endfor %}
+{% elif replyMethod == 'action-urls' %}
+  {% for action, url in settings.get('action-urls', []) %}
+    <a class="reply-link" href="{{ url | replace('{url}', entry.permalink) }}" target="_blank">{{ action | capitalize }}</a>
+  {% endfor %}
+{% endif %}

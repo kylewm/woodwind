@@ -2,45 +2,123 @@
 {% block body %}
   <main>
 
-    <!-- reply via micropub -->
+    <form name="settings" action="{{ url_for('.settings') }}" method="POST">
+      <button type="submit">Save Changes</button>
 
-    {% if current_user.micropub_endpoint or current_user.access_token %}
-      <form>
-        <label>Micropub Endpoint</label>
-        <input type="text" value="{{ current_user.micropub_endpoint }}" readonly />
+      <div id="reply-mechanism-settings">
+        {% set reply_method = settings.get('reply-method') %}
 
-        <label>Access Token</label>
-        <input type="text" value="{{ current_user.access_token }}" readonly />
-      </form>
+        <h2>Reply Mechanism</h2>
+        <p>
+          <input type="radio" id="reply-method-micropub"
+                 name="reply-method" value="micropub"
+                 {% if reply_method == 'micropub' %}checked{% endif %}/>
+          <label for="reply-method-micropub">Micropub.</label>
+          Each post will have a Like and Reply button that will post content to your site directly via micropub. See <a href="https://indiewebcamp.com/Micropub">Micropub</a> for details.
+        </p>
 
-      <form action="{{ url_for('.authorize') }}" method="POST">
-        <button type="submit">
-          Reauthorize Micropub
-        </button>
-        <input type="hidden" name="next" value="{{ request.path }}" />
-      </form>
+        <p>
+          <input type="radio" id="reply-method-indie-config"
+                 name="reply-method" value="indie-config"
+                 {% if reply_method == 'indie-config' %}checked{% endif %}/>
+          <label for="reply-method-indie-config">Indie-config.</label>
+          Clicking Like or Reply will invoke your <code>web+action</code> handler if registered. See <a href="https://indiewebcamp.com/indie-config">indie-config</a> for details.
+        </p>
 
-      <form action="{{ url_for('.deauthorize') }}" method="POST">
-        <button type="submit">Revoke Credentials</button>
-        <input type="hidden" name="next" value="{{ request.path }}" />
-      </form>
+        <p>
+          <input type="radio" id="reply-method-action-urls"
+                 name="reply-method" value="action-urls"
+                 {% if reply_method == 'action-urls' %}checked{% endif %}/>
+          <label for="reply-method-action-urls">Configurable action urls.</label>
+          Configure Woodwind with your preferred web action handlers. The placeholder <code>{url}</code> will be replaced with the permalink URL of each entry.
+        </p>
+      </div>
 
-{% else %}
-  <form action="{{ url_for('.authorize') }}" method="POST">
-    <button type="submit">
-          Authorize Micropub
-        </button>
-        <input type="hidden" name="next" value="{{ request.path }}" />
-      </form>
-    {% endif %}
+      <!-- reply via micropub -->
 
-    <!-- reply via indie-config -->
+      <div id="micropub-settings">
+        <h2>Micropub</h2>
+        <p>
+        Configure micropub credentials.
+        </p>
+        {% if current_user.micropub_endpoint or current_user.access_token %}
+          <input type="text" value="{{ current_user.micropub_endpoint }}" readonly />
+          <input type="text" value="{{ current_user.access_token }}" readonly />
+          <p>
+            <a href="{{url_for('.authorize', next=request.path)}}">Reauthorize Micropub</a>
+          </p>
+          <p>
+            <a href="{{url_for('.deauthorize', next=request.path)}}">Revoke Credentials</a>
+          </p>
+        {% else %}
+          <p>
+            <a href="{{url_for('.authorize', next=request.path)}}">Authorize Micropub</a>
+          </p>
+        {% endif %}
+      </div>
 
+      <!-- reply via indie-config -->
 
+      <div id="indie-config-settings">
+        <h2>Indie-Config</h2>
+        <p>
+          Select indie-config actions.
+        </p>
+        {% set selectedActions = settings.get('indie-config-actions', []) %}
 
-    <!-- configure endpoints manually -->
+        {% for action in ['like', 'favorite', 'reply', 'repost', 'bookmark'] %}
+          <label>
+            <input type="checkbox" name="indie-config-action" value="{{ action }}"
+                   {% if action in selectedActions %}checked{% endif %} />
+            {{ action | capitalize }}
+          </label><br/>
+        {% endfor %}
+        </p>
+      </div>
+      <!-- configure endpoints manually -->
 
+      <div id="action-urls-settings">
+        <h2>Action URLs</h2>
+        <div id="action-urls-inputs">
+          {% set actionUrls = settings.get('action-urls', {}) %}
+          {% for action, url in actionUrls %}
+            <input type="text" name="action" class="input-25" value="{{action}}" />
+            <input type="text" name="action-url" class="input-75" value="{{url}}" />
+          {% endfor %}
+          <input type="text" id="action-1" name="action" class="input-25" placeholder="Like" />
+          <input type="text" id="action-url-1" name="action-url" class="input-75" placeholder="http://example.com/new/like?url={url}" />
 
+        </div>
+        <button id="add-action">Add</button>
 
+    </form>
   </main>
+
+<script>
+
+$('#add-action').click(function(evt) {
+    evt.preventDefault();
+    $('#action-1').clone().appendTo('#action-urls-inputs');
+    $('#action-url-1').clone().appendTo('#action-urls-inputs');
+});
+
+function showRelevantSection() {
+    var replyMethod = $('input[name=reply-method]:checked').val();
+    $('#micropub-settings').hide();
+    $('#indie-config-settings').hide();
+    $('#action-urls-settings').hide();
+    if (replyMethod == 'micropub') {
+        $('#micropub-settings').show();
+    } else if (replyMethod == 'indie-config') {
+        $('#indie-config-settings').show();
+    } else if (replyMethod == 'action-urls') {
+        $('#action-urls-settings').show();
+    }
+}
+
+$('input[name=reply-method]').change(showRelevantSection);
+$(showRelevantSection);
+
+</script>
+
 {% endblock body %}
