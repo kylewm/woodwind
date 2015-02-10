@@ -21,7 +21,11 @@ def index():
     if flask_login.current_user.is_authenticated():
         per_page = flask.current_app.config.get('PER_PAGE', 30)
         offset = (page - 1) * per_page
-        feed_ids = set(f.id for f in flask_login.current_user.feeds)
+        if 'feed' in flask.request.args:
+            feed_ids = [int(flask.request.args.get('feed'))]
+        else:
+            feed_ids = set(f.id for f in flask_login.current_user.feeds)
+
         if feed_ids:
             entries = Entry.query.filter(Entry.feed_id.in_(feed_ids))\
                                  .order_by(Entry.published.desc())\
@@ -73,7 +77,7 @@ def settings():
 @views.route('/update_feed', methods=['POST'])
 @flask_login.login_required
 def update_feed():
-    feed_id = flask.request.args.get('id')
+    feed_id = flask.request.form.get('id')
     tasks.update_feed.delay(feed_id)
     return flask.redirect(flask.url_for('.feeds'))
 
@@ -301,3 +305,12 @@ def find_possible_feeds(origin):
                     'type': 'xml',
                 })
     return feeds
+
+
+@views.app_template_global()
+def url_for_other_page(page):
+    """http://flask.pocoo.org/snippets/44/#URL+Generation+Helper
+    """
+    args = flask.request.view_args.copy()
+    args['page'] = page
+    return flask.url_for(flask.request.endpoint, **args)

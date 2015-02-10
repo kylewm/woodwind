@@ -159,40 +159,40 @@ def process_html_feed_for_new_entries(session, feed):
         mf2py.Parser(url=feed.feed).to_dict(), feed.feed)
     hfeed = parsed.get('entries', [])
 
-    all_uids = [e.get('uid') or e.get('url') for e in hfeed]
-    if all_uids:
-        preexisting = set(row[0] for row in session.query(Entry.uid)
-                          .filter(Entry.uid.in_(all_uids))
-                          .filter(Entry.feed == feed))
-    else:
-        preexisting = set()
-
-    # logger.debug('preexisting urls: %r', preexisting)
-
     for hentry in hfeed:
         permalink = url = hentry.get('url')
         uid = hentry.get('uid') or url
-
-        if not uid or uid in preexisting:
+        if not uid:
             continue
+        
+        entry = session.query(Entry)\
+            .filter(Entry.feed == feed)\
+            .filter(Entry.uid == uid).first()
 
         # hentry = mf2util.interpret(mf2py.Parser(url=url).to_dict(), url)
         # permalink = hentry.get('url') or url
         # uid = hentry.get('uid') or uid
-        entry = Entry(
-            feed=feed,
-            published=hentry.get('published') or now,
-            updated=hentry.get('updated'),
-            uid=uid,
-            permalink=permalink,
-            retrieved=now,
-            title=hentry.get('name'),
-            content=hentry.get('content'),
-            author_name=hentry.get('author', {}).get('name'),
-            author_photo=hentry.get('author', {}).get('photo')
-            or fallback_photo(feed.origin),
-            author_url=hentry.get('author', {}).get('url'))
-        session.add(entry)
+
+        name = hentry.get('name')
+        content = hentry.get('content')
+
+        if not entry:
+            entry = Entry(feed=feed, uid=uid, retrieved=now)
+            session.add(entry)
+                    
+        entry.published = hentry.get('published') or entry.published or now
+        entry.updated = hentry.get('updated') or entry.updated
+        entry.permalink = permalink
+        if content:
+            entry.title = name
+            entry.content = content
+        else:
+            entry.title = None
+            entry.content = name
+        entry.author_name = hentry.get('author', {}).get('name')
+        entry.author_photo = hentry.get('author', {}).get('photo') or fallback_photo(feed.origin)
+        entry.author_url = hentry.get('author', {}).get('url')
+
         session.commit()
         logger.debug('saved entry: %s', entry.permalink)
         yield entry

@@ -50,7 +50,7 @@
 
   {% if entries %}
     <div class="pager">
-      <a id="older-link" href="{{ url_for(request.endpoint, page=page+1)}}">Older</a>
+      <a id="older-link" href="{{ url_for_other_page(page=page+1) }}">Older</a>
     </div>
   {% endif %}
 
