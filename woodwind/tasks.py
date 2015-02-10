@@ -56,7 +56,7 @@ def update_feed(feed_id):
         logger.info('Updating {}'.format(feed))
         process_feed_for_new_entries(session, feed)
 
-        
+
 def process_feed_for_new_entries(session, feed):
     now = datetime.datetime.utcnow()
     found_new = False
@@ -76,17 +76,17 @@ def process_feed_for_new_entries(session, feed):
             if not old or not is_content_equal(old, entry):
                 # set a default value for published if none is provided
                 if not entry.published:
-                    entry.published = (old.published or now) if old else now
-                    
+                    entry.published = (old and old.published) or now
+
                 if old:
                     feed.entries.remove(old)
                     session.delete(old)
-                    
+
                 feed.entries.append(entry)
                 session.commit()
                 found_new = True
             else:
-                logger.info('skipping previously seen post {}'.format(old.permalink))
+                logger.info('skipping previously seen post %s', old.permalink)
 
     finally:
         feed.last_checked = now
@@ -104,7 +104,7 @@ def is_content_equal(e1, e2):
             and e1.author_name == e2.author_name
             and e1.author_url == e2.author_url
             and e1.author_photo == e2.author_photo)
-    
+
 
 def process_xml_feed_for_new_entries(session, feed):
     logger.debug('fetching xml feed: %s', feed)
@@ -128,7 +128,7 @@ def process_xml_feed_for_new_entries(session, feed):
 
         if 'updated_parsed' in p_entry:
             updated = datetime.datetime.fromtimestamp(
-                time.mktime(p_entry.updated_parsed)) 
+                time.mktime(p_entry.updated_parsed))
         else:
             updated = None
 
@@ -203,7 +203,8 @@ def process_html_feed_for_new_entries(session, feed):
             title=title,
             content=content,
             author_name=hentry.get('author', {}).get('name'),
-            author_photo=hentry.get('author', {}).get('photo') or fallback_photo(feed.origin),
+            author_photo=hentry.get('author', {}).get('photo')
+            or fallback_photo(feed.origin),
             author_url=hentry.get('author', {}).get('url'))
 
         logger.debug('built entry: %s', entry.permalink)

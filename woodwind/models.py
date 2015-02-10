@@ -1,5 +1,6 @@
 import bleach
 import json
+import binascii
 from .extensions import db
 
 
@@ -84,6 +85,9 @@ class Feed(db.Model):
     # last time we checked this feed
     last_checked = db.Column(db.DateTime)
     etag = db.Column(db.String(512))
+
+    def get_feed_code(self):
+        return binascii.hexlify(self.feed.encode())
 
     def __repr__(self):
         return '<Feed:{},{}>'.format(self.name, self.feed)

@@ -13,10 +13,10 @@
         action="{{ url_for('.update_all') }}" method="POST">
         <button type="submit">Update All</button>
   </form>
-  
+
   {% for feed in feeds %}
     <article>
-      
+
       <form style="display:inline"
             action="{{ url_for('.edit_feed') }}" method="POST">
             <input type="hidden" name="id" value="{{ feed.id }}"/>
@@ -37,7 +37,7 @@
             <button type="submit">Delete</button>
       </form>
       <br/>
-      <a href="{{ url_for('.index', feed=feed.id) }}">View posts from this feed</a>
+      <a href="{{ url_for('.index', feed=feed.get_feed_code()) }}">View posts from this feed</a>
     </article>
   {% endfor %}
 

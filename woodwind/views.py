@@ -2,6 +2,7 @@ from . import tasks
 from .extensions import db, login_mgr, micropub
 from .models import Feed, Entry, User
 import flask.ext.login as flask_login
+import binascii
 import bs4
 import feedparser
 import flask
@@ -21,15 +22,19 @@ def index():
     if flask_login.current_user.is_authenticated():
         per_page = flask.current_app.config.get('PER_PAGE', 30)
         offset = (page - 1) * per_page
-        if 'feed' in flask.request.args:
-            feed_ids = [int(flask.request.args.get('feed'))]
-        else:
-            feed_ids = set(f.id for f in flask_login.current_user.feeds)
+        entry_query = Entry.query\
+                           .join(Entry.feed)\
+                           .join(Feed.users)\
+                           .filter(User.id == flask_login.current_user.id)
 
-        if feed_ids:
-            entries = Entry.query.filter(Entry.feed_id.in_(feed_ids))\
-                                 .order_by(Entry.published.desc())\
-                                 .offset(offset).limit(per_page).all()
+        if 'feed' in flask.request.args:
+            feed_hex = flask.request.args.get('feed').encode()
+            feed_url = binascii.unhexlify(feed_hex).decode('utf-8')
+            entry_query = entry_query.filter(Feed.feed == feed_url)
+
+        entries = entry_query.order_by(Entry.published.desc())\
+                             .offset(offset).limit(per_page).all()
+
     return flask.render_template('feed.jinja2', entries=entries, page=page)
 
 
@@ -312,5 +317,7 @@ def url_for_other_page(page):
     """http://flask.pocoo.org/snippets/44/#URL+Generation+Helper
     """
     args = flask.request.view_args.copy()
+    args.update(flask.request.args)
     args['page'] = page
+
     return flask.url_for(flask.request.endpoint, **args)

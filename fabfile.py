@@ -24,8 +24,7 @@ def restart():
     with cd(REMOTE_PATH):
         with prefix("source venv/bin/activate"):
             run("pip install -r requirements.txt")
-            # run("uwsgi --reload /tmp/redwind.pid")
-            run("supervisorctl restart woodwind woodwind-celery")
+            run("supervisorctl restart ww:*")
 
 
 def deploy():

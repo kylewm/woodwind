@@ -70,6 +70,8 @@ article {
         img {
             max-width: 64px;
             max-height: 64px;
+            min-width: 48px;
+            min-height: 48px;
             margin-left: -85px;
             float: left;
             border-radius: 4px;
@@ -144,6 +146,8 @@ form {
                 display: inline;
                 max-width: 1.2em;
                 max-height: 1.2em;
+                min-width: inherit;
+                min-height: inherit;
             }
         }
     }
