@@ -54,27 +54,57 @@ def update_feed(feed_id):
     with session_scope() as session:
         feed = session.query(Feed).get(feed_id)
         logger.info('Updating {}'.format(feed))
-        new_entries = process_feed_for_new_entries(session, feed)
-        for entry in new_entries:
-            logger.debug('Got new entry: {}'.format(entry))
+        process_feed_for_new_entries(session, feed)
 
-
+        
 def process_feed_for_new_entries(session, feed):
-    result = None
+    now = datetime.datetime.utcnow()
+    found_new = False
     try:
         if feed.type == 'xml':
-            result = list(process_xml_feed_for_new_entries(session, feed))
+            result = process_xml_feed_for_new_entries(session, feed)
         elif feed.type == 'html':
-            result = list(process_html_feed_for_new_entries(session, feed))
+            result = process_html_feed_for_new_entries(session, feed)
+        else:
+            result = []
+
+        for entry in result:
+            old = session.query(Entry)\
+                .filter(Entry.feed == feed)\
+                .filter(Entry.uid == entry.uid).first()
+            # have we seen this post before
+            if not old or not is_content_equal(old, entry):
+                # set a default value for published if none is provided
+                if not entry.published:
+                    entry.published = (old.published or now) if old else now
+                    
+                if old:
+                    feed.entries.remove(old)
+                    session.delete(old)
+                    
+                feed.entries.append(entry)
+                session.commit()
+                found_new = True
+            else:
+                logger.info('skipping previously seen post {}'.format(old.permalink))
+
     finally:
-        now = datetime.datetime.utcnow()
         feed.last_checked = now
-        if result:
+        if found_new:
             feed.last_updated = now
-        session.commit()
-    return result
 
 
+def is_content_equal(e1, e2):
+    """The criteria for determining if an entry that we've seen before
+    has been updated. If any of these fields have changed, we'll scrub the
+    old entry and replace it with the updated one.
+    """
+    return (e1.title == e2.title
+            and e1.content == e2.content
+            and e1.author_name == e2.author_name
+            and e1.author_url == e2.author_url
+            and e1.author_photo == e2.author_photo)
+    
 
 def process_xml_feed_for_new_entries(session, feed):
     logger.debug('fetching xml feed: %s', feed)
@@ -87,21 +117,13 @@ def process_xml_feed_for_new_entries(session, feed):
     default_author_name = feed_props.get('author_detail', {}).get('name')
     default_author_photo = feed_props.get('logo')
 
-    all_uids = [e.id or e.link for e in parsed.entries]
-    if all_uids:
-        preexisting = set(row[0] for row in session.query(Entry.uid)
-                          .filter(Entry.uid.in_(all_uids))
-                          .filter(Entry.feed == feed))
-    else:
-        preexisting = set()
-
     logger.debug('found {} entries'.format(len(parsed.entries)))
     for p_entry in parsed.entries:
         logger.debug('processing entry {}'.format(p_entry))
         permalink = p_entry.link
         uid = p_entry.id or permalink
 
-        if not uid or uid in preexisting:
+        if not uid:
             continue
 
         if 'updated_parsed' in p_entry:
@@ -114,7 +136,7 @@ def process_xml_feed_for_new_entries(session, feed):
             published = datetime.datetime.fromtimestamp(
                 time.mktime(p_entry.published_parsed))
         else:
-            published = updated or now
+            published = updated
 
         title = p_entry.get('title')
 
@@ -131,7 +153,6 @@ def process_xml_feed_for_new_entries(session, feed):
                 title = None
 
         entry = Entry(
-            feed=feed,
             published=published,
             updated=updated,
             uid=uid,
@@ -146,8 +167,6 @@ def process_xml_feed_for_new_entries(session, feed):
             author_photo=default_author_photo
             or fallback_photo(feed.origin))
 
-        session.add(entry)
-        session.commit()
         yield entry
 
 
@@ -164,37 +183,30 @@ def process_html_feed_for_new_entries(session, feed):
         uid = hentry.get('uid') or url
         if not uid:
             continue
-        
-        entry = session.query(Entry)\
-            .filter(Entry.feed == feed)\
-            .filter(Entry.uid == uid).first()
 
         # hentry = mf2util.interpret(mf2py.Parser(url=url).to_dict(), url)
         # permalink = hentry.get('url') or url
         # uid = hentry.get('uid') or uid
 
-        name = hentry.get('name')
+        title = hentry.get('name')
         content = hentry.get('content')
+        if not content:
+            content = title
+            title = None
 
-        if not entry:
-            entry = Entry(feed=feed, uid=uid, retrieved=now)
-            session.add(entry)
-                    
-        entry.published = hentry.get('published') or entry.published or now
-        entry.updated = hentry.get('updated') or entry.updated
-        entry.permalink = permalink
-        if content:
-            entry.title = name
-            entry.content = content
-        else:
-            entry.title = None
-            entry.content = name
-        entry.author_name = hentry.get('author', {}).get('name')
-        entry.author_photo = hentry.get('author', {}).get('photo') or fallback_photo(feed.origin)
-        entry.author_url = hentry.get('author', {}).get('url')
+        entry = Entry(
+            uid=uid,
+            retrieved=now,
+            permalink=permalink,
+            published=hentry.get('published'),
+            updated=hentry.get('updated'),
+            title=title,
+            content=content,
+            author_name=hentry.get('author', {}).get('name'),
+            author_photo=hentry.get('author', {}).get('photo') or fallback_photo(feed.origin),
+            author_url=hentry.get('author', {}).get('url'))
 
-        session.commit()
-        logger.debug('saved entry: %s', entry.permalink)
+        logger.debug('built entry: %s', entry.permalink)
         yield entry
 
 
