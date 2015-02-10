@@ -159,6 +159,7 @@ def login_callback(resp):
     user.url = resp.me
     db.session.commit()
     flask_login.login_user(user, remember=True)
+    update_micropub_syndicate_to()
     return flask.redirect(resp.next_url or flask.url_for('.index'))
 
 
@@ -187,7 +188,29 @@ def micropub_callback(resp):
     user.micropub_endpoint = resp.micropub_endpoint
     user.access_token = resp.access_token
     db.session.commit()
+    update_micropub_syndicate_to()
     return flask.redirect(resp.next_url or flask.url_for('.index'))
+
+
+@flask_login.login_required
+def update_micropub_syndicate_to():
+    endpt = flask_login.current_user.micropub_endpoint
+    token = flask_login.current_user.access_token
+    if not endpt or not token:
+        return
+    resp = requests.get(endpt, params={
+        'q': 'syndicate-to',
+    }, headers={
+        'Authorization': 'Bearer ' + token,
+    })
+    if resp.status_code // 100 != 2:
+        flask.current_app.logger.warn(
+            'Unexpected response querying micropub endpoint %s: %s',
+            resp, resp.text)
+        return
+    syndicate_tos = urllib.parse.parse_qs(resp.text).get('syndicate-to[]', [])
+    flask_login.current_user.set_setting('syndicate-to', syndicate_tos)
+    db.session.commit()
 
 
 @views.route('/deauthorize')
@@ -310,6 +333,14 @@ def find_possible_feeds(origin):
                     'type': 'xml',
                 })
     return feeds
+
+
+@views.app_template_filter()
+def prettify_url(url):
+    parsed = urllib.parse.urlparse(url)
+    if parsed.path:
+        return parsed.netloc + parsed.path
+    return parsed.netloc
 
 
 @views.app_template_global()

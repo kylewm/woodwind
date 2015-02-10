@@ -59,6 +59,18 @@ class User(db.Model):
     def get_id(self):
         return self.domain
 
+    def get_setting(self, key, default=None):
+        if self.settings is None:
+            return default
+        return self.settings.get(key, default)
+
+    def set_setting(self, key, value):
+        if self.settings is None:
+            self.settings = {}
+        else:
+            self.settings = dict(self.settings)
+        self.settings[key] = value
+
     def __eq__(self, other):
         if type(other) is type(self):
             return self.domain == other.domain

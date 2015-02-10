@@ -433,7 +433,7 @@ textarea, input[type="text"], input[type="url"] {
 
 .reply-area {
   text-align: center; }
-  .reply-area a {
+  .reply-area .reply-link {
     display: inline-block;
     padding: 0.2em;
     border: 1px solid #687D77;
@@ -449,6 +449,32 @@ button {
 
 form {
   margin: 1em 0; }
+
+.toggle {
+  font-family: sans-serif;
+  background-color: #eee;
+  display: inline-block;
+  border-radius: 4px;
+  padding: 0.2em 2em 0.2em 0.2em; }
+  .toggle input {
+    display: none; }
+  .toggle label {
+    font-weight: inherit;
+    /* override bootstrap */
+    margin: inherit;
+    /* override bootstrap */
+    position: relative;
+    transition: transform 0.1s;
+    cursor: pointer;
+    background-color: #ccc;
+    color: #666;
+    display: inline-block;
+    padding: 0.25em 1em;
+    border-radius: 3.8px; }
+  .toggle input:checked + label {
+    background-color: #337AB7;
+    color: #fff;
+    transform: translateX(1.8em); }
 
 @media only screen and (max-width: 800px) {
   article header img {
