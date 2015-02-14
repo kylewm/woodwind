@@ -36,7 +36,7 @@
       {% endif %}
       {% if entry.content %}
         <div>
-          {{ entry.content_cleaned() }}
+          {{ entry.content_cleaned() | add_preview }}
         </div>
       {% endif %}
       <footer>

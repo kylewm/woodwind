@@ -9,6 +9,7 @@ import flask
 import mf2py
 import mf2util
 import requests
+import re
 import urllib
 import cgi
 
@@ -341,6 +342,45 @@ def prettify_url(url):
     if parsed.path:
         return parsed.netloc + parsed.path
     return parsed.netloc
+
+
+@views.app_template_filter()
+def add_preview(content):
+    """If a post ends with the URL of a known media source (youtube,
+    instagram, etc.), add the content inline.
+    """
+    instagram_regex = 'https?://instagram.com/p/[\w\-]+/?'
+    vimeo_regex = 'https?://vimeo.com/(\d+)/?'
+    youtube_regex = 'https?://(?:www.)youtube.com/watch\?v=([\w\-]+)'
+
+    m = re.search(instagram_regex, content)
+    if m:
+        ig_url = m.group(0)
+        media_url = urllib.parse.urljoin(ig_url, 'media/?size=l')
+        return '{}<div><a href="{}"><img src="{}" /></a></div>'.format(
+            content, ig_url, media_url)
+
+    m = re.search(vimeo_regex, content)
+    if m:
+        # vimeo_url = m.group(0)
+        vimeo_id = m.group(1)
+        return (
+            '{}<iframe src="//player.vimeo.com/video/{}" width="560" '
+            'height="315" frameborder="0" webkitallowfullscreen '
+            'mozallowfullscreen allowfullscreen></iframe>'
+        ).format(content, vimeo_id)
+
+    m = re.search(youtube_regex, content)
+    if m:
+        youtube_id = m.group(1)
+        return (
+            '{}<iframe width="560" height="315" '
+            'src="https://www.youtube.com/embed/{}" frameborder="0" '
+            'allowfullscreen></iframe>'
+        ).format(content, youtube_id)
+
+    return content
+
 
 
 @views.app_template_global()
