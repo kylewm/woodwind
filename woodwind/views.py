@@ -349,6 +349,11 @@ def add_preview(content):
     """If a post ends with the URL of a known media source (youtube,
     instagram, etc.), add the content inline.
     """
+    if any('<' + tag in content for tag in (
+            'img', 'iframe', 'embed', 'audio', 'video')):
+        # don't add  a preview to a post that already has one
+        return content
+
     instagram_regex = 'https?://instagram.com/p/[\w\-]+/?'
     vimeo_regex = 'https?://vimeo.com/(\d+)/?'
     youtube_regex = 'https?://(?:www.)youtube.com/watch\?v=([\w\-]+)'
@@ -357,7 +362,7 @@ def add_preview(content):
     if m:
         ig_url = m.group(0)
         media_url = urllib.parse.urljoin(ig_url, 'media/?size=l')
-        return '{}<div><a href="{}"><img src="{}" /></a></div>'.format(
+        return '{}<a href="{}"><img src="{}" /></a>'.format(
             content, ig_url, media_url)
 
     m = re.search(vimeo_regex, content)
