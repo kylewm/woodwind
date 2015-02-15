@@ -394,6 +394,8 @@ article {
   box-shadow: 0 0 2px #687D77;
   background-color: white;
   padding: 0.5em; }
+  article div {
+    overflow: auto; }
   article img {
     max-width: 100%; }
   article header {
