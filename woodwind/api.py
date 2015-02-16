@@ -1,7 +1,44 @@
 import flask
+import flask.ext.login as flask_login
 import requests
 
+
 api = flask.Blueprint('api', __name__)
+
+
+@api.route('/publish', methods=['POST'])
+def publish():
+    action = flask.request.form.get('action')
+    target = flask.request.form.get('target')
+    content = flask.request.form.get('content')
+    syndicate_to = flask.request.form.getlist('syndicate-to[]')
+
+    data = {
+        'h': 'entry',
+        'syndicate-to[]': syndicate_to,
+    }
+
+    if action == 'like':
+        data['like-of'] = target
+
+    else:
+        data['in-reply-to'] = target
+        data['content'] = content
+
+    resp = requests.post(
+        flask_login.current_user.micropub_endpoint, data=data, headers={
+            'Authorization': 'Bearer {}'.format(
+                flask_login.current_user.access_token),
+        })
+
+    return flask.jsonify({
+        'code': resp.status_code,
+        'content': resp.text,
+        'content-type': resp.headers.get('content-type'),
+        'location': resp.headers.get('location'),
+    })
+
+
 
 
 @api.route('/_forward', methods=['GET', 'POST'])

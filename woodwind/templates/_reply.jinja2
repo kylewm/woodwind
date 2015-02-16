@@ -3,47 +3,22 @@
 
 {% if replyMethod == 'micropub' and current_user.micropub_endpoint %}
 
-  <a class="reply-link show-like-form" href="#">Like</a>
-  <a class="reply-link show-reply-form" href="#">Reply</a>
-  <br/>
-
-  <form class="like-form" action="{{ current_user.micropub_endpoint }}" method="POST" style="display:inline">
-    <input type="hidden" name="access_token" value="{{current_user.access_token}}"/>
-    <input type="hidden" name="h" value="entry"/>
-    <input type="hidden" name="like-of" value="{{ entry.permalink }}"/>
-
-    {% for target in current_user.get_setting('syndicate-to', []) %}
-      {% set input_id = 'st-like-{}-{}'.format(entry.id, loop.index) %}
-      <div class="toggle">
-        <input id="{{ input_id }}" type="checkbox" name="syndicate-to[]"
-               value="{{ target }}"/>
-        <label for="{{ input_id }}">{{ target | prettify_url }}</label>
-      </div>
-    {% endfor %}
-
-    <br/>
-    <button type="submit" class="like-button">Like</button>
+  <form class="micropub-form" action="{{ url_for('api.publish') }}" method="POST">
+    <input type="hidden" name="target" value="{{ entry.permalink }}"/>
+    <div>
+      <textarea class="content" name="content"></textarea>
+      <button type="submit" name="action" value="reply" class="fa fa-reply"></button>
+      <button type="submit" name="action" value="like" class="fa fa-star"></button>
+    </div>
+    <div>
+      {% for target in current_user.get_setting('syndicate-to', []) %}
+        <div class="syndication-toggle">
+          <input id="sc-{{entry.id}}-{{loop.index}}" type="checkbox" name="syndicate-to[]" value="{{ target }}"/>
+          <label for="sc-{{entry.id}}-{{loop.index}}"><img src="{{ target | favicon_for_url }}" /></label>
+        </div>
+      {% endfor %}
+    </div>
   </form>
-
-  <form class="reply-form" action="{{ current_user.micropub_endpoint }}" method="POST">
-    <input type="hidden" name="access_token" value="{{current_user.access_token}}"/>
-    <input type="hidden" name="h" value="entry"/>
-    <input type="hidden" name="in-reply-to" value="{{ entry.permalink }}"/>
-    <textarea name="content"></textarea>
-
-    {% for target in current_user.get_setting('syndicate-to', []) %}
-      {% set input_id = 'st-reply-{}-{}'.format(entry.id, loop.index) %}
-      <div class="toggle">
-        <input id="{{ input_id }}" type="checkbox" name="syndicate-to[]"
-               value="{{ target }}"/>
-        <label for="{{ input_id }}">{{ target | prettify_url }}</label>
-      </div>
-    {% endfor %}
-    <br/>
-
-    <button type="submit" class="reply-button">Reply</button>
-  </form>
-
   <div class="micropub-response">
   </div>
 

@@ -33,14 +33,12 @@ $(function(){
         var responseArea = $('.micropub-response', replyArea);
 
         $.post(
-            '/_forward',
-            '_url=' + encodeURIComponent(endpoint) + '&' + form.serialize(),
+            form.attr('action'),
+            form.serialize(),
             function(result) {
                 if (Math.floor(result.code / 100) == 2) {
                     responseArea.html('<a target="_blank" href="' + result.location + '">Success!</a>');
-                    $(".reply-form textarea").val("");
-                    $(".reply-form", replyArea).hide();
-                    $(".like-form", replyArea).hide();
+                    $(".micropub-form textarea").val("");
                 } else {
                     responseArea.html('Failure');
                 }
@@ -59,7 +57,11 @@ $(function(){
         $(".show-reply-form").off('click').click(clickShowReplyForm);
         $(".show-like-form").off('click').click(clickShowLikeForm);
 
-        $(".like-form, .reply-form").off('submit').submit(submitMicropubForm);
+        $(".micropub-form").off('submit').submit(submitMicropubForm);
+
+        $(".micropub-form .content").focus(function (){
+            $(this).animate({ height: "4em" }, 200);
+        });
     }
 
 

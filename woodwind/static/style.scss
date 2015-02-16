@@ -118,8 +118,64 @@ textarea, input[type="text"], input[type="url"] {
     }
 }
 
+.micropub-form {
+    .content {
+        height: 1em;
+        width: calc(100% - 1.4em - 48px);
+        padding: 3px;
+        margin: 0;
+        vertical-align: middle;
+    }
+
+    button {
+        height: 24px;width: 24px;
+        padding: 4px;
+        background-color: #eee;
+        border-radius: 3px;
+        border: 0;
+        line-height: 1;
+        vertical-align: middle;
+    }
+}
+
+.syndication-toggle {
+    display: inline-block;
+    margin-top: 0.25em;
+
+    input {
+        display: none;
+    }
+
+    label {
+        display: inline-block;
+        vertical-align: middle;
+        height: 16px;
+        width: 16px;
+        padding: 4px;
+        border-radius: 3px;
+        background-color: #eee;
+        margin: 0;
+
+        color: #666;
+        cursor: pointer;
+
+        img {
+            max-height: 16px;
+            max-width: 16px;
+        }
+    }
+
+    input:checked + label {
+        background-color: #337AB7;
+        color: #fff;
+    }
+}
+
+
 .reply-area {
     text-align: center;
+    margin-top: 0.5em;
+
     .reply-link {
         display: inline-block;
         padding: 0.2em;
@@ -131,51 +187,7 @@ textarea, input[type="text"], input[type="url"] {
         min-width: 50px;
         text-align: center;
     }
-    .like-form, .reply-form {
-
-    }
 }
-
-button {
-    padding: 0.25em;
-}
-
-form {
-    margin: 1em 0;
-}
-
-
-.toggle {
-    font-family: sans-serif;
-    background-color: #eee;
-    display: inline-block;
-    border-radius: 4px;
-    padding: 0.2em 2em 0.2em 0.2em;
-
-    input {
-        display: none;
-    }
-
-    label {
-        font-weight: inherit; /* override bootstrap */
-        margin: inherit; /* override bootstrap */
-        position: relative;
-        transition: transform 0.1s;
-        cursor: pointer;
-        background-color: #ccc;
-        color: #666;
-        display: inline-block;
-        padding: 0.25em 1em;
-        border-radius: 3.8px;
-    }
-
-    input:checked + label {
-        background-color: #337AB7;
-        color: #fff;
-        transform: translateX(1.8em);
-    }
-}
-
 
 @media only screen and (max-width: 800px) {
     article {

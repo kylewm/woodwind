@@ -315,7 +315,7 @@ def find_possible_feeds(origin):
     elif content_type == 'text/html':
         # if text/html, then parse and look for h-entries
         hfeed = mf2util.interpret_feed(
-	    mf2py.Parser(doc=resp.text).to_dict(), origin)
+            mf2py.Parser(doc=resp.text).to_dict(), origin)
         if hfeed.get('entries'):
             feeds.append({
                 'origin': origin,
@@ -342,6 +342,12 @@ def prettify_url(url):
     if parsed.path:
         return parsed.netloc + parsed.path
     return parsed.netloc
+
+
+@views.app_template_filter()
+def favicon_for_url(url):
+    parsed = urllib.parse.urlparse(url)
+    return 'http://www.google.com/s2/favicons?domain={}'.format(parsed.netloc)
 
 
 @views.app_template_filter()
@@ -385,7 +391,6 @@ def add_preview(content):
         ).format(content, youtube_id)
 
     return content
-
 
 
 @views.app_template_global()
