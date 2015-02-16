@@ -131,13 +131,11 @@ def logout():
     return flask.redirect(flask.url_for('.index'))
 
 
-@views.route('/login', methods=['GET', 'POST'])
+@views.route('/login', methods=['POST'])
 def login():
-    if flask.request.method == 'POST':
-        return micropub.authenticate(
-            flask.request.form.get('me'),
-            next_url=flask.request.form.get('next'))
-    return flask.render_template('login.jinja2')
+    return micropub.authenticate(
+        flask.request.form.get('me'),
+        next_url=flask.request.form.get('next'))
 
 
 @views.route('/login-callback')

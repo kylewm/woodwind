@@ -2,6 +2,7 @@ import bleach
 import json
 import binascii
 from .extensions import db
+import re
 
 
 bleach.ALLOWED_TAGS += ['a', 'img', 'p', 'br', 'marquee', 'blink',
@@ -122,7 +123,9 @@ class Entry(db.Model):
 
     def content_cleaned(self):
         if self.content:
-            return bleach.clean(self.content, strip=True)
+            text = self.content
+            text = re.sub('<script>.*?</script>', '', text, flags=re.DOTALL)
+            return bleach.clean(text, strip=True)
 
     def __repr__(self):
         return '<Entry:{},{}>'.format(self.title, (self.content or '')[:140])
