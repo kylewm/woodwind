@@ -27,14 +27,16 @@ $(function(){
     function submitMicropubForm(evt) {
         evt.preventDefault();
 
-        var form = $(this);
+        var form = $(this).closest('form');
         var replyArea = form.parent();
         var endpoint = form.attr('action');
         var responseArea = $('.micropub-response', replyArea);
+        var formData = form.serializeArray();
+        formData.push({name: this.name, value: this.value});
 
         $.post(
             form.attr('action'),
-            form.serialize(),
+            formData,
             function(result) {
                 if (Math.floor(result.code / 100) == 2) {
                     responseArea.html('<a target="_blank" href="' + result.location + '">Success!</a>');
@@ -57,7 +59,7 @@ $(function(){
         $(".show-reply-form").off('click').click(clickShowReplyForm);
         $(".show-like-form").off('click').click(clickShowLikeForm);
 
-        $(".micropub-form").off('submit').submit(submitMicropubForm);
+        $(".micropub-form button[type='submit']").off('click').click(submitMicropubForm);
 
         $(".micropub-form .content").focus(function (){
             $(this).animate({ height: "4em" }, 200);

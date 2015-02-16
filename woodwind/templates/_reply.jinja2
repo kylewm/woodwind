@@ -7,8 +7,8 @@
     <input type="hidden" name="target" value="{{ entry.permalink }}"/>
     <div>
       <textarea class="content" name="content"></textarea>
-      <button type="submit" name="action" value="reply" class="fa fa-reply"></button>
-      <button type="submit" name="action" value="like" class="fa fa-star"></button>
+      <button type="submit" name="action" value="reply"><i class="fa fa-reply"></i></button>
+      <button type="submit" name="action" value="like"><i class="fa fa-star"></i></button>
     </div>
     <div>
       {% for target in current_user.get_setting('syndicate-to', []) %}
