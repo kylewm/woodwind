@@ -96,14 +96,17 @@ def update_all():
     return flask.redirect(flask.url_for('.feeds'))
 
 
-@views.route('/delete_feed', methods=['POST'])
+@views.route('/unsubscribe_feed', methods=['POST'])
 @flask_login.login_required
-def delete_feed():
+def unsubscribe_feed():
     feed_id = flask.request.form.get('id')
     feed = Feed.query.get(feed_id)
-    db.session.delete(feed)
+
+    feeds = flask_login.current_user.feeds
+    feeds.remove(feed)
+
     db.session.commit()
-    flask.flash('Deleted {} ({})'.format(feed.name, feed.feed))
+    flask.flash('Unsubscribed {} ({})'.format(feed.name, feed.feed))
     return flask.redirect(flask.url_for('.feeds'))
 
 

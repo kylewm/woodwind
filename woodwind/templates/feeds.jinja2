@@ -32,9 +32,9 @@
             <button type="submit">Update</button>
       </form>
       <form style="display:inline;"
-            action="{{ url_for('.delete_feed') }}" method="POST">
+            action="{{ url_for('.unsubscribe_feed') }}" method="POST">
             <input type="hidden" name="id" value="{{ feed.id }}"/>
-            <button type="submit">Delete</button>
+            <button type="submit">Unsubscribe</button>
       </form>
       <br/>
       <a href="{{ url_for('.index', feed=feed.get_feed_code()) }}">View posts from this feed</a>

@@ -171,7 +171,7 @@ def process_xml_feed_for_new_entries(session, feed):
 
 
 def process_html_feed_for_new_entries(session, feed):
-    logger.debug('fetching html feed: %s', feed)
+    logger.info('fetching html feed: %s', feed)
 
     now = datetime.datetime.utcnow()
     parsed = mf2util.interpret_feed(
@@ -181,6 +181,7 @@ def process_html_feed_for_new_entries(session, feed):
     for hentry in hfeed:
         permalink = url = hentry.get('url')
         uid = hentry.get('uid') or url
+        logger.debug('processing permalink %s. uid %s', permalink, uid)
         if not uid:
             continue
 
