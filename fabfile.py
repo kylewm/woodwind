@@ -23,7 +23,7 @@ def pull():
 def restart():
     with cd(REMOTE_PATH):
         with prefix("source venv/bin/activate"):
-            run("pip install -r requirements.txt")
+            run("pip install --upgrade -r requirements.txt")
             run("supervisorctl restart ww:*")
 
 

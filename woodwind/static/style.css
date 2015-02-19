@@ -399,7 +399,7 @@ article {
     background-color: #f3f3f3; }
   article div {
     overflow: auto; }
-  article img {
+  article img, article video {
     max-width: 100%; }
   article header {
     color: #484A47;
