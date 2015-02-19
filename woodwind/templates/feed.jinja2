@@ -21,6 +21,31 @@
 {% block body %}
 
   {% for entry in entries %}
+    {% for context in entry.reply_context %}
+      <article class="reply-context">
+        <header>
+          {% if context.author_photo %}
+            <img src="{{context.author_photo}}"/>
+          {% endif %}
+          {% if context.author_name %}
+            {{ context.author_name }} -
+          {% endif %}
+          {{ context.feed.name }}
+        </header>
+        {% if context.title %}
+          <h1>{{ context.title }}</h1>
+        {% endif %}
+        {% if context.content %}
+          <div>
+            {{ context.content_cleaned() | add_preview }}
+          </div>
+        {% endif %}
+        <footer>
+          <a href="{{ context.permalink }}">{{ context.published }}</a>
+        </footer>
+      </article>
+    {% endfor %}
+
     <article>
       <header>
         {% if entry.author_photo %}

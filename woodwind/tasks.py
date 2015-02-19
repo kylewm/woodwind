@@ -1,18 +1,21 @@
-from woodwind.models import Feed, Entry
 from config import Config
 from contextlib import contextmanager
+from woodwind.models import Feed, Entry
 import celery
 import celery.utils.log
+import datetime
 import feedparser
 import mf2py
 import mf2util
-import time
-import urllib.parse
-import datetime
+import re
 import sqlalchemy
 import sqlalchemy.orm
+import time
+import urllib.parse
+
 
 UPDATE_INTERVAL = datetime.timedelta(hours=1)
+TWITTER_RE = re.compile(r'https?://(?:www\.|mobile\.)?twitter\.com/(\w+)/status(?:es)?/(\w+)')
 
 app = celery.Celery('woodwind')
 app.config_from_object('celeryconfig')
@@ -84,6 +87,10 @@ def process_feed_for_new_entries(session, feed):
 
                 feed.entries.append(entry)
                 session.commit()
+
+                for in_reply_to in entry.get_property('in-reply-to', []):
+                    fetch_reply_context.delay(entry.id, in_reply_to)
+
                 found_new = True
             else:
                 logger.info('skipping previously seen post %s', old.permalink)
@@ -103,7 +110,8 @@ def is_content_equal(e1, e2):
             and e1.content == e2.content
             and e1.author_name == e2.author_name
             and e1.author_url == e2.author_url
-            and e1.author_photo == e2.author_photo)
+            and e1.author_photo == e2.author_photo
+            and e1.properties == e2.properties)
 
 
 def process_xml_feed_for_new_entries(session, feed):
@@ -173,43 +181,90 @@ def process_xml_feed_for_new_entries(session, feed):
 def process_html_feed_for_new_entries(session, feed):
     logger.info('fetching html feed: %s', feed)
 
-    now = datetime.datetime.utcnow()
     parsed = mf2util.interpret_feed(
         mf2py.Parser(url=feed.feed).to_dict(), feed.feed)
     hfeed = parsed.get('entries', [])
 
     for hentry in hfeed:
-        permalink = url = hentry.get('url')
-        uid = hentry.get('uid') or url
-        logger.debug('processing permalink %s. uid %s', permalink, uid)
-        if not uid:
-            continue
+        entry = hentry_to_entry(hentry, feed)
+        if entry:
+            logger.debug('built entry: %s', entry.permalink)
+            yield entry
 
-        # hentry = mf2util.interpret(mf2py.Parser(url=url).to_dict(), url)
-        # permalink = hentry.get('url') or url
-        # uid = hentry.get('uid') or uid
 
-        title = hentry.get('name')
-        content = hentry.get('content')
-        if not content:
-            content = title
-            title = None
+def hentry_to_entry(hentry, feed):
+    now = datetime.datetime.utcnow()
+    permalink = url = hentry.get('url')
+    uid = hentry.get('uid') or url
+    if not uid:
+        return
 
-        entry = Entry(
-            uid=uid,
-            retrieved=now,
-            permalink=permalink,
-            published=hentry.get('published'),
-            updated=hentry.get('updated'),
-            title=title,
-            content=content,
-            author_name=hentry.get('author', {}).get('name'),
-            author_photo=hentry.get('author', {}).get('photo')
-            or fallback_photo(feed.origin),
-            author_url=hentry.get('author', {}).get('url'))
+    # hentry = mf2util.interpret(mf2py.Parser(url=url).to_dict(), url)
+    # permalink = hentry.get('url') or url
+    # uid = hentry.get('uid') or uid
 
-        logger.debug('built entry: %s', entry.permalink)
-        yield entry
+    title = hentry.get('name')
+    content = hentry.get('content')
+    if not content:
+        content = title
+        title = None
+
+    entry = Entry(
+        uid=uid,
+        retrieved=now,
+        permalink=permalink,
+        published=hentry.get('published'),
+        updated=hentry.get('updated'),
+        title=title,
+        content=content,
+        author_name=hentry.get('author', {}).get('name'),
+        author_photo=hentry.get('author', {}).get('photo')
+        or (feed and fallback_photo(feed.origin)),
+        author_url=hentry.get('author', {}).get('url'))
+
+    in_reply_to = hentry.get('in-reply-to')
+    if in_reply_to:
+        entry.set_property('in-reply-to', in_reply_to)
+
+    return entry
+
+
+@app.task
+def fetch_reply_context(entry_id, in_reply_to):
+    with session_scope() as session:
+        entry = session.query(Entry).get(entry_id)
+        context = session.query(Entry)\
+                         .filter_by(permalink=in_reply_to).first()
+
+        if not context:
+            logger.info('fetching in-reply-to url: %s', in_reply_to)
+            parsed = mf2util.interpret(
+                mf2py.Parser(url=proxy_url(in_reply_to)).to_dict(),
+                in_reply_to)
+            if parsed:
+                context = hentry_to_entry(parsed, in_reply_to)
+
+        if context:
+            entry.reply_context.append(context)
+            session.commit()
+
+
+def proxy_url(url):
+    if Config.TWITTER_AU_KEY and Config.TWITTER_AU_SECRET:
+        # swap out the a-u url for twitter urls
+        match = TWITTER_RE.match(url)
+        if match:
+            proxy_url = (
+                'https://twitter-activitystreams.appspot.com/@me/@all/@app/{}?'
+                .format(match.group(2)) + urllib.parse.urlencode({
+                    'format': 'html',
+                    'access_token_key': Config.TWITTER_AU_KEY,
+                    'access_token_secret': Config.TWITTER_AU_SECRET,
+                }))
+            logger.debug('proxied twitter url %s', proxy_url)
+            return proxy_url
+    return url
+
 
 
 def fallback_photo(url):

@@ -4,6 +4,9 @@ import binascii
 from .extensions import db
 import re
 
+from sqlalchemy.ext.orderinglist import ordering_list
+from sqlalchemy.ext.associationproxy import association_proxy
+
 
 bleach.ALLOWED_TAGS += ['a', 'img', 'p', 'br', 'marquee', 'blink',
                         'audio', 'video', 'table', 'tbody', 'td', 'tr']
@@ -37,6 +40,12 @@ users_to_feeds = db.Table(
     'users_to_feeds', db.Model.metadata,
     db.Column('user_id', db.Integer, db.ForeignKey('user.id'), index=True),
     db.Column('feed_id', db.Integer, db.ForeignKey('feed.id'), index=True))
+
+
+entry_to_reply_context = db.Table(
+    'entry_to_reply_context', db.Model.metadata,
+    db.Column('entry_id', db.Integer, db.ForeignKey('entry.id'), index=True),
+    db.Column('context_id', db.Integer, db.ForeignKey('entry.id'), index=True))
 
 
 class User(db.Model):
@@ -120,12 +129,42 @@ class Entry(db.Model):
     author_photo = db.Column(db.String(512))
     title = db.Column(db.String(512))
     content = db.Column(db.Text)
+    # other properties
+    properties = db.Column(JsonType)
+    # # association with the InReplyTo objects
+    # irt = db.relationship(
+    #     'InReplyTo', order_by='InReplyTo.list_index',
+    #     collection_class=ordering_list('list_index'))
+    # # proxy for just the urls
+    # in_reply_to = association_proxy(
+    #     'irt', 'url', creator=lambda url: InReplyTo(url=url))
+    reply_context = db.relationship(
+        'Entry', secondary='entry_to_reply_context',
+        primaryjoin=id == entry_to_reply_context.c.entry_id,
+        secondaryjoin=id == entry_to_reply_context.c.context_id)
 
     def content_cleaned(self):
         if self.content:
             text = self.content
-            text = re.sub('<script>.*?</script>', '', text, flags=re.DOTALL)
+            text = re.sub('<script.*?</script>', '', text, flags=re.DOTALL)
             return bleach.clean(text, strip=True)
+
+    def get_property(self, key, default=None):
+        if self.properties is None:
+            return default
+        return self.properties.get(key, default)
+
+    def set_property(self, key, value):
+        self.properties = ({} if self.properties is None
+                           else dict(self.settings))
+        self.properties[key] = value
 
     def __repr__(self):
         return '<Entry:{},{}>'.format(self.title, (self.content or '')[:140])
+
+
+# class InReplyTo(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     entry_id = db.Column(db.Integer, db.ForeignKey(Entry.id))
+#     url = db.Column(db.String(512))
+#     list_index = db.Column(db.Integer)
