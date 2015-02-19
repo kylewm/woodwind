@@ -30,7 +30,7 @@
           {% if context.author_name %}
             {{ context.author_name }} -
           {% endif %}
-          {{ context.feed.name }}
+          {{ context.permalink | domain_for_url }}
         </header>
         {% if context.title %}
           <h1>{{ context.title }}</h1>
