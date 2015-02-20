@@ -395,7 +395,7 @@ article {
   background-color: white;
   padding: 0.5em; }
   article.reply-context {
-    margin-bottom: 0.5em;
+    margin-bottom: 0;
     background-color: #f3f3f3; }
   article div {
     overflow: auto; }
