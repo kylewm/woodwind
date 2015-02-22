@@ -368,20 +368,22 @@ def relative_time(dt):
         minutes = diff.seconds // 60
 
         if years > 1:
-            return str(years) + ' years ago'
-        if diff.days == 1:
-            return 'A day ago'
-        if diff.days > 1:
-            return str(diff.days) + ' days ago'
-        if hours == 1:
-            return 'An hour ago'
-        if hours > 1:
-            return str(hours) + ' hours ago'
-        if minutes == 1:
-            return 'A minute ago'
-        if minutes > 1:
-            return str(minutes) + ' minutes ago'
-        return str(diff.seconds) + ' seconds ago'
+            pretty = str(years) + ' years ago'
+        elif diff.days == 1:
+            pretty = 'A day ago'
+        elif diff.days > 1:
+            pretty = str(diff.days) + ' days ago'
+        elif hours == 1:
+            pretty = 'An hour ago'
+        elif hours > 1:
+            pretty = str(hours) + ' hours ago'
+        elif minutes == 1:
+            pretty = 'A minute ago'
+        elif minutes > 1:
+            pretty = str(minutes) + ' minutes ago'
+        else:
+            pretty = str(diff.seconds) + ' seconds ago'
+        return '<time datetime="{}">{}</time>'.format(dt.isoformat(), pretty)
 
 
 @views.app_template_filter()
