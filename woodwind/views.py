@@ -4,6 +4,7 @@ from .models import Feed, Entry, User
 import flask.ext.login as flask_login
 import binascii
 import bs4
+import datetime
 import feedparser
 import flask
 import mf2py
@@ -355,6 +356,37 @@ def domain_for_url(url):
 def favicon_for_url(url):
     parsed = urllib.parse.urlparse(url)
     return 'http://www.google.com/s2/favicons?domain={}'.format(parsed.netloc)
+
+
+@views.app_template_filter()
+def relative_time(dt):
+    if dt:
+        now = datetime.datetime.utcnow()
+        diff = dt - now
+        years = diff.days // 365
+        hours = diff.seconds // 60 // 60
+        minutes = diff.seconds // 60
+
+        if years > 1:
+            return str(years) + ' years ago'
+        if diff.days == 1:
+            return 'A day ago'
+        if diff.days > 1:
+            return str(diff.days) + ' days ago'
+        if hours == 1:
+            return 'An hour ago'
+        if hours > 1:
+            return str(hours) + ' hours ago'
+        if minutes == 1:
+            return 'A minute ago'
+        if minutes > 1:
+            return str(minutes) + ' minutes ago'
+        return str(diff.seconds) + ' seconds ago'
+
+
+@views.app_template_filter()
+def isoformat(dt):
+    return dt and dt.isoformat()
 
 
 @views.app_template_filter()

@@ -9,13 +9,18 @@
 {% endblock header %}
 
 {% block body %}
-  <form style="display:inline;"
+  <p>
+    <form style="display:inline;"
         action="{{ url_for('.update_all') }}" method="POST">
-        <button type="submit">Update All</button>
-  </form>
+          <button type="submit">Update All</button>
+    </form>
+  </p>
 
   {% for feed in feeds %}
     <article>
+      <div>
+        <a href="{{ url_for('.index', feed=feed.get_feed_code()) }}">View only posts from this feed</a>
+      </div>
 
       <form style="display:inline"
             action="{{ url_for('.edit_feed') }}" method="POST">
@@ -36,8 +41,18 @@
             <input type="hidden" name="id" value="{{ feed.id }}"/>
             <button type="submit">Unsubscribe</button>
       </form>
-      <br/>
-      <a href="{{ url_for('.index', feed=feed.get_feed_code()) }}">View posts from this feed</a>
+
+      <div class="feed-details">
+        <h4>Details</h4>
+        <ul>
+          <li>Last checked: {{feed.last_checked | relative_time}}</li>
+          <li>Last updated: {{feed.last_updated | relative_time}}</li>
+          <li>PuSH hub: {{feed.push_hub}}</li>
+          <li>PuSH topic: {{feed.push_topic}}</li>
+          <li>PuSH verified: {{feed.push_verified}}</li>
+          <li>PuSH last ping: {{feed.last_pinged | relative_time}}</li>
+        </ul>
+      </div>
     </article>
   {% endfor %}
 

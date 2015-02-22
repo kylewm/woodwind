@@ -1,6 +1,7 @@
 from config import Config
 from contextlib import contextmanager
 from woodwind.models import Feed, Entry
+import bs4
 import celery
 import celery.utils.log
 import datetime
@@ -135,6 +136,25 @@ def check_push_subscription(session, feed, response):
     hub = response.links.get('hub', {}).get('url')
     topic = response.links.get('self', {}).get('url')
 
+    if not hub or not topic:
+        # try to find link rel elements
+        if feed.type == 'html':
+            soup = bs4.BeautifulSoup(get_response_content(response))
+            if not hub:
+                hub_link = soup.find('link', rel='hub')
+                hub = hub_link and hub_link.get('href')
+            if not topic:
+                self_link = soup.find('link', rel='self')
+                topic = self_link and self_link.get('href')
+        elif feed.type == 'xml':
+            parsed = feedparser.parse(get_response_content(response))
+            if not hub:
+                hub = next((link['href'] for link in parsed.feed.links
+                            if 'hub' in link['rel']), None)
+            if not topic:
+                topic = next((link['href'] for link in parsed.feed.links
+                              if 'self' in link['rel']), None)
+
     if hub != old_hub or topic != old_topic or not feed.push_verified:
         feed.push_hub = hub
         feed.push_topic = topic
@@ -146,7 +166,6 @@ def check_push_subscription(session, feed, response):
 
         if hub and topic:
             send_request('subscribe', hub, topic)
-
 
 
 def is_content_equal(e1, e2):
