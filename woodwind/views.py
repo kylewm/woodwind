@@ -362,7 +362,7 @@ def favicon_for_url(url):
 def relative_time(dt):
     if dt:
         now = datetime.datetime.utcnow()
-        diff = dt - now
+        diff = now - dt
         years = diff.days // 365
         hours = diff.seconds // 60 // 60
         minutes = diff.seconds // 60
