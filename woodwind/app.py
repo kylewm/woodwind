@@ -1,9 +1,9 @@
 from . import extensions
 from .views import views
 from .api import api
+from .push import push
 from config import Config
 import flask
-import logging
 
 
 def create_app():
@@ -12,4 +12,5 @@ def create_app():
     extensions.init_app(app)
     app.register_blueprint(views)
     app.register_blueprint(api)
+    app.register_blueprint(push)
     return app

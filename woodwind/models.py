@@ -108,6 +108,11 @@ class Feed(db.Model):
     last_checked = db.Column(db.DateTime)
     etag = db.Column(db.String(512))
 
+    push_hub = db.Column(db.String(512))
+    push_topic = db.Column(db.String(512))
+    push_verified = db.Column(db.Boolean)
+    last_pinged = db.Column(db.DateTime)
+
     def get_feed_code(self):
         return binascii.hexlify(self.feed.encode())
 

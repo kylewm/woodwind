@@ -12,10 +12,12 @@ import sqlalchemy
 import sqlalchemy.orm
 import time
 import urllib.parse
+import requests
 
 
 UPDATE_INTERVAL = datetime.timedelta(hours=1)
-TWITTER_RE = re.compile(r'https?://(?:www\.|mobile\.)?twitter\.com/(\w+)/status(?:es)?/(\w+)')
+TWITTER_RE = re.compile(
+    r'https?://(?:www\.|mobile\.)?twitter\.com/(\w+)/status(?:es)?/(\w+)')
 
 app = celery.Celery('woodwind')
 app.config_from_object('celeryconfig')
@@ -57,17 +59,25 @@ def update_feed(feed_id):
     with session_scope() as session:
         feed = session.query(Feed).get(feed_id)
         logger.info('Updating {}'.format(feed))
-        process_feed_for_new_entries(session, feed)
+        process_feed(session, feed)
 
 
-def process_feed_for_new_entries(session, feed):
+def process_feed(session, feed):
     now = datetime.datetime.utcnow()
     found_new = False
     try:
+        logger.info('fetching feed: %s', feed)
+        response = requests.get(feed.feed)
+        if response.status_code // 100 != 2:
+            logger.warn('bad response from %s. %r: %r', feed.feed,
+                        response, response.text)
+            return
+
+        check_push_subscription(session, feed, response)
         if feed.type == 'xml':
-            result = process_xml_feed_for_new_entries(session, feed)
+            result = process_xml_feed_for_new_entries(session, feed, response)
         elif feed.type == 'html':
-            result = process_html_feed_for_new_entries(session, feed)
+            result = process_html_feed_for_new_entries(session, feed, response)
         else:
             result = []
 
@@ -101,6 +111,44 @@ def process_feed_for_new_entries(session, feed):
             feed.last_updated = now
 
 
+def check_push_subscription(session, feed, response):
+    def build_callback_url():
+        return '{}://{}/_notify/{}'.format(
+            getattr(Config, 'PREFERRED_URL_SCHEME', 'http'),
+            Config.SERVER_NAME,
+            feed.id)
+
+    def send_request(mode, hub, topic):
+        logger.debug(
+            'sending %s request for hub=%r, topic=%r', mode, hub, topic)
+        r = requests.post(hub, data={
+            'hub.mode': mode,
+            'hub.topic': topic,
+            'hub.callback': build_callback_url(),
+            # TODO secret should only be used over HTTPS
+            # 'hub.secret': secret,
+        })
+        logger.debug('%s response %r', mode, r)
+
+    old_hub = feed.push_hub
+    old_topic = feed.push_topic
+    hub = response.links.get('hub', {}).get('url')
+    topic = response.links.get('self', {}).get('url')
+
+    if hub != old_hub or topic != old_topic or not feed.push_verified:
+        feed.push_hub = hub
+        feed.push_topic = topic
+        feed.push_verified = False
+        session.commit()
+
+        if old_hub and old_topic:
+            send_request('unsubscribe', old_hub, old_topic)
+
+        if hub and topic:
+            send_request('subscribe', hub, topic)
+
+
+
 def is_content_equal(e1, e2):
     """The criteria for determining if an entry that we've seen before
     has been updated. If any of these fields have changed, we'll scrub the
@@ -114,12 +162,11 @@ def is_content_equal(e1, e2):
             and e1.properties == e2.properties)
 
 
-def process_xml_feed_for_new_entries(session, feed):
+def process_xml_feed_for_new_entries(session, feed, response):
     logger.debug('fetching xml feed: %s', feed)
 
     now = datetime.datetime.utcnow()
-    parsed = feedparser.parse(feed.feed)
-
+    parsed = feedparser.parse(get_response_content(response))
     feed_props = parsed.get('feed', {})
     default_author_url = feed_props.get('author_detail', {}).get('href')
     default_author_name = feed_props.get('author_detail', {}).get('name')
@@ -178,11 +225,10 @@ def process_xml_feed_for_new_entries(session, feed):
         yield entry
 
 
-def process_html_feed_for_new_entries(session, feed):
-    logger.info('fetching html feed: %s', feed)
-
+def process_html_feed_for_new_entries(session, feed, response):
+    doc = get_response_content(response)
     parsed = mf2util.interpret_feed(
-        mf2py.Parser(url=feed.feed).to_dict(), feed.feed)
+        mf2py.Parser(url=feed.feed, doc=doc).to_dict(), feed.feed)
     hfeed = parsed.get('entries', [])
 
     for hentry in hfeed:
@@ -271,3 +317,12 @@ def fallback_photo(url):
     """Use favatar to find an appropriate photo for any URL"""
     domain = urllib.parse.urlparse(url).netloc
     return 'http://www.google.com/s2/favicons?domain=' + domain
+
+
+def get_response_content(response):
+    """Kartik's trick for handling responses that don't specify their
+    encoding. Response.text will guess badly if they don't.
+    """
+    if 'charset' not in response.headers.get('content-type', ''):
+        return response.content
+    return response.text
