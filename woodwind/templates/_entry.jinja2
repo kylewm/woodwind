@@ -1,0 +1,50 @@
+{% for context in entry.reply_context %}
+  <article class="reply-context">
+    <header>
+      {% if context.author_photo %}
+        <img src="{{context.author_photo}}"/>
+      {% endif %}
+      {% if context.author_name %}
+        {{ context.author_name }} -
+      {% endif %}
+      {{ context.permalink | domain_for_url }}
+    </header>
+    {% if context.title %}
+      <h1>{{ context.title }}</h1>
+    {% endif %}
+    {% if context.content %}
+      <div>
+        {{ context.content_cleaned() | add_preview }}
+      </div>
+    {% endif %}
+    <footer>
+      <a href="{{ context.permalink }}">{{ context.published }}</a>
+    </footer>
+  </article>
+{% endfor %}
+
+<article>
+  <header>
+    {% if entry.author_photo %}
+      <img src="{{entry.author_photo}}"/>
+    {% endif %}
+    {% if entry.author_name %}
+      {{ entry.author_name }} -
+    {% endif %}
+    {{ entry.feed.name }}
+  </header>
+  {% if entry.title %}
+    <h1>{{ entry.title }}</h1>
+  {% endif %}
+  {% if entry.content %}
+    <div>
+      {{ entry.content_cleaned() | add_preview }}
+    </div>
+  {% endif %}
+  <footer>
+    <a href="{{ entry.permalink }}">{{ entry.published }}</a>
+    <div class="reply-area">
+      {% include '_reply.jinja2' with context %}
+    </div>
+  </footer>
+</article>

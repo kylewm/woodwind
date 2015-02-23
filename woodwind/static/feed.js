@@ -66,7 +66,5 @@ $(function(){
         });
     }
 
-
-
     attachListeners();
 });

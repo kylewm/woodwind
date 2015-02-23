@@ -1,11 +1,13 @@
 from config import Config
 from contextlib import contextmanager
 from woodwind.models import Feed, Entry
+from redis import StrictRedis
 import bs4
 import celery
 import celery.utils.log
 import datetime
 import feedparser
+import json
 import mf2py
 import mf2util
 import re
@@ -26,6 +28,8 @@ app.config_from_object('celeryconfig')
 logger = celery.utils.log.get_task_logger(__name__)
 engine = sqlalchemy.create_engine(Config.SQLALCHEMY_DATABASE_URI)
 Session = sqlalchemy.orm.sessionmaker(bind=engine)
+
+redis = StrictRedis()
 
 
 @contextmanager
@@ -65,7 +69,7 @@ def update_feed(feed_id):
 
 def process_feed(session, feed):
     now = datetime.datetime.utcnow()
-    found_new = False
+    new_entries = []
     try:
         logger.info('fetching feed: %s', feed)
         response = requests.get(feed.feed)
@@ -102,14 +106,17 @@ def process_feed(session, feed):
                 for in_reply_to in entry.get_property('in-reply-to', []):
                     fetch_reply_context.delay(entry.id, in_reply_to)
 
-                found_new = True
+                new_entries.append(entry)
             else:
                 logger.info('skipping previously seen post %s', old.permalink)
 
     finally:
         feed.last_checked = now
-        if found_new:
+        if new_entries:
             feed.last_updated = now
+        session.commit()
+        if new_entries:
+            notify_feed_updated(session, feed, new_entries)
 
 
 def check_push_subscription(session, feed, response):
@@ -166,6 +173,28 @@ def check_push_subscription(session, feed, response):
 
         if hub and topic:
             send_request('subscribe', hub, topic)
+
+
+def notify_feed_updated(session, feed, entries):
+    """Render the new entries and publish them to redis
+    """
+    from . import create_app
+    from flask import render_template
+    import flask.ext.login as flask_login
+    flask_app = create_app()
+
+    for user in feed.users:
+        with flask_app.test_request_context():
+            flask_login.login_user(user, remember=True)
+            message = json.dumps({
+                'user': user.id,
+                'feed': feed.id,
+                'entries': [
+                    render_template('_entry.jinja2', feed=feed, entry=e)
+                    for e in entries
+                ],
+            })
+            redis.publish('woodwind:user:{}'.format(user.id), message)
 
 
 def is_content_equal(e1, e2):
