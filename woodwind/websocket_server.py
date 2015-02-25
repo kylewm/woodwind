@@ -39,7 +39,7 @@ class WSHandler(tornado.websocket.WebSocketHandler):
 
     def on_close(self):
         if hasattr(self, 'topic'):
-            SUBSCRIBERS.setdefault(self.topic, []).append(self)
+            SUBSCRIBERS.get(self.topic, []).remove(self)
 
 
 application = tornado.web.Application([
