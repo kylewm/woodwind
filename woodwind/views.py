@@ -21,6 +21,8 @@ views = flask.Blueprint('views', __name__)
 def index():
     page = int(flask.request.args.get('page', 1))
     entries = []
+    ws_topic = None
+
     if flask_login.current_user.is_authenticated():
         per_page = flask.current_app.config.get('PER_PAGE', 30)
         offset = (page - 1) * per_page
@@ -32,12 +34,19 @@ def index():
         if 'feed' in flask.request.args:
             feed_hex = flask.request.args.get('feed').encode()
             feed_url = binascii.unhexlify(feed_hex).decode('utf-8')
+            feed = Feed.query.filter_by(feed=feed_url).first()
+            if not feed:
+                flask.abort(404)
             entry_query = entry_query.filter(Feed.feed == feed_url)
+            ws_topic = 'feed:{}'.format(feed.id)
+        else:
+            ws_topic = 'user:{}'.format(flask_login.current_user.id)
 
         entries = entry_query.order_by(Entry.published.desc())\
                              .offset(offset).limit(per_page).all()
 
-    return flask.render_template('feed.jinja2', entries=entries, page=page)
+    return flask.render_template('feed.jinja2', entries=entries, page=page,
+                                 ws_topic=ws_topic)
 
 
 @views.route('/install')

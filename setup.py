@@ -12,4 +12,4 @@ setup(name='Woodwind',
       install_requires=[
           'Flask', 'Flask-Login', 'Flask-Micropub', 'Flask-SQLAlchemy',
           'beautifulsoup4', 'bleach', 'celery', 'feedparser', 'html5lib',
-          'mf2py', 'mf2util', 'redis', 'requests'])
+          'mf2py', 'mf2util', 'redis', 'requests', 'tornado'])

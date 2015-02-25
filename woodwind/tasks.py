@@ -194,7 +194,7 @@ def notify_feed_updated(session, feed, entries):
                     for e in entries
                 ],
             })
-            redis.publish('woodwind:user:{}'.format(user.id), message)
+            redis.publish('woodwind_notify', message)
 
 
 def is_content_equal(e1, e2):
