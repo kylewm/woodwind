@@ -18,7 +18,7 @@
       </div>
     {% endif %}
     <footer>
-      <a href="{{ context.permalink }}">{{ context.published }}</a>
+      <a href="{{ context.permalink }}">{{ context.published | relative_time }}</a>
     </footer>
   </article>
 {% endfor %}
@@ -42,7 +42,7 @@
     </div>
   {% endif %}
   <footer>
-    <a href="{{ entry.permalink }}">{{ entry.published }}</a>
+    <a href="{{ entry.permalink }}">{{ entry.published | relative_time }}</a>
     <div class="reply-area">
       {% include '_reply.jinja2' with context %}
     </div>

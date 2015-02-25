@@ -31,7 +31,7 @@
     </div>
   {% endif %}
 
-  {% if current_user %}
+  {% if current_user.is_authenticated() %}
     <script>
       webSocketSubscribe('woodwind:user:' + {{ current_user.id }});
     </script>
