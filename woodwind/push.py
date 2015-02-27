@@ -24,14 +24,18 @@ def notify(feed_id):
         mode = request.args.get('hub.mode')
         topic = request.args.get('hub.topic')
         challenge = request.args.get('hub.challenge')
+        lease_seconds = request.args.get('hub.lease_seconds')
         current_app.logger.debug(
-            'PuSH verification. feed=%r, mode=%s, topic=%s, challenge=%s',
-            feed, mode, topic, challenge)
+            'PuSH verification. feed=%r, mode=%s, topic=%s, challenge=%s, lease_seconds=%s',
+            feed, mode, topic, challenge, lease_seconds)
 
         if mode == 'subscribe' and topic == feed.push_topic:
             current_app.logger.debug(
                 'PuSH verify subscribe for feed=%r, topic=%s', feed, topic)
             feed.push_verified = True
+            if lease_seconds:
+                feed.push_expiry = datetime.datetime.utcnow() \
+                    + datetime.timedelta(seconds=int(lease_seconds))
             db.session.commit()
             return challenge
         elif mode == 'unsubscribe' and topic != feed.push_topic:

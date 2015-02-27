@@ -111,6 +111,7 @@ class Feed(db.Model):
     push_hub = db.Column(db.String(512))
     push_topic = db.Column(db.String(512))
     push_verified = db.Column(db.Boolean)
+    push_expiry = db.Column(db.DateTime)
     last_pinged = db.Column(db.DateTime)
 
     def get_feed_code(self):

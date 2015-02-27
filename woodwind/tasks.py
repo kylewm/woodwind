@@ -133,12 +133,13 @@ def check_push_subscription(session, feed, response):
             'hub.mode': mode,
             'hub.topic': topic,
             'hub.callback': build_callback_url(),
-            'hub.verify': 'async', # backcompat with 0.3
+            'hub.verify': 'async',  # backcompat with 0.3
             # TODO secret should only be used over HTTPS
             # 'hub.secret': secret,
         })
         logger.debug('%s response %r', mode, r)
 
+    expiry = feed.push_expiry
     old_hub = feed.push_hub
     old_topic = feed.push_topic
     hub = response.links.get('hub', {}).get('url')
@@ -165,13 +166,15 @@ def check_push_subscription(session, feed, response):
                     topic = next((link['href'] for link in links
                                   if 'self' in link['rel']), None)
 
-    if hub != old_hub or topic != old_topic or not feed.push_verified:
+    if ((expiry and expiry - datetime.datetime.utcnow() <= UPDATE_INTERVAL)
+            or hub != old_hub or topic != old_topic or not feed.push_verified):
         feed.push_hub = hub
         feed.push_topic = topic
         feed.push_verified = False
+        feed.push_expiry = None
         session.commit()
 
-        if old_hub and old_topic:
+        if old_hub and old_topic and hub != old_hub and topic != old_topic:
             send_request('unsubscribe', old_hub, old_topic)
 
         if hub and topic:
