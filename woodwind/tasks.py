@@ -98,7 +98,7 @@ def process_feed(session, feed):
 
                 if old:
                     feed.entries.remove(old)
-                    session.delete(old)
+                    #session.delete(old)
 
                 feed.entries.append(entry)
                 session.commit()
@@ -133,6 +133,7 @@ def check_push_subscription(session, feed, response):
             'hub.mode': mode,
             'hub.topic': topic,
             'hub.callback': build_callback_url(),
+            'hub.verify': 'async', # backcompat with 0.3
             # TODO secret should only be used over HTTPS
             # 'hub.secret': secret,
         })
@@ -155,12 +156,14 @@ def check_push_subscription(session, feed, response):
                 topic = self_link and self_link.get('href')
         elif feed.type == 'xml':
             parsed = feedparser.parse(get_response_content(response))
-            if not hub:
-                hub = next((link['href'] for link in parsed.feed.links
-                            if 'hub' in link['rel']), None)
-            if not topic:
-                topic = next((link['href'] for link in parsed.feed.links
-                              if 'self' in link['rel']), None)
+            links = parsed.feed.get('links')
+            if links:
+                if not hub:
+                    hub = next((link['href'] for link in links
+                                if 'hub' in link['rel']), None)
+                if not topic:
+                    topic = next((link['href'] for link in links
+                                  if 'self' in link['rel']), None)
 
     if hub != old_hub or topic != old_topic or not feed.push_verified:
         feed.push_hub = hub
@@ -222,9 +225,9 @@ def process_xml_feed_for_new_entries(session, feed, response):
 
     logger.debug('found {} entries'.format(len(parsed.entries)))
     for p_entry in parsed.entries:
-        logger.debug('processing entry {}'.format(p_entry))
-        permalink = p_entry.link
-        uid = p_entry.id or permalink
+        logger.debug('processing entry {}'.format(str(p_entry)[:256]))
+        permalink = p_entry.get('link')
+        uid = p_entry.get('id') or permalink
 
         if not uid:
             continue
