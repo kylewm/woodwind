@@ -42,7 +42,7 @@ def index():
         else:
             ws_topic = 'user:{}'.format(flask_login.current_user.id)
 
-        entries = entry_query.order_by(Entry.published.desc())\
+        entries = entry_query.order_by(Entry.retrieved.desc())\
                              .offset(offset).limit(per_page).all()
 
     return flask.render_template('feed.jinja2', entries=entries, page=page,

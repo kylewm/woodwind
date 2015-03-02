@@ -79,10 +79,13 @@ def process_feed(session, feed):
             return
 
         check_push_subscription(session, feed, response)
+        backfill = len(feed.entries) == 0  # backfill if this is the first pull
         if feed.type == 'xml':
-            result = process_xml_feed_for_new_entries(session, feed, response)
+            result = process_xml_feed_for_new_entries(session, feed,
+                                                      response, backfill)
         elif feed.type == 'html':
-            result = process_html_feed_for_new_entries(session, feed, response)
+            result = process_html_feed_for_new_entries(session, feed,
+                                                       response, backfill)
         else:
             result = []
 
@@ -95,16 +98,20 @@ def process_feed(session, feed):
                 # set a default value for published if none is provided
                 if not entry.published:
                     entry.published = (old and old.published) or now
-
                 if old:
+                    # if we're updating an old entriy, use the original
+                    # retrieved time
+                    entry.retrieved = old.retrieved
                     feed.entries.remove(old)
-                    #session.delete(old)
+                    # punt on deleting for now, learn about cascade
+                    # and stuff later
+                    # session.delete(old)
 
                 feed.entries.append(entry)
                 session.commit()
 
                 for in_reply_to in entry.get_property('in-reply-to', []):
-                    fetch_reply_context.delay(entry.id, in_reply_to)
+                    fetch_reply_context(entry.id, in_reply_to)
 
                 new_entries.append(entry)
             else:
@@ -217,7 +224,7 @@ def is_content_equal(e1, e2):
             and e1.properties == e2.properties)
 
 
-def process_xml_feed_for_new_entries(session, feed, response):
+def process_xml_feed_for_new_entries(session, feed, response, backfill):
     logger.debug('fetching xml feed: %s', feed)
 
     now = datetime.datetime.utcnow()
@@ -248,6 +255,10 @@ def process_xml_feed_for_new_entries(session, feed, response):
         else:
             published = updated
 
+        retrieved = now
+        if backfill and published:
+            retrieved = published
+
         title = p_entry.get('title')
 
         content = None
@@ -267,7 +278,7 @@ def process_xml_feed_for_new_entries(session, feed, response):
             updated=updated,
             uid=uid,
             permalink=permalink,
-            retrieved=now,
+            retrieved=retrieved,
             title=p_entry.get('title'),
             content=content,
             author_name=p_entry.get('author_detail', {}).get('name')
@@ -280,20 +291,20 @@ def process_xml_feed_for_new_entries(session, feed, response):
         yield entry
 
 
-def process_html_feed_for_new_entries(session, feed, response):
+def process_html_feed_for_new_entries(session, feed, response, backfill):
     doc = get_response_content(response)
     parsed = mf2util.interpret_feed(
-        mf2py.Parser(url=feed.feed, doc=doc).to_dict(), feed.feed)
+        mf2py.parse(url=feed.feed, doc=doc), feed.feed)
     hfeed = parsed.get('entries', [])
 
     for hentry in hfeed:
-        entry = hentry_to_entry(hentry, feed)
+        entry = hentry_to_entry(hentry, feed, backfill)
         if entry:
             logger.debug('built entry: %s', entry.permalink)
             yield entry
 
 
-def hentry_to_entry(hentry, feed):
+def hentry_to_entry(hentry, feed, backfill):
     now = datetime.datetime.utcnow()
     permalink = url = hentry.get('url')
     uid = hentry.get('uid') or url
@@ -310,12 +321,20 @@ def hentry_to_entry(hentry, feed):
         content = title
         title = None
 
+    published = hentry.get('published')
+    updated = hentry.get('updated')
+
+    # retrieved time is now unless we're backfilling old posts
+    retrieved = now
+    if backfill and published:
+        retrieved = published
+
     entry = Entry(
         uid=uid,
-        retrieved=now,
+        retrieved=retrieved,
         permalink=permalink,
-        published=hentry.get('published'),
-        updated=hentry.get('updated'),
+        published=published,
+        updated=updated,
         title=title,
         content=content,
         author_name=hentry.get('author', {}).get('name'),
@@ -323,9 +342,10 @@ def hentry_to_entry(hentry, feed):
         or (feed and fallback_photo(feed.origin)),
         author_url=hentry.get('author', {}).get('url'))
 
-    in_reply_to = hentry.get('in-reply-to')
-    if in_reply_to:
-        entry.set_property('in-reply-to', in_reply_to)
+    for prop in 'in-reply-to', 'like-of', 'repost-of':
+        value = hentry.get(prop)
+        if value:
+            entry.set_property(prop, value)
 
     return entry
 
