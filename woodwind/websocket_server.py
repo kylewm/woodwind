@@ -31,7 +31,10 @@ class WSHandler(tornado.websocket.WebSocketHandler):
         return True
 
     def forward_message(self, message):
-        self.write_message(message)
+        try:
+            self.write_message(message)
+        except tornado.websocket.WebSocketClosedError:
+            self.on_close()
 
     def on_message(self, topic):
         self.topic = topic

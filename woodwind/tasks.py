@@ -133,7 +133,7 @@ def check_push_subscription(session, feed, response):
             'hub.mode': mode,
             'hub.topic': topic,
             'hub.callback': build_callback_url(),
-            'hub.verify': 'async',  # backcompat with 0.3
+            'hub.verify': 'sync',  # backcompat with 0.3
             # TODO secret should only be used over HTTPS
             # 'hub.secret': secret,
         })
@@ -145,6 +145,7 @@ def check_push_subscription(session, feed, response):
     hub = response.links.get('hub', {}).get('url')
     topic = response.links.get('self', {}).get('url')
 
+    logger.debug('link headers. links=%s, hub=%s, topic=%s', response.links, hub, topic)
     if not hub or not topic:
         # try to find link rel elements
         if feed.type == 'html':

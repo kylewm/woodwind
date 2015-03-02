@@ -372,13 +372,14 @@ def relative_time(dt):
     if dt:
         now = datetime.datetime.utcnow()
         diff = now - dt
+        zero = datetime.timedelta(0)
         years = diff.days // 365
         hours = diff.seconds // 60 // 60
         minutes = diff.seconds // 60
 
-        if diff == 0:
+        if diff == zero:
             pretty = 'Right now'
-        if diff > 0:
+        if diff > zero:
             if years > 1:
                 pretty = str(years) + ' years ago'
             elif diff.days == 1:
