@@ -31,7 +31,11 @@
     {% if entry.author_name %}
       {{ entry.author_name }} -
     {% endif %}
-    {{ entry.feed.name }}
+    {% if entry.feed %}
+      <a href="{{ url_for('.index', feed=entry.feed.get_feed_code()) }}">
+        {{ entry.feed.name }}
+      </a>
+    {% endif %}
   </header>
   {% if entry.title %}
     <h1>{{ entry.title }}</h1>
