@@ -3,3 +3,7 @@
 celerybeat-schedule
 .sass-cache
 __pycache__
+celerybeat-schedule*
+config.py
+venv
+*.egg-info

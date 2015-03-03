@@ -363,7 +363,7 @@ def fetch_reply_context(entry_id, in_reply_to):
                 mf2py.Parser(url=proxy_url(in_reply_to)).to_dict(),
                 in_reply_to)
             if parsed:
-                context = hentry_to_entry(parsed, in_reply_to)
+                context = hentry_to_entry(parsed, in_reply_to, False)
 
         if context:
             entry.reply_context.append(context)

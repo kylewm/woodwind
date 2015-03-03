@@ -18,6 +18,10 @@
 
   <header>
     {% if current_user.is_authenticated() %}
+      <span class="h-x-app" style="font-weight: bold">
+        <img class="u-logo" src="{{ url_for('static', filename='logo.png') }}" style="max-height: 1.5em; vertical-align: middle;" />
+        Woodwind
+      </span>
       <ul id="navigation">
         <li>
           <a href="{{ url_for('.index') }}">Home</a>
@@ -33,12 +37,13 @@
           (<a href="{{ url_for('.logout') }}">Logout</a>)
         </li>
       </ul>
-    {% endif %}
-    <h1 class="h-x-app">
-      <img class="u-logo" src="{{ url_for('static', filename='logo.png') }}" style="max-height: 64px; vertical-align: middle;" />
-        Woodwind
-    </h1>
 
+    {% else %}
+      <h1 class="h-x-app">
+        <img class="u-logo" src="{{ url_for('static', filename='logo.png') }}" style="max-height: 1.5em; vertical-align: middle;" />
+        Woodwind
+      </h1>
+    {% endif %}
     {% if not current_user.is_authenticated() %}
       <form action="{{ url_for('.login') }}" method="POST">
         <input type="text" name="me" placeholder="mydomain.com" />

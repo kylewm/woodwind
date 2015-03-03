@@ -25,7 +25,7 @@ def notify(feed_id):
         topic = request.args.get('hub.topic')
         challenge = request.args.get('hub.challenge')
         lease_seconds = request.args.get('hub.lease_seconds')
-        current_app.logger.debusg(
+        current_app.logger.debug(
             'PuSH verification. feed=%r, mode=%s, topic=%s, '
             'challenge=%s, lease_seconds=%s',
             feed, mode, topic, challenge, lease_seconds)
