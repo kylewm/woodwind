@@ -359,9 +359,9 @@ th {
 /*$body-font: Georgia, Times New Roman, serif;*/
 /* Subtlety of Hue */
 body {
-    padding-top: 1em;
   font: 12pt Helvetica, Arial, sans-serif;
-  background: #ECEBF0; }
+  background: #ECEBF0;
+  padding-top: 1em; }
 
 header, main {
   max-width: 600px;
@@ -400,6 +400,10 @@ article {
     background-color: #f3f3f3; }
   article div {
     overflow: auto; }
+    article div p:first-child {
+      margin-top: 0; }
+    article div p:last-child {
+      margin-bottom: 0; }
   article img, article video {
     max-width: 100%; }
   article header {

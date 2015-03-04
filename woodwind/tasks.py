@@ -342,7 +342,7 @@ def hentry_to_entry(hentry, feed, backfill):
         or (feed and fallback_photo(feed.origin)),
         author_url=hentry.get('author', {}).get('url'))
 
-    for prop in 'in-reply-to', 'like-of', 'repost-of':
+    for prop in 'in-reply-to', 'like-of', 'repost-of', 'syndication':
         value = hentry.get(prop)
         if value:
             entry.set_property(prop, value)

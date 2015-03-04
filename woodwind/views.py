@@ -45,6 +45,7 @@ def index():
         entries = entry_query.order_by(Entry.retrieved.desc())\
                              .offset(offset).limit(per_page).all()
 
+    entries = dedupe_copies(entries)
     return flask.render_template('feed.jinja2', entries=entries, page=page,
                                  ws_topic=ws_topic)
 
@@ -474,3 +475,14 @@ def url_for_other_page(page):
     args['page'] = page
 
     return flask.url_for(flask.request.endpoint, **args)
+
+
+def dedupe_copies(entries):
+    all_copies = set()
+    for entry in entries:
+        syndurls = entry.get_property('syndication')
+        if syndurls:
+            copies = [e for e in entries if e.permalink in syndurls]
+            entry._syndicated_copies = copies
+            all_copies.update(copies)
+    return [e for e in entries if e not in all_copies]

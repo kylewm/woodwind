@@ -45,6 +45,16 @@
       {{ entry.content_cleaned() | add_preview }}
     </div>
   {% endif %}
+
+  {% if entry._syndicated_copies %}
+    <div>
+      Also on
+      {% for copy in entry._syndicated_copies %}
+        {{ copy.permalink | domain_for_url }}
+      {% endfor %}
+    </div>
+  {% endif %}
+
   <footer>
     <a href="{{ entry.permalink }}">{{ entry.published | relative_time }}</a>
     <div class="reply-area">

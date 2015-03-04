@@ -149,6 +149,10 @@ class Entry(db.Model):
         primaryjoin=id == entry_to_reply_context.c.entry_id,
         secondaryjoin=id == entry_to_reply_context.c.context_id)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._syndicated_copies = []
+
     def content_cleaned(self):
         if self.content:
             text = self.content
@@ -162,7 +166,7 @@ class Entry(db.Model):
 
     def set_property(self, key, value):
         self.properties = ({} if self.properties is None
-                           else dict(self.settings))
+                           else dict(self.properties))
         self.properties[key] = value
 
     def __repr__(self):

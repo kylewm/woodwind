@@ -1,4 +1,4 @@
-from fabric.api import local, prefix, cd, run, env, lcd
+from fabric.api import local, prefix, cd, run, env, lcd, sudo
 
 env.hosts = ['orin.kylewm.com']
 
@@ -20,11 +20,20 @@ def pull():
         run("git submodule update")
 
 
+def push_remote():
+    with cd(REMOTE_PATH):
+        run("git add -p")
+        run("git diff-index --quiet HEAD || git commit")
+        run("git push origin master")
+
+
 def restart():
     with cd(REMOTE_PATH):
         with prefix("source venv/bin/activate"):
             run("pip install --upgrade -r requirements.txt")
-            run("supervisorctl restart ww:*")
+    sudo("restart woodwind")
+    sudo("restart woodwind-celery")
+    sudo("restart woodwind-tornado")
 
 
 def deploy():
