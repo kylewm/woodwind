@@ -359,6 +359,7 @@ th {
 /*$body-font: Georgia, Times New Roman, serif;*/
 /* Subtlety of Hue */
 body {
+    padding-top: 1em;
   font: 12pt Helvetica, Arial, sans-serif;
   background: #ECEBF0; }
 
