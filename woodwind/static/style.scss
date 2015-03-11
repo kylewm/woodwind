@@ -154,6 +154,8 @@ textarea, input[type="text"], input[type="url"] {
 .syndication-toggle {
     display: inline-block;
     margin-top: 0.25em;
+    height: 32px;
+    width: 32px;
 
     input {
         display: none;

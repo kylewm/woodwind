@@ -21,6 +21,8 @@ import requests
 UPDATE_INTERVAL = datetime.timedelta(hours=1)
 TWITTER_RE = re.compile(
     r'https?://(?:www\.|mobile\.)?twitter\.com/(\w+)/status(?:es)?/(\w+)')
+TAG_RE = re.compile(r'</?\w+[^>]*?>')
+
 
 app = celery.Celery('woodwind')
 app.config_from_object('celeryconfig')
@@ -216,8 +218,15 @@ def is_content_equal(e1, e2):
     has been updated. If any of these fields have changed, we'll scrub the
     old entry and replace it with the updated one.
     """
+    def normalize(content):
+        """Strip HTML tags, added to prevent a specific case where Wordpress
+        syntax highlighting (crayon) generates slightly different
+        markup every time it's called.
+        """
+        return TAG_RE.sub('', content)
+
     return (e1.title == e2.title
-            and e1.content == e2.content
+            and normalize(e1.content) == normalize(e2.content)
             and e1.author_name == e2.author_name
             and e1.author_url == e2.author_url
             and e1.author_photo == e2.author_photo
