@@ -1,7 +1,6 @@
 from config import Config
 from contextlib import contextmanager
 from redis import StrictRedis
-from uwsgidecorators import timer
 from woodwind.models import Feed, Entry
 import bs4
 import datetime
@@ -45,8 +44,7 @@ def session_scope():
         session.close()
 
 
-@timer(300)
-def tick(signum=None):
+def tick():
     """Checks all feeds to see if any of them are ready for an update.
     Makes use of uWSGI timers to run every 5 minutes, without needing
     a separate process to fire ticks.
