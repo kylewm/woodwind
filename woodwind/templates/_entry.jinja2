@@ -46,17 +46,14 @@
     </div>
   {% endif %}
 
-  {% if entry._syndicated_copies %}
-    <div>
-      Also on
-      {% for copy in entry._syndicated_copies %}
-        {{ copy.permalink | domain_for_url }}
-      {% endfor %}
-    </div>
-  {% endif %}
 
   <footer>
     <a href="{{ entry.permalink }}">{{ entry.published | relative_time }}</a>
+
+  {% if entry._syndicated_copies %}
+    (also on{% for copy in entry._syndicated_copies %} <a href="{{ copy.permalink }}">{{ copy.permalink | domain_for_url }}</a>{% endfor %})
+  {% endif %}
+
     <div class="reply-area">
       {% include '_reply.jinja2' with context %}
     </div>
