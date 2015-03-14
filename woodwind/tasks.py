@@ -1,21 +1,22 @@
 from config import Config
 from contextlib import contextmanager
-from woodwind.models import Feed, Entry
 from redis import StrictRedis
+from uwsgidecorators import timer
+from woodwind.models import Feed, Entry
 import bs4
-import celery
-import celery.utils.log
 import datetime
 import feedparser
 import json
+import logging
 import mf2py
 import mf2util
 import re
+import requests
+import rq
 import sqlalchemy
 import sqlalchemy.orm
 import time
 import urllib.parse
-import requests
 
 
 UPDATE_INTERVAL = datetime.timedelta(hours=1)
@@ -23,15 +24,11 @@ TWITTER_RE = re.compile(
     r'https?://(?:www\.|mobile\.)?twitter\.com/(\w+)/status(?:es)?/(\w+)')
 TAG_RE = re.compile(r'</?\w+[^>]*?>')
 
-
-app = celery.Celery('woodwind')
-app.config_from_object('celeryconfig')
-
-logger = celery.utils.log.get_task_logger(__name__)
+logger = logging.getLogger(__name__)
 engine = sqlalchemy.create_engine(Config.SQLALCHEMY_DATABASE_URI)
 Session = sqlalchemy.orm.sessionmaker(bind=engine)
-
 redis = StrictRedis()
+q = rq.Queue(connection=redis)
 
 
 @contextmanager
@@ -48,20 +45,23 @@ def session_scope():
         session.close()
 
 
-@app.task
-def tick():
+@timer(300)
+def tick(signum=None):
+    """Checks all feeds to see if any of them are ready for an update.
+    Makes use of uWSGI timers to run every 5 minutes, without needing
+    a separate process to fire ticks.
+    """
     with session_scope() as session:
         now = datetime.datetime.utcnow()
-        logger.debug('Tick {}'.format(now))
+        logger.info('Tick {}'.format(now))
         for feed in session.query(Feed).all():
             logger.debug('Feed {} last checked {}'.format(
                 feed, feed.last_checked))
             if (not feed.last_checked
                     or now - feed.last_checked > UPDATE_INTERVAL):
-                update_feed.delay(feed.id)
+                q.enqueue(update_feed, feed.id)
 
 
-@app.task
 def update_feed(feed_id):
     with session_scope() as session:
         feed = session.query(Feed).get(feed_id)
@@ -359,7 +359,6 @@ def hentry_to_entry(hentry, feed, backfill):
     return entry
 
 
-@app.task
 def fetch_reply_context(entry_id, in_reply_to):
     with session_scope() as session:
         entry = session.query(Entry).get(entry_id)
@@ -394,7 +393,6 @@ def proxy_url(url):
             logger.debug('proxied twitter url %s', proxy_url)
             return proxy_url
     return url
-
 
 
 def fallback_photo(url):

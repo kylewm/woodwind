@@ -95,7 +95,7 @@ def settings():
 @flask_login.login_required
 def update_feed():
     feed_id = flask.request.form.get('id')
-    tasks.update_feed.delay(feed_id)
+    tasks.q.enqueue(tasks.update_feed, feed_id)
     return flask.redirect(flask.url_for('.feeds'))
 
 
@@ -103,7 +103,7 @@ def update_feed():
 @flask_login.login_required
 def update_all():
     for feed in flask_login.current_user.feeds:
-        tasks.update_feed.delay(feed.id)
+        tasks.q.enqueue(tasks.update_feed, feed.id)
     return flask.redirect(flask.url_for('.feeds'))
 
 
@@ -293,7 +293,7 @@ def add_subscription(origin, feed_url, type):
         flask_login.current_user.feeds.append(feed)
         db.session.commit()
         # go ahead and update the fed
-        tasks.update_feed.delay(feed.id)
+        tasks.q.enqueue(update_feed, feed.id)
     return feed
 
 

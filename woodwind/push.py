@@ -51,5 +51,5 @@ def notify(feed_id):
     current_app.logger.debug('received PuSH ping for %r', feed)
     feed.last_pinged = datetime.datetime.utcnow()
     db.session.commit()
-    tasks.update_feed.delay(feed.id)
+    tasks.q.enqueue(tasks.update_feed, feed.id)
     return make_response('', 204)
