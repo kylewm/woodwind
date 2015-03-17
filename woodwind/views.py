@@ -365,7 +365,7 @@ def domain_for_url(url):
 @views.app_template_filter()
 def favicon_for_url(url):
     parsed = urllib.parse.urlparse(url)
-    return 'http://www.google.com/s2/favicons?domain={}'.format(parsed.netloc)
+    return '//www.google.com/s2/favicons?domain={}'.format(parsed.netloc)
 
 
 @views.app_template_filter()
