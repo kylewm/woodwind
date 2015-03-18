@@ -109,13 +109,13 @@ def process_feed(session, feed):
 
                 feed.entries.append(entry)
                 session.commit()
-
-                for in_reply_to in entry.get_property('in-reply-to', []):
-                    fetch_reply_context(entry.id, in_reply_to)
-
                 new_entries.append(entry)
             else:
                 logger.info('skipping previously seen post %s', old.permalink)
+
+        for entry in new_entries:
+            for in_reply_to in entry.get_property('in-reply-to', []):
+                fetch_reply_context(entry.id, in_reply_to)
 
     finally:
         feed.last_checked = now

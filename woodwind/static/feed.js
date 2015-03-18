@@ -72,8 +72,10 @@ $(function(){
     function webSocketSubscribe(topic) {
         if ('WebSocket' in window) {
             var ws = new WebSocket(window.location.origin
-                                   .replace(/https?:\/\//, 'ws://')
-                                   .replace(/(:\d+)?$/, ':8077'));
+                                   .replace(/http:\/\//, 'ws://')
+                                   .replace(/https:\/\//, 'wss://')
+                                   + '/_updates');
+
             ws.onopen = function(event) {
                 // send the topic
                 console.log('subscribing to topic: ' + topic);
