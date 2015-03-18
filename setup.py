@@ -26,4 +26,6 @@ setup(name='Woodwind',
           'rq',
           'uwsgi',
           'websockets',
+          'pyOpenSSL',
+          'pyasn1',
       ])

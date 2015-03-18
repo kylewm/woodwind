@@ -8,14 +8,6 @@ from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.ext.associationproxy import association_proxy
 
 
-bleach.ALLOWED_TAGS += ['a', 'img', 'p', 'br', 'marquee', 'blink',
-                        'audio', 'video', 'table', 'tbody', 'td', 'tr']
-bleach.ALLOWED_ATTRIBUTES.update({
-    'img': ['src', 'alt', 'title'],
-    'audio': ['preload', 'controls', 'src'],
-    'video': ['preload', 'controls', 'src'],
-    'td': ['colspan'],
-})
 
 
 class JsonType(db.TypeDecorator):
@@ -135,6 +127,7 @@ class Entry(db.Model):
     author_photo = db.Column(db.String(512))
     title = db.Column(db.String(512))
     content = db.Column(db.Text)
+    content_cleaned = db.Column(db.Text)
     # other properties
     properties = db.Column(JsonType)
     # # association with the InReplyTo objects
@@ -152,12 +145,6 @@ class Entry(db.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._syndicated_copies = []
-
-    def content_cleaned(self):
-        if self.content:
-            text = self.content
-            text = re.sub('<script.*?</script>', '', text, flags=re.DOTALL)
-            return bleach.clean(text, strip=True)
 
     def get_property(self, key, default=None):
         if self.properties is None:

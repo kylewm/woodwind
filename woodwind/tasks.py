@@ -2,6 +2,7 @@ from config import Config
 from contextlib import contextmanager
 from redis import StrictRedis
 from woodwind.models import Feed, Entry
+from woodwind import util
 import bs4
 import datetime
 import feedparser
@@ -290,6 +291,7 @@ def process_xml_feed_for_new_entries(session, feed, response, backfill):
             retrieved=retrieved,
             title=p_entry.get('title'),
             content=content,
+            content_cleaned=util.clean(content),
             author_name=p_entry.get('author_detail', {}).get('name')
             or default_author_name,
             author_url=p_entry.get('author_detail', {}).get('href')
@@ -346,6 +348,7 @@ def hentry_to_entry(hentry, feed, backfill):
         updated=updated,
         title=title,
         content=content,
+        content_cleaned=util.clean(content),
         author_name=hentry.get('author', {}).get('name'),
         author_photo=hentry.get('author', {}).get('photo')
         or (feed and fallback_photo(feed.origin)),
