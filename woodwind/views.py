@@ -13,6 +13,7 @@ import requests
 import re
 import urllib
 import cgi
+import sqlalchemy
 
 views = flask.Blueprint('views', __name__)
 
@@ -26,10 +27,14 @@ def index():
     if flask_login.current_user.is_authenticated():
         per_page = flask.current_app.config.get('PER_PAGE', 30)
         offset = (page - 1) * per_page
-        entry_query = Entry.query\
-                           .join(Entry.feed)\
-                           .join(Feed.users)\
-                           .filter(User.id == flask_login.current_user.id)
+        entry_query = Entry.query
+
+        entry_query = entry_query\
+            .options(sqlalchemy.orm.subqueryload(Entry.feed),
+                     sqlalchemy.orm.subqueryload(Entry.reply_context))\
+            .join(Entry.feed)\
+            .join(Feed.users)\
+            .filter(User.id == flask_login.current_user.id)
 
         if 'feed' in flask.request.args:
             feed_hex = flask.request.args.get('feed').encode()

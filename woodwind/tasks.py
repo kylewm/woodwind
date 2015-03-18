@@ -152,7 +152,8 @@ def check_push_subscription(session, feed, response):
     hub = response.links.get('hub', {}).get('url')
     topic = response.links.get('self', {}).get('url')
 
-    logger.debug('link headers. links=%s, hub=%s, topic=%s', response.links, hub, topic)
+    logger.debug('link headers. links=%s, hub=%s, topic=%s',
+                 response.links, hub, topic)
     if not hub or not topic:
         # try to find link rel elements
         if feed.type == 'html':
