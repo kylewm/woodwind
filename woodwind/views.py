@@ -47,7 +47,8 @@ def index():
         else:
             ws_topic = 'user:{}'.format(flask_login.current_user.id)
 
-        entries = entry_query.order_by(Entry.retrieved.desc())\
+        entries = entry_query.order_by(Entry.retrieved.desc(),
+                                       Entry.published.desc())\
                              .offset(offset).limit(per_page).all()
 
     entries = dedupe_copies(entries)

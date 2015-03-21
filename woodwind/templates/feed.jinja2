@@ -4,7 +4,7 @@
   {% if ws_topic %}
     <script>var WS_TOPIC = "{{ ws_topic }}";</script>
   {% endif %}
-  <script src="{{url_for('static', filename='feed.js', version='2015-03-16')}}"></script>
+  <script src="{{url_for('static', filename='feed.js', version='2015-03-20')}}"></script>
 
   {% if current_user and current_user.settings
         and current_user.settings.get('reply-method') == 'indie-config' %}

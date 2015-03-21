@@ -87,11 +87,11 @@ def process_feed(session, feed):
         check_push_subscription(session, feed, response)
         backfill = len(feed.entries) == 0  # backfill if this is the first pull
         if feed.type == 'xml':
-            result = process_xml_feed_for_new_entries(session, feed,
-                                                      response, backfill)
+            result = process_xml_feed_for_new_entries(
+                session, feed, response, backfill, now)
         elif feed.type == 'html':
-            result = process_html_feed_for_new_entries(session, feed,
-                                                       response, backfill)
+            result = process_html_feed_for_new_entries(
+                session, feed, response, backfill, now)
         else:
             result = []
 
@@ -121,7 +121,7 @@ def process_feed(session, feed):
 
         for entry in new_entries:
             for in_reply_to in entry.get_property('in-reply-to', []):
-                fetch_reply_context(entry.id, in_reply_to)
+                fetch_reply_context(entry.id, in_reply_to, now)
 
     finally:
         feed.last_checked = now
@@ -204,6 +204,9 @@ def notify_feed_updated(session, feed, entries):
     import flask.ext.login as flask_login
     flask_app = create_app()
 
+    entries = sorted(entries, key=lambda e: (e.retrieved, e.published),
+                     reverse=True)
+
     for user in feed.users:
         with flask_app.test_request_context():
             flask_login.login_user(user, remember=True)
@@ -241,10 +244,9 @@ def is_content_equal(e1, e2):
             and e1.properties == e2.properties)
 
 
-def process_xml_feed_for_new_entries(session, feed, response, backfill):
+def process_xml_feed_for_new_entries(session, feed, response, backfill, now):
     logger.debug('fetching xml feed: %s', feed)
 
-    now = datetime.datetime.utcnow()
     parsed = feedparser.parse(get_response_content(response))
     feed_props = parsed.get('feed', {})
     default_author_url = feed_props.get('author_detail', {}).get('href')
@@ -252,7 +254,9 @@ def process_xml_feed_for_new_entries(session, feed, response, backfill):
     default_author_photo = feed_props.get('logo')
 
     logger.debug('found {} entries'.format(len(parsed.entries)))
-    for p_entry in parsed.entries:
+
+    # work from the bottom up (oldest first, usually)
+    for p_entry in reversed(parsed.entries):
         logger.debug('processing entry {}'.format(str(p_entry)[:256]))
         permalink = p_entry.get('link')
         uid = p_entry.get('id') or permalink
@@ -309,21 +313,20 @@ def process_xml_feed_for_new_entries(session, feed, response, backfill):
         yield entry
 
 
-def process_html_feed_for_new_entries(session, feed, response, backfill):
+def process_html_feed_for_new_entries(session, feed, response, backfill, now):
     doc = get_response_content(response)
     parsed = mf2util.interpret_feed(
         mf2py.parse(url=feed.feed, doc=doc), feed.feed)
     hfeed = parsed.get('entries', [])
 
     for hentry in hfeed:
-        entry = hentry_to_entry(hentry, feed, backfill)
+        entry = hentry_to_entry(hentry, feed, backfill, now)
         if entry:
             logger.debug('built entry: %s', entry.permalink)
             yield entry
 
 
-def hentry_to_entry(hentry, feed, backfill):
-    now = datetime.datetime.utcnow()
+def hentry_to_entry(hentry, feed, backfill, now):
     permalink = url = hentry.get('url')
     uid = hentry.get('uid') or url
     if not uid:
@@ -369,7 +372,7 @@ def hentry_to_entry(hentry, feed, backfill):
     return entry
 
 
-def fetch_reply_context(entry_id, in_reply_to):
+def fetch_reply_context(entry_id, in_reply_to, now):
     with session_scope() as session:
         entry = session.query(Entry).get(entry_id)
         context = session.query(Entry)\
@@ -378,10 +381,9 @@ def fetch_reply_context(entry_id, in_reply_to):
         if not context:
             logger.info('fetching in-reply-to url: %s', in_reply_to)
             parsed = mf2util.interpret(
-                mf2py.Parser(url=proxy_url(in_reply_to)).to_dict(),
-                in_reply_to)
+                mf2py.parse(url=proxy_url(in_reply_to)), in_reply_to)
             if parsed:
-                context = hentry_to_entry(parsed, in_reply_to, False)
+                context = hentry_to_entry(parsed, in_reply_to, False, now)
 
         if context:
             entry.reply_context.append(context)

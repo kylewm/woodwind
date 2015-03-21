@@ -83,9 +83,7 @@ $(function(){
             };
             ws.onmessage = function(event) {
                 var data = JSON.parse(event.data);
-                data.entries.forEach(function(entryHtml) {
-                    $('body main').prepend(entryHtml);
-                });
+                $('body main').prepend(data.entries.join('\n'));
                 attachListeners();
             };
         }
