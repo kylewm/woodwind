@@ -48,7 +48,8 @@ def notify(feed_id):
         abort(404)
 
     # could it be? an actual push notification!?
-    current_app.logger.debug('received PuSH ping for %r', feed)
+    current_app.logger.debug(
+        'received PuSH ping for %r; content size: %d', feed, len(request.data))
     feed.last_pinged = datetime.datetime.utcnow()
     db.session.commit()
     tasks.q.enqueue(tasks.update_feed, feed.id)

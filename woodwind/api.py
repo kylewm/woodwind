@@ -20,7 +20,8 @@ def publish():
 
     if action == 'like':
         data['like-of'] = target
-
+    elif action == 'repost':
+        data['repost-of'] = target
     else:
         data['in-reply-to'] = target
         data['content'] = content

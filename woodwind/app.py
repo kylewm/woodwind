@@ -9,6 +9,11 @@ import flask
 def create_app():
     app = flask.Flask('woodwind')
     app.config.from_object(Config)
+    if not app.debug:
+        import logging
+        import sys
+        app.logger.setLevel(logging.DEBUG)
+        app.logger.addHandler(logging.StreamHandler(sys.stdout))
     extensions.init_app(app)
     app.register_blueprint(views)
     app.register_blueprint(api)

@@ -22,6 +22,16 @@ body {
 }
 
 
+a { 
+    color: #336699; 
+    text-decoration: none; 
+}
+
+a:hover { 
+    color: #993366; 
+}
+
+
 header, main {
     max-width: 600px;
     margin: 0 auto;
@@ -134,7 +144,7 @@ textarea, input[type="text"], input[type="url"] {
 .micropub-form {
     .content {
         height: 1em;
-        width: calc(100% - 1.4em - 48px);
+        width: calc(100% - 1.4em - 96px);
         padding: 3px;
         margin: 0;
         vertical-align: middle;
