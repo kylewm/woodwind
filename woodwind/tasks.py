@@ -20,7 +20,11 @@ import time
 import urllib.parse
 
 
+# normal update interval for polling feeds
 UPDATE_INTERVAL = datetime.timedelta(hours=1)
+# update interval when polling feeds that are push verified
+UPDATE_INTERVAL_PUSH = datetime.timedelta(days=1)
+
 TWITTER_RE = re.compile(
     r'https?://(?:www\.|mobile\.)?twitter\.com/(\w+)/status(?:es)?/(\w+)')
 TAG_RE = re.compile(r'</?\w+[^>]*?>')
@@ -29,11 +33,12 @@ COMMENT_RE = re.compile(r'<!--[^>]*?-->')
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 logger.addHandler(logging.StreamHandler(sys.stdout))
-
 engine = sqlalchemy.create_engine(Config.SQLALCHEMY_DATABASE_URI)
 Session = sqlalchemy.orm.sessionmaker(bind=engine)
 redis = StrictRedis()
-q = rq.Queue(connection=redis)
+
+q_high = rq.Queue('high', connection=redis)
+q = rq.Queue('low', connection=redis)
 
 
 @contextmanager
@@ -62,7 +67,8 @@ def tick():
             logger.debug('Feed {} last checked {}'.format(
                 feed, feed.last_checked))
             if (not feed.last_checked
-                    or now - feed.last_checked > UPDATE_INTERVAL):
+                    or (not feed.push_verified and now - feed.last_checked > UPDATE_INTERVAL)
+                    or (feed.push_verified and now - feed.last_checked > UPDATE_INTERVAL_PUSH)):
                 q.enqueue(update_feed, feed.id)
 
 

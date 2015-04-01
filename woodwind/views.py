@@ -337,7 +337,7 @@ def find_possible_feeds(origin):
         if hfeed.get('entries'):
             feeds.append({
                 'origin': origin,
-                'feed': origin,
+                'feed': resp.url,
                 'type': 'html',
             })
 
