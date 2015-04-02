@@ -187,7 +187,7 @@ def check_push_subscription(session, feed, response):
                     topic = next((link['href'] for link in links
                                   if 'self' in link['rel']), None)
 
-    if ((expiry and expiry - datetime.datetime.utcnow() <= UPDATE_INTERVAL)
+    if ((expiry and expiry - datetime.datetime.utcnow() <= UPDATE_INTERVAL_PUSH)
             or hub != old_hub or topic != old_topic or not feed.push_verified):
         feed.push_hub = hub
         feed.push_topic = topic

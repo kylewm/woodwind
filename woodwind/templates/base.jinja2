@@ -48,8 +48,10 @@
       <form action="{{ url_for('.login') }}" method="POST">
         <input type="text" name="me" placeholder="mydomain.com" />
         <input type="hidden" name="next" placeholder="{{ request.path }}" />
-        <button type="submit">Login</button>
+        <button style="text-align: right;" type="submit">Login</button>
       </form>
+      Your Woodwind account is tied to your personal domain name. Check out IndieWebCamp's <a href="http://indiewebcamp.com/Getting_Started" target="_blank">Getting Started</a> page for details.
+
     {% endif %}
 
     {% block header %}{% endblock %}
