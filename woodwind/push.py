@@ -3,6 +3,7 @@ from .extensions import db
 from .models import Feed
 from flask import Blueprint, request, abort, current_app, make_response
 import datetime
+import hmac
 
 
 push = Blueprint('push', __name__)
@@ -34,10 +35,10 @@ def notify(feed_id):
 
             if topic != feed.push_topic:
                 current_app.logger.warn(
-                    'feed topic (%s) does not match subscription request (%s)', 
+                    'feed topic (%s) does not match subscription request (%s)',
                     feed.push_topic, topic)
                 abort(404)
-                
+
             current_app.logger.debug(
                 'PuSH verify subscribe for feed=%r, topic=%s', feed, topic)
             feed.push_verified = True
@@ -63,7 +64,21 @@ def notify(feed_id):
     # could it be? an actual push notification!?
     current_app.logger.debug(
         'received PuSH ping for %r; content size: %d', feed, len(request.data))
+
+    # try to process fat pings
+    content = None
+    signature = request.headers.get('X-Hub-Signature')
+    if signature and feed.push_secret and request.data:
+        h = hmac.new(feed.push_secret.encode('utf-8'),
+                     msg=request.data, digestmod='sha1').hexdigest()
+        if h != signature:
+            current_app.logger.warn(
+                'X-Hub-Signature did not match expected key')
+            return make_response('', 204)
+            content = request.data.decode('utf-8')
+
+    tasks.q_high.enqueue(tasks.update_feed, feed.id,
+                         content=content, is_polling=False)
     feed.last_pinged = datetime.datetime.utcnow()
     db.session.commit()
-    tasks.q_high.enqueue(tasks.update_feed, feed.id)
     return make_response('', 204)

@@ -3,6 +3,7 @@ import json
 import binascii
 from .extensions import db
 import re
+import uuid
 
 from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.ext.associationproxy import association_proxy
@@ -104,10 +105,17 @@ class Feed(db.Model):
     push_topic = db.Column(db.String(512))
     push_verified = db.Column(db.Boolean)
     push_expiry = db.Column(db.DateTime)
+    push_secret = db.Column(db.String(200))
     last_pinged = db.Column(db.DateTime)
 
     def get_feed_code(self):
         return binascii.hexlify(self.feed.encode())
+
+    def get_or_create_push_secret(self):
+        if not self.push_secret:
+            self.push_secret = uuid.uuid4().hex
+            db.commit()
+        return self.push_secret
 
     def __repr__(self):
         return '<Feed:{},{}>'.format(self.name, self.feed)
