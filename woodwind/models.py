@@ -114,7 +114,6 @@ class Feed(db.Model):
     def get_or_create_push_secret(self):
         if not self.push_secret:
             self.push_secret = uuid.uuid4().hex
-            db.commit()
         return self.push_secret
 
     def __repr__(self):

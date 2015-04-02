@@ -210,6 +210,8 @@ def check_push_subscription(session, feed, response):
         if hub and topic:
             send_request('subscribe', hub, topic)
 
+        session.commit()
+
 
 def notify_feed_updated(session, feed, entries):
     """Render the new entries and publish them to redis
