@@ -69,13 +69,15 @@ def notify(feed_id):
     content = None
     signature = request.headers.get('X-Hub-Signature')
     if signature and feed.push_secret and request.data:
-        h = hmac.new(feed.push_secret.encode('utf-8'),
+        expected = 'sha1=' + hmac.new(feed.push_secret.encode('utf-8'),
                      msg=request.data, digestmod='sha1').hexdigest()
-        if h != signature:
+        if expected != signature:
             current_app.logger.warn(
-                'X-Hub-Signature did not match expected key')
+                'X-Hub-Signature (%s) did not match expected (%s)',
+                signature, expected)
             return make_response('', 204)
-            content = request.data.decode('utf-8')
+        current_app.logger.info('Good X-Hub-Signature!')
+        content = request.data.decode('utf-8')
 
     tasks.q_high.enqueue(tasks.update_feed, feed.id,
                          content=content, is_polling=False)
