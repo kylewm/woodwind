@@ -32,7 +32,6 @@ def restart():
         with prefix("source venv/bin/activate"):
             run("pip install --upgrade -r requirements.txt")
     sudo("restart woodwind")
-    sudo("restart woodwind-tornado")
 
 
 def deploy():
