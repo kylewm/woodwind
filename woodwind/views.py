@@ -380,13 +380,14 @@ def relative_time(dt):
         now = datetime.datetime.utcnow()
         diff = now - dt
         zero = datetime.timedelta(0)
-        years = diff.days // 365
-        hours = diff.seconds // 60 // 60
-        minutes = diff.seconds // 60
 
         if diff == zero:
             pretty = 'Right now'
-        if diff > zero:
+        elif diff > zero:
+            years = diff.days // 365
+            hours = diff.seconds // 60 // 60
+            minutes = diff.seconds // 60
+
             if years > 1:
                 pretty = str(years) + ' years ago'
             elif diff.days == 1:
@@ -404,22 +405,27 @@ def relative_time(dt):
             else:
                 pretty = str(diff.seconds) + ' seconds ago'
         else:
-            if years < -1:
-                pretty = str(-years) + ' years from now'
-            elif diff.days == -1:
+            diff = abs(diff)
+            years = diff.days // 365
+            hours = diff.seconds // 60 // 60
+            minutes = diff.seconds // 60
+
+            if years > 1:
+                pretty = str(years) + ' years from now'
+            elif diff.days == 1:
                 pretty = 'A day from now'
-            elif diff.days < -1:
-                pretty = str(-diff.days) + ' days from now'
-            elif hours == -1:
+            elif diff.days > 1:
+                pretty = str(diff.days) + ' days from now'
+            elif hours == 1:
                 pretty = 'An hour from now'
-            elif hours < -1:
-                pretty = str(-hours) + ' hours from now'
-            elif minutes == -1:
+            elif hours > 1:
+                pretty = str(hours) + ' hours from now'
+            elif minutes == 1:
                 pretty = 'A minute from now'
-            elif minutes < -1:
-                pretty = str(-minutes) + ' minutes from now'
+            elif minutes > 1:
+                pretty = str(minutes) + ' minutes from now'
             else:
-                pretty = str(-diff.seconds) + ' seconds from now'
+                pretty = str(diff.seconds) + ' seconds from now'
 
         return '<time datetime="{}">{}</time>'.format(dt.isoformat(), pretty)
 

@@ -31,8 +31,8 @@ TAG_RE = re.compile(r'</?\w+[^>]*?>')
 COMMENT_RE = re.compile(r'<!--[^>]*?-->')
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-logger.addHandler(logging.StreamHandler(sys.stdout))
+#logger.setLevel(logging.DEBUG)
+#logger.addHandler(logging.StreamHandler(sys.stdout))
 engine = sqlalchemy.create_engine(Config.SQLALCHEMY_DATABASE_URI)
 Session = sqlalchemy.orm.sessionmaker(bind=engine)
 redis = StrictRedis()
@@ -249,8 +249,9 @@ def is_content_equal(e1, e2):
         syntax highlighting (crayon) generates slightly different
         markup every time it's called.
         """
-        content = TAG_RE.sub('', content)
-        content = COMMENT_RE.sub('', content)
+        if content:
+            content = TAG_RE.sub('', content)
+            content = COMMENT_RE.sub('', content)
         return content
 
     return (e1.title == e2.title
