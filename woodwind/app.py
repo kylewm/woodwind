@@ -5,7 +5,7 @@ from .push import push
 import flask
 
 
-def create_app(config_path):
+def create_app(config_path='../woodwind.cfg'):
     app = flask.Flask('woodwind')
     app.config.from_pyfile(config_path)
     if not app.debug:
