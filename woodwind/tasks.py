@@ -1,8 +1,8 @@
-from config import Config
 from contextlib import contextmanager
 from redis import StrictRedis
 from woodwind.models import Feed, Entry
 from woodwind import util
+from flask import Config as FlaskConfig
 import bs4
 import datetime
 import feedparser
@@ -19,6 +19,8 @@ import sys
 import time
 import urllib.parse
 
+config = FlaskConfig('/home/kmahan/projects/woodwind')
+config.from_pyfile('/home/kmahan/projects/woodwind.cfg')
 
 # normal update interval for polling feeds
 UPDATE_INTERVAL = datetime.timedelta(hours=1)
@@ -30,10 +32,17 @@ TWITTER_RE = re.compile(
 TAG_RE = re.compile(r'</?\w+[^>]*?>')
 COMMENT_RE = re.compile(r'<!--[^>]*?-->')
 
+AUDIO_ENCLOSURE_TMPL = '<p><audio class="u-audio" src="{href}" controls '\
+                       'preload=none ><a href="{href}">audio</a></audio></p>'
+VIDEO_ENCLOSURE_TMPL = '<p><video class="u-video" src="{href}" controls '\
+                       'preload=none ><a href="{href}">video</a></video></p>'
+
 logger = logging.getLogger(__name__)
-#logger.setLevel(logging.DEBUG)
-#logger.addHandler(logging.StreamHandler(sys.stdout))
-engine = sqlalchemy.create_engine(Config.SQLALCHEMY_DATABASE_URI)
+logger.setLevel(logging.DEBUG)
+logger.addHandler(logging.StreamHandler(sys.stdout))
+
+engine = sqlalchemy.create_engine(config['SQLALCHEMY_DATABASE_URI'])
+
 Session = sqlalchemy.orm.sessionmaker(bind=engine)
 redis = StrictRedis()
 
@@ -148,8 +157,8 @@ def update_feed(feed_id, content=None, is_polling=True):
 def check_push_subscription(session, feed, response):
     def build_callback_url():
         return '{}://{}/_notify/{}'.format(
-            getattr(Config, 'PREFERRED_URL_SCHEME', 'http'),
-            Config.SERVER_NAME,
+            getattr(config, 'PREFERRED_URL_SCHEME', 'http'),
+            config['SERVER_NAME'],
             feed.id)
 
     def send_request(mode, hub, topic):
@@ -312,6 +321,16 @@ def process_xml_feed_for_new_entries(session, feed, content, backfill, now):
             if content.startswith(title_trimmed):
                 title = None
 
+        for link in p_entry.get('links', []):
+            if link.type == 'audio/mpeg':
+                audio = AUDIO_ENCLOSURE_TMPL.format(href=link.get('href'))
+                content = audio + (content or '')
+            if (link.type == 'video/x-m4v'
+                    or link.type == 'video/x-mp4'
+                    or link.type == 'video/mp4'):
+                video = VIDEO_ENCLOSURE_TMPL.format(href=link.get('href'))
+                content = video + (content or '')
+
         entry = Entry(
             published=published,
             updated=updated,
@@ -408,7 +427,7 @@ def fetch_reply_context(entry_id, in_reply_to, now):
 
 
 def proxy_url(url):
-    if Config.TWITTER_AU_KEY and Config.TWITTER_AU_SECRET:
+    if config['TWITTER_AU_KEY'] and config['TWITTER_AU_SECRET']:
         # swap out the a-u url for twitter urls
         match = TWITTER_RE.match(url)
         if match:
@@ -416,8 +435,8 @@ def proxy_url(url):
                 'https://twitter-activitystreams.appspot.com/@me/@all/@app/{}?'
                 .format(match.group(2)) + urllib.parse.urlencode({
                     'format': 'html',
-                    'access_token_key': Config.TWITTER_AU_KEY,
-                    'access_token_secret': Config.TWITTER_AU_SECRET,
+                    'access_token_key': config['TWITTER_AU_KEY'],
+                    'access_token_secret': config['TWITTER_AU_SECRET'],
                 }))
             logger.debug('proxied twitter url %s', proxy_url)
             return proxy_url

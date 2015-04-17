@@ -299,7 +299,7 @@ def add_subscription(origin, feed_url, type):
         flask_login.current_user.feeds.append(feed)
         db.session.commit()
         # go ahead and update the fed
-        tasks.q.enqueue(update_feed, feed.id)
+        tasks.q.enqueue(tasks.update_feed, feed.id)
     return feed
 
 
