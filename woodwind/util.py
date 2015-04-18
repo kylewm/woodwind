@@ -1,9 +1,9 @@
 import bleach
 import re
 
-bleach.ALLOWED_TAGS += [
-    'a', 'img', 'p', 'br', 'marquee', 'blink', 'audio', 'video', 'table', 
-    'tbody', 'td', 'tr', 'pre', 
+bleach.ALLOWED_TAGS += ['a', 'img', 'p', 'br', 'marquee', 'blink',
+                        'audio', 'video', 'table', 'tbody', 'td', 'tr',
+                        'div', 'span', 'pre',
 ]
 bleach.ALLOWED_ATTRIBUTES.update({
     'img': ['src', 'alt', 'title'],
