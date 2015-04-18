@@ -19,8 +19,8 @@ import sys
 import time
 import urllib.parse
 
-config = FlaskConfig('/home/kmahan/projects/woodwind')
-config.from_pyfile('/home/kmahan/projects/woodwind.cfg')
+config = FlaskConfig('/srv/www/kylewm.com/woodwind')
+config.from_pyfile('woodwind.cfg')
 
 # normal update interval for polling feeds
 UPDATE_INTERVAL = datetime.timedelta(hours=1)
@@ -38,8 +38,6 @@ VIDEO_ENCLOSURE_TMPL = '<p><video class="u-video" src="{href}" controls '\
                        'preload=none ><a href="{href}">video</a></video></p>'
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-logger.addHandler(logging.StreamHandler(sys.stdout))
 
 engine = sqlalchemy.create_engine(config['SQLALCHEMY_DATABASE_URI'])
 
@@ -118,7 +116,9 @@ def update_feed(feed_id, content=None, is_polling=True):
             for entry in result:
                 old = session.query(Entry)\
                     .filter(Entry.feed == feed)\
-                    .filter(Entry.uid == entry.uid).first()
+                    .filter(Entry.uid == entry.uid)\
+                    .order_by(Entry.id.desc())\
+                    .first()
                 # have we seen this post before
                 if not old or not is_content_equal(old, entry):
                     # set a default value for published if none is provided
@@ -324,12 +324,12 @@ def process_xml_feed_for_new_entries(session, feed, content, backfill, now):
         for link in p_entry.get('links', []):
             if link.type == 'audio/mpeg':
                 audio = AUDIO_ENCLOSURE_TMPL.format(href=link.get('href'))
-                content = audio + (content or '')
+                content = (content or '') + audio
             if (link.type == 'video/x-m4v'
                     or link.type == 'video/x-mp4'
                     or link.type == 'video/mp4'):
                 video = VIDEO_ENCLOSURE_TMPL.format(href=link.get('href'))
-                content = video + (content or '')
+                content = (content or '') + video
 
         entry = Entry(
             published=published,

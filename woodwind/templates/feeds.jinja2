@@ -10,9 +10,8 @@
 
 {% block body %}
   <p>
-    <form style="display:inline;"
-        action="{{ url_for('.update_all') }}" method="POST">
-          <button type="submit">Update All</button>
+    <form action="{{ url_for('.update_all') }}" method="POST">
+          <button type="submit">Poll All</button>
     </form>
   </p>
 
@@ -22,28 +21,30 @@
         <a href="{{ url_for('.index', feed=feed.get_feed_code()) }}">View only posts from this feed</a>
       </div>
 
-      <form style="display:inline"
-            action="{{ url_for('.edit_feed') }}" method="POST">
+      <form action="{{ url_for('.edit_feed') }}" method="POST">
             <input type="hidden" name="id" value="{{ feed.id }}"/>
             <label>Name</label>
             <input type="text" name="name" value="{{  feed.name }}"/>
             <label>URL</label>
             <input type="text" name="feed" value="{{ feed.feed }}"/>
-            <button type="submit">Save</button>
+            <button type="submit">Save Edits</button>
       </form>
-      <form style="display:inline;"
-            action="{{ url_for('.update_feed') }}" method="POST">
+      
+      <form action="{{ url_for('.update_feed') }}" method="POST">
             <input type="hidden" name="id" value="{{ feed.id }}"/>
-            <button type="submit">Update</button>
+            <button type="submit">Poll Now</button>
       </form>
-      <form style="display:inline;"
-            action="{{ url_for('.unsubscribe_feed') }}" method="POST">
+      
+      <form action="{{ url_for('.unsubscribe_feed') }}" method="POST">
             <input type="hidden" name="id" value="{{ feed.id }}"/>
             <button type="submit">Unsubscribe</button>
       </form>
 
-      <div class="feed-details">
-        <h4>Details</h4>
+
+      <a class="show-details" data-target="details-{{loop.index}}" href="#">Show Details</a>
+
+      <div class="feed-details" id="details-{{loop.index}}">
+        <strong>Details</strong>
         <ul>
           <li>Last checked: {{feed.last_checked | relative_time}}</li>
           <li>Last updated: {{feed.last_updated | relative_time}}</li>
@@ -58,3 +59,20 @@
   {% endfor %}
 
 {% endblock body %}
+{% block foot %}
+<script>
+$(function() {
+
+  $(".feed-details").css({display: "none"});
+
+  $(".show-details").click(function(evt) {
+    evt.preventDefault();
+    var target = $(this).data("target");
+    $("#" + target).css({display: "inherit"});
+    $(this).css({display: "none"});
+  });
+
+});
+</script>
+
+{% endblock foot %}

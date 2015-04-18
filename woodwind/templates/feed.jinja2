@@ -28,7 +28,7 @@
     {% include '_entry.jinja2' with context %}
   {% endfor %}
 
-  {% if entries %}
+  {% if entries and has_older %}
     <div class="pager">
       <a id="older-link" href="{{ url_for_other_page(page=page+1) }}">Older</a>
     </div>

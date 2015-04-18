@@ -109,7 +109,7 @@ class Feed(db.Model):
     last_pinged = db.Column(db.DateTime)
 
     def get_feed_code(self):
-        return binascii.hexlify(self.feed.encode())
+        return self.feed  # binascii.hexlify(self.feed.encode())
 
     def get_or_create_push_secret(self):
         if not self.push_secret:

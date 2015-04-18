@@ -32,9 +32,10 @@
       {{ entry.author_name }} -
     {% endif %}
     {% if entry.feed %}
-      <a href="{{ url_for('.index', feed=entry.feed.get_feed_code()) }}">
-        {{ entry.feed.name }}
-      </a>
+      <a href="{{ entry.feed.origin }}">{{ entry.feed.name }}</a>
+      <span style="font-size: 0.8em; float: right;">
+        <a href="{{ url_for('.index', feed=entry.feed.get_feed_code()) }}">more from this feed</a>
+      </span>
     {% endif %}
   </header>
   {% if entry.title %}
@@ -49,6 +50,7 @@
 
   <footer>
     <a href="{{ entry.permalink }}">{{ entry.published | relative_time }}</a>
+    <a href="{{ url_for('.index', entry=entry.permalink) }}" target="_blank">&#x21d7;</a>
 
   {% if entry._syndicated_copies %}
     (also on{% for copy in entry._syndicated_copies %} <a href="{{ copy.permalink }}">{{ copy.permalink | domain_for_url }}</a>{% endfor %})

@@ -7,3 +7,4 @@ celerybeat-schedule*
 config.py
 venv
 *.egg-info
+*.pyc
