@@ -122,13 +122,13 @@ class Feed(db.Model):
 
 class Entry(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    feed_id = db.Column(db.Integer, db.ForeignKey(Feed.id))
+    feed_id = db.Column(db.Integer, db.ForeignKey(Feed.id), index=True)
     feed = db.relationship(Feed, backref='entries')
     published = db.Column(db.DateTime)
     updated = db.Column(db.DateTime)
-    retrieved = db.Column(db.DateTime)
+    retrieved = db.Column(db.DateTime, index=True)
     uid = db.Column(db.String(512))
-    permalink = db.Column(db.String(512))
+    permalink = db.Column(db.String(512), index=True)
     author_name = db.Column(db.String(512))
     author_url = db.Column(db.String(512))
     author_photo = db.Column(db.String(512))
