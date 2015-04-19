@@ -306,7 +306,7 @@ def subscribe():
     return flask.render_template('subscribe.jinja2')
 
 
-def add_subscription(origin, feed_url, type, tags=['stream']):
+def add_subscription(origin, feed_url, type, tags=None):
     feed = Feed.query.filter_by(feed=feed_url, type=type).first()
     if not feed:
         if type == 'html':
