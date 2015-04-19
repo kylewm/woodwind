@@ -13,7 +13,7 @@
       <h1>{{ context.title }}</h1>
     {% endif %}
     {% if context.content %}
-      <div>
+      <div class="content">
         {{ context.content_cleaned | add_preview }}
       </div>
     {% endif %}
@@ -42,7 +42,7 @@
     <h1>{{ entry.title }}</h1>
   {% endif %}
   {% if entry.content %}
-    <div>
+    <div class="content">
       {{ entry.content_cleaned | add_preview }}
     </div>
   {% endif %}
@@ -50,7 +50,9 @@
 
   <footer>
     <a href="{{ entry.permalink }}">{{ entry.published | relative_time }}</a>
-    <a href="{{ url_for('.index', entry=entry.permalink) }}" target="_blank">&#x21d7;</a>
+    <a href="{{ url_for('.index', entry=entry.permalink) }}" target="_blank">
+      <img src="{{ url_for('static', filename='open_in_new_window2.png') }}" style="vertical-align:middle;" />
+    </a>
 
   {% if entry._syndicated_copies %}
     (also on{% for copy in entry._syndicated_copies %} <a href="{{ copy.permalink }}">{{ copy.permalink | domain_for_url }}</a>{% endfor %})

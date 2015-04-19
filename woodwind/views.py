@@ -1,6 +1,6 @@
 from . import tasks
 from .extensions import db, login_mgr, micropub
-from .models import Feed, Entry, User
+from .models import Feed, Entry, User, Subscription
 import flask.ext.login as flask_login
 import binascii
 import bs4
@@ -28,13 +28,13 @@ def index():
     if flask_login.current_user.is_authenticated():
         per_page = flask.current_app.config.get('PER_PAGE', 30)
         offset = (page - 1) * per_page
-        entry_query = Entry.query
 
-        entry_query = entry_query\
+        entry_query = Entry.query\
             .options(sqlalchemy.orm.subqueryload(Entry.feed),
                      sqlalchemy.orm.subqueryload(Entry.reply_context))\
             .join(Entry.feed)\
-            .join(Feed.users)\
+            .join(Feed.subscriptions)\
+            .join(Subscription.user)\
             .filter(User.id == flask_login.current_user.id)
 
         if 'entry' in flask.request.args:
@@ -47,17 +47,16 @@ def index():
             entries = [entry]
             has_older = False
         else:
-            if 'feed' in flask.request.args:
-                #feed_hex = flask.request.args.get('feed').encode()
-                #feed_url = binascii.unhexlify(feed_hex).decode('utf-8')
-                feed_url = flask.request.args.get('feed')
-                feed = Feed.query.filter_by(feed=feed_url).first()
-                if not feed:
+            if 'subscription' in flask.request.args:
+                subsc_id = flask.request.args.get('subscription')
+                subsc = Subscription.query.get(subsc_id)
+                if not subsc:
                     flask.abort(404)
-                entry_query = entry_query.filter(Feed.feed == feed_url)
-                ws_topic = 'feed:{}'.format(feed.id)
+                entry_query = entry_query.filter(Subscription.id == subsc_id)
+                ws_topic = 'user={}&feed={}'.format(subsc.user.id,
+                                                    subsc.feed.id)
             else:
-                ws_topic = 'user:{}'.format(flask_login.current_user.id)
+                ws_topic = 'user={}'.format(flask_login.current_user.id)
 
             entries = entry_query.order_by(Entry.retrieved.desc(),
                                            Entry.published.desc())\
@@ -74,12 +73,13 @@ def install():
     return 'Success!'
 
 
-@views.route('/feeds')
+@views.route('/subscriptions')
 @flask_login.login_required
-def feeds():
-    feeds = flask_login.current_user.feeds
-    sorted_feeds = sorted(feeds, key=lambda f: f.name and f.name.lower())
-    return flask.render_template('feeds.jinja2', feeds=sorted_feeds)
+def subscriptions():
+    subscs = flask_login.current_user.subscriptions
+    sorted_subscs = sorted(subscs, key=lambda s: s.name and s.name.lower())
+    return flask.render_template('subscriptions.jinja2',
+                                 subscriptions=sorted_subscs)
 
 
 @views.route('/settings', methods=['GET', 'POST'])
@@ -114,47 +114,44 @@ def settings():
 def update_feed():
     feed_id = flask.request.form.get('id')
     tasks.q.enqueue(tasks.update_feed, feed_id)
-    return flask.redirect(flask.url_for('.feeds'))
+    return flask.redirect(flask.url_for('.subscriptions'))
 
 
 @views.route('/update_all', methods=['POST'])
 @flask_login.login_required
 def update_all():
-    for feed in flask_login.current_user.feeds:
-        tasks.q.enqueue(tasks.update_feed, feed.id)
-    return flask.redirect(flask.url_for('.feeds'))
+    for s in flask_login.current_user.subscriptions:
+        tasks.q.enqueue(tasks.update_feed, s.feed.id)
+    return flask.redirect(flask.url_for('.subscriptions'))
 
 
-@views.route('/unsubscribe_feed', methods=['POST'])
+@views.route('/unsubscribe', methods=['POST'])
 @flask_login.login_required
-def unsubscribe_feed():
-    feed_id = flask.request.form.get('id')
-    feed = Feed.query.get(feed_id)
+def unsubscribe():
+    subsc_id = flask.request.form.get('id')
+    subsc = Subscription.query.get(subsc_id)
+    subsc.delete()
+    db.session.commit()
+    flask.flash('Unsubscribed {} ({})'.format(subsc.name))
+    return flask.redirect(flask.url_for('.subscriptions'))
 
-    feeds = flask_login.current_user.feeds
-    feeds.remove(feed)
+
+@views.route('/edit_subscription', methods=['POST'])
+@flask_login.login_required
+def edit_subscription():
+    subsc_id = flask.request.form.get('id')
+    subsc_name = flask.request.form.get('name')
+    #feed_url = flask.request.form.get('feed')
+
+    subsc = Subscription.query.get(subsc_id)
+    if subsc_name:
+        subsc.name = subsc_name
+    #if feed_url:
+    #    feed.feed = feed_url
 
     db.session.commit()
-    flask.flash('Unsubscribed {} ({})'.format(feed.name, feed.feed))
-    return flask.redirect(flask.url_for('.feeds'))
-
-
-@views.route('/edit_feed', methods=['POST'])
-@flask_login.login_required
-def edit_feed():
-    feed_id = flask.request.form.get('id')
-    feed_name = flask.request.form.get('name')
-    feed_url = flask.request.form.get('feed')
-
-    feed = Feed.query.get(feed_id)
-    if feed_name:
-        feed.name = feed_name
-    if feed_url:
-        feed.feed = feed_url
-
-    db.session.commit()
-    flask.flash('Edited {} ({})'.format(feed.name, feed.feed))
-    return flask.redirect(flask.url_for('.feeds'))
+    flask.flash('Edited {} ({})'.format(subsc.name))
+    return flask.redirect(flask.url_for('.subscriptions'))
 
 
 @views.route('/logout')
@@ -289,7 +286,7 @@ def subscribe():
     return flask.render_template('subscribe.jinja2')
 
 
-def add_subscription(origin, feed_url, type):
+def add_subscription(origin, feed_url, type, tags=['stream']):
     feed = Feed.query.filter_by(feed=feed_url, type=type).first()
     if not feed:
         if type == 'html':
@@ -308,7 +305,10 @@ def add_subscription(origin, feed_url, type):
                         origin=origin, feed=feed_url, type=type)
     if feed:
         db.session.add(feed)
-        flask_login.current_user.feeds.append(feed)
+
+        flask_login.current_user.subscriptions.append(
+            Subscription(feed=feed, name=feed.name, tags=tags))
+
         db.session.commit()
         # go ahead and update the fed
         tasks.q.enqueue(tasks.update_feed, feed.id)

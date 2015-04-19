@@ -234,19 +234,21 @@ def notify_feed_updated(session, feed, entries):
     entries = sorted(entries, key=lambda e: (e.retrieved, e.published),
                      reverse=True)
 
-    for user in feed.users:
-        with flask_app.test_request_context():
-            flask_login.login_user(user, remember=True)
-            message = json.dumps({
-                'user': user.id,
-                'feed': feed.id,
-                'entries': [
-                    render_template('_entry.jinja2', feed=feed, entry=e)
-                    for e in entries
-                ],
-            })
-            for topic in 'user:{}'.format(user.id), 'feed:{}'.format(feed.id):
-                redis.publish('woodwind_notify:{}'.format(topic), message)
+    for s in feed.subscriptions:
+        for user in s.users:
+            with flask_app.test_request_context():
+                flask_login.login_user(user, remember=True)
+                message = json.dumps({
+                    'user': user.id,
+                    'feed': feed.id,
+                    'entries': [
+                        render_template('_entry.jinja2', feed=feed, entry=e)
+                        for e in entries
+                    ],
+                })
+                for topic in ('user={}'.format(user.id),
+                              'user={}&feed={}'.format(user.id, feed.id)):
+                    redis.publish('woodwind_notify:{}'.format(topic), message)
 
 
 def is_content_equal(e1, e2):

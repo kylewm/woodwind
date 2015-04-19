@@ -71,7 +71,6 @@ class User(db.Model):
 
 class Feed(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    users = db.relationship(User, secondary='users_to_feeds', backref='feeds')
     # the name of this feed
     name = db.Column(db.String(256))
     # url that we subscribed to; periodically check if the feed url
@@ -108,11 +107,15 @@ class Feed(db.Model):
 
 class Subscription(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    users = db.relationship(User, backref='subscriptions')
+    user_id = db.Column(db.Integer, db.ForeignKey(User.id))
+    feed_id = db.Column(db.Integer, db.ForeignKey(Feed.id))
+
     # user-editable name of this subscribed feed
     name = db.Column(db.String(256))
-    feed = db.relationship(Feed, backref='subscriptions')
     tags = db.Column(JsonType)
+
+    user = db.relationship(User, backref='subscriptions')
+    feed = db.relationship(Feed, backref='subscriptions')
 
 
 class Entry(db.Model):

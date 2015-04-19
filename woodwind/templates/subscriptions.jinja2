@@ -9,34 +9,38 @@
 {% endblock header %}
 
 {% block body %}
-  <p>
-    <form action="{{ url_for('.update_all') }}" method="POST">
-          <button type="submit">Poll All</button>
-    </form>
-  </p>
 
-  {% for feed in feeds %}
-    <article>
+  <article>
+    {{ subscriptions | count }} subscriptions
+
+    <form action="{{ url_for('.update_all') }}" method="POST">
+      <button type="submit">Poll All</button>
+    </form>
+  </article>
+
+  {% for s in subscriptions %}
+
+  <article>
       <div>
-        <a href="{{ url_for('.index', feed=feed.get_feed_code()) }}">View only posts from this feed</a>
+        <a href="{{ url_for('.index', subscription=s.id) }}">View only posts from this feed</a>
       </div>
 
-      <form action="{{ url_for('.edit_feed') }}" method="POST">
-            <input type="hidden" name="id" value="{{ feed.id }}"/>
+      <form action="{{ url_for('.edit_subscription') }}" method="POST">
+            <input type="hidden" name="id" value="{{ s.id }}"/>
             <label>Name</label>
-            <input type="text" name="name" value="{{  feed.name }}"/>
+            <input type="text" name="name" value="{{  s.name }}"/>
             <label>URL</label>
-            <input type="text" name="feed" value="{{ feed.feed }}"/>
+            <input type="text" name="feed" value="{{ s.feed.feed }}" editable="false" />
             <button type="submit">Save Edits</button>
       </form>
-      
+
       <form action="{{ url_for('.update_feed') }}" method="POST">
-            <input type="hidden" name="id" value="{{ feed.id }}"/>
+            <input type="hidden" name="id" value="{{ s.feed.id }}"/>
             <button type="submit">Poll Now</button>
       </form>
-      
-      <form action="{{ url_for('.unsubscribe_feed') }}" method="POST">
-            <input type="hidden" name="id" value="{{ feed.id }}"/>
+
+      <form action="{{ url_for('.unsubscribe') }}" method="POST">
+            <input type="hidden" name="id" value="{{ s.id }}"/>
             <button type="submit">Unsubscribe</button>
       </form>
 
@@ -46,13 +50,13 @@
       <div class="feed-details" id="details-{{loop.index}}">
         <strong>Details</strong>
         <ul>
-          <li>Last checked: {{feed.last_checked | relative_time}}</li>
-          <li>Last updated: {{feed.last_updated | relative_time}}</li>
-          <li>PuSH hub: {{feed.push_hub}}</li>
-          <li>PuSH topic: {{feed.push_topic}}</li>
-          <li>PuSH verified: {{feed.push_verified}}</li>
-          <li>PuSH last ping: {{feed.last_pinged | relative_time}}</li>
-          <li>PuSH expiry: {{feed.push_expiry | relative_time}}</li>
+          <li>Last checked: {{s.feed.last_checked | relative_time}}</li>
+          <li>Last updated: {{s.feed.last_updated | relative_time}}</li>
+          <li>PuSH hub: {{s.feed.push_hub}}</li>
+          <li>PuSH topic: {{s.feed.push_topic}}</li>
+          <li>PuSH verified: {{s.feed.push_verified}}</li>
+          <li>PuSH last ping: {{s.feed.last_pinged | relative_time}}</li>
+          <li>PuSH expiry: {{s.feed.push_expiry | relative_time}}</li>
         </ul>
       </div>
     </article>

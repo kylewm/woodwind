@@ -405,7 +405,7 @@ article {
   article.reply-context {
     margin-bottom: 0;
     background-color: #f3f3f3; }
-    article.reply-context img {
+    article.reply-context .content img {
       max-height: 240px;
       max-width: 240px; }
   article div {
@@ -421,7 +421,7 @@ article {
     border-bottom: 1px solid #687d77;
     margin-bottom: 0.5em; }
     article header img {
-      vertical-align: text-middle;
+      vertical-align: middle;
       margin: inherit;
       display: inline;
       max-width: 1.2em;
