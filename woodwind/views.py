@@ -53,10 +53,9 @@ def index():
                 if not subsc:
                     flask.abort(404)
                 entry_query = entry_query.filter(Subscription.id == subsc_id)
-                ws_topic = 'user={}&feed={}'.format(subsc.user.id,
-                                                    subsc.feed.id)
+                ws_topic = 'subsc:{}'.format(subsc.id)
             else:
-                ws_topic = 'user={}'.format(flask_login.current_user.id)
+                ws_topic = 'user:{}'.format(flask_login.current_user.id)
 
             entries = entry_query.order_by(Entry.retrieved.desc(),
                                            Entry.published.desc())\
@@ -130,9 +129,9 @@ def update_all():
 def unsubscribe():
     subsc_id = flask.request.form.get('id')
     subsc = Subscription.query.get(subsc_id)
-    subsc.delete()
+    db.session.delete(subsc)
     db.session.commit()
-    flask.flash('Unsubscribed {} ({})'.format(subsc.name))
+    flask.flash('Unsubscribed {}'.format(subsc.name))
     return flask.redirect(flask.url_for('.subscriptions'))
 
 

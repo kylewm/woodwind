@@ -20,32 +20,24 @@
 
   {% for s in subscriptions %}
 
-  <article>
+    <article>
+      <form class="edit-subscription" action="{{ url_for('.edit_subscription') }}" method="POST">
+        <input type="hidden" name="id" value="{{ s.id }}"/>
+        <label>Name</label>
+        <input type="text" name="name" value="{{  s.name }}"/>
+        <label>Tags</label>
+        <input type="text" name="tags" value="{{ (s.tags or []) | join(',') }}"/>
+        <label>URL</label>
+        <input type="text" name="feed" value="{{ s.feed.feed }}" disabled />
+        <button type="submit">Save Edits</button>
+      </form>
+
+
       <div>
-        <a href="{{ url_for('.index', subscription=s.id) }}">View only posts from this feed</a>
+        <a target="_blank" href="{{ url_for('.index', subscription=s.id) }}">View Posts</a>
+        <br/>
+        <a class="show-details" data-target="details-{{loop.index}}" href="#">Show Details</a>
       </div>
-
-      <form action="{{ url_for('.edit_subscription') }}" method="POST">
-            <input type="hidden" name="id" value="{{ s.id }}"/>
-            <label>Name</label>
-            <input type="text" name="name" value="{{  s.name }}"/>
-            <label>URL</label>
-            <input type="text" name="feed" value="{{ s.feed.feed }}" editable="false" />
-            <button type="submit">Save Edits</button>
-      </form>
-
-      <form action="{{ url_for('.update_feed') }}" method="POST">
-            <input type="hidden" name="id" value="{{ s.feed.id }}"/>
-            <button type="submit">Poll Now</button>
-      </form>
-
-      <form action="{{ url_for('.unsubscribe') }}" method="POST">
-            <input type="hidden" name="id" value="{{ s.id }}"/>
-            <button type="submit">Unsubscribe</button>
-      </form>
-
-
-      <a class="show-details" data-target="details-{{loop.index}}" href="#">Show Details</a>
 
       <div class="feed-details" id="details-{{loop.index}}">
         <strong>Details</strong>
@@ -59,24 +51,37 @@
           <li>PuSH expiry: {{s.feed.push_expiry | relative_time}}</li>
         </ul>
       </div>
+
+
+      <form action="{{ url_for('.update_feed') }}" method="POST" style="display:inline">
+        <input type="hidden" name="id" value="{{ s.feed.id }}"/>
+        <button type="submit">Poll Now</button>
+      </form>
+
+      <form action="{{ url_for('.unsubscribe') }}" method="POST" style="display:inline">
+        <input type="hidden" name="id" value="{{ s.id }}"/>
+        <button type="submit">Unsubscribe</button>
+      </form>
+
+
     </article>
   {% endfor %}
 
 {% endblock body %}
 {% block foot %}
-<script>
-$(function() {
+  <script>
+    $(function() {
 
-  $(".feed-details").css({display: "none"});
+    $(".feed-details").css({display: "none"});
 
-  $(".show-details").click(function(evt) {
+    $(".show-details").click(function(evt) {
     evt.preventDefault();
     var target = $(this).data("target");
     $("#" + target).css({display: "inherit"});
     $(this).css({display: "none"});
-  });
+    });
 
-});
-</script>
+    });
+  </script>
 
 {% endblock foot %}

@@ -438,18 +438,36 @@ article {
 label {
   font-weight: bold;
   display: inline-block;
-  margin-bottom: 5px;
+  margin: 5px 0 2px 0;
   max-width: 100%; }
 
 textarea, input[type="text"], input[type="url"] {
   width: 100%;
-  margin: 0.25em 0; }
+  margin: 0.25em 0;
+  background-image: none;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0x 1px 1px rgba(0, 0, 0, 0.075) inset; }
   textarea.input-25, input[type="text"].input-25, input[type="url"].input-25 {
     width: 23%; }
   textarea.input-50, input[type="text"].input-50, input[type="url"].input-50 {
     width: 48%; }
   textarea.input-75, input[type="text"].input-75, input[type="url"].input-75 {
     width: 73%; }
+
+button {
+  border: 1px solid #cccccc;
+  background: #efefef;
+  color: #003366;
+  border-radius: 4px;
+  padding: 4px 10px;
+  margin: 5px 5px 5px 0;
+  box-shadow: 0 1px 1px #ccc; }
+  button:hover {
+    background: white; }
+  button:active {
+    box-shadow: 0 0;
+    margin: 6px 4px 4px 1px; }
 
 .micropub-form .content {
   height: 1em;
