@@ -1,14 +1,6 @@
-import bleach
-import json
-import binascii
 from .extensions import db
-import re
+import json
 import uuid
-
-from sqlalchemy.ext.orderinglist import ordering_list
-from sqlalchemy.ext.associationproxy import association_proxy
-
-
 
 
 class JsonType(db.TypeDecorator):
@@ -27,12 +19,6 @@ class JsonType(db.TypeDecorator):
         if value is not None:
             value = json.loads(value)
         return value
-
-
-users_to_feeds = db.Table(
-    'users_to_feeds', db.Model.metadata,
-    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), index=True),
-    db.Column('feed_id', db.Integer, db.ForeignKey('feed.id'), index=True))
 
 
 entry_to_reply_context = db.Table(
@@ -120,6 +106,15 @@ class Feed(db.Model):
         return '<Feed:{},{}>'.format(self.name, self.feed)
 
 
+class Subscription(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    users = db.relationship(User, backref='subscriptions')
+    # user-editable name of this subscribed feed
+    name = db.Column(db.String(256))
+    feed = db.relationship(Feed, backref='subscriptions')
+    tags = db.Column(JsonType)
+
+
 class Entry(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     feed_id = db.Column(db.Integer, db.ForeignKey(Feed.id))
@@ -137,13 +132,6 @@ class Entry(db.Model):
     content_cleaned = db.Column(db.Text)
     # other properties
     properties = db.Column(JsonType)
-    # # association with the InReplyTo objects
-    # irt = db.relationship(
-    #     'InReplyTo', order_by='InReplyTo.list_index',
-    #     collection_class=ordering_list('list_index'))
-    # # proxy for just the urls
-    # in_reply_to = association_proxy(
-    #     'irt', 'url', creator=lambda url: InReplyTo(url=url))
     reply_context = db.relationship(
         'Entry', secondary='entry_to_reply_context',
         primaryjoin=id == entry_to_reply_context.c.entry_id,
@@ -165,10 +153,3 @@ class Entry(db.Model):
 
     def __repr__(self):
         return '<Entry:{},{}>'.format(self.title, (self.content or '')[:140])
-
-
-# class InReplyTo(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     entry_id = db.Column(db.Integer, db.ForeignKey(Entry.id))
-#     url = db.Column(db.String(512))
-#     list_index = db.Column(db.Integer)
