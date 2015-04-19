@@ -1,10 +1,11 @@
+*.egg-info
+*.pyc
 *~
-.sass-cacheconfig.py
-celerybeat-schedule
 .sass-cache
+.sass-cacheconfig.py
 __pycache__
+celerybeat-schedule
 celerybeat-schedule*
 config.py
 venv
-*.egg-info
-*.pyc
+woodwind.cfg
