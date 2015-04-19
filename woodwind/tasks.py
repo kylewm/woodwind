@@ -1,8 +1,8 @@
 from contextlib import contextmanager
-from redis import StrictRedis
-from woodwind.models import Feed, Entry
-from woodwind import util
 from flask import Config as FlaskConfig
+from redis import StrictRedis
+from woodwind import util
+from woodwind.models import Feed, Entry
 import bs4
 import datetime
 import feedparser

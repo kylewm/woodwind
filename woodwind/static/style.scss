@@ -22,13 +22,13 @@ body {
 }
 
 
-a { 
-    color: #336699; 
-    text-decoration: none; 
+a {
+    color: #336699;
+    text-decoration: none;
 }
 
-a:hover { 
-    color: #993366; 
+a:hover {
+    color: #993366;
 }
 
 
@@ -76,6 +76,11 @@ article {
     &.reply-context {
         margin-bottom: 0;
         background-color: #f3f3f3;
+
+        img {
+            max-height: 240px;
+            max-width: 240px;
+        }
     }
 
     div {
@@ -95,14 +100,15 @@ article {
 
     header {
         img {
-            max-width: 64px;
-            max-height: 64px;
-            min-width: 48px;
-            min-height: 48px;
-            margin-left: -85px;
-            float: left;
-            border-radius: 4px;
+            vertical-align: text-middle;
+            margin: inherit;
+            display: inline;
+            max-width: 1.2em;
+            max-height: 1.2em;
+            min-width: inherit;
+            min-height: inherit;
         }
+
         color: $lunar-green;
         border-bottom: 1px solid $sirocco;
         margin-bottom: 0.5em;
