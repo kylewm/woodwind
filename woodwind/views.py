@@ -23,15 +23,22 @@ def index():
     page = int(flask.request.args.get('page', 1))
     entries = []
     ws_topic = None
-    has_older = True
+    solo = False
 
     if flask_login.current_user.is_authenticated():
+        all_tags = set()
+        for subsc in flask_login.current_user.subscriptions:
+            if subsc.tags:
+                all_tags.update(subsc.tags.split())
+
         per_page = flask.current_app.config.get('PER_PAGE', 30)
         offset = (page - 1) * per_page
 
         entry_query = Entry.query\
-            .options(sqlalchemy.orm.subqueryload(Entry.feed),
-                     sqlalchemy.orm.subqueryload(Entry.reply_context))\
+            .options(
+                sqlalchemy.orm.subqueryload(Entry.feed),
+                sqlalchemy.orm.subqueryload(Entry.reply_context)
+            )\
             .join(Entry.feed)\
             .join(Feed.subscriptions)\
             .join(Subscription.user)\
@@ -45,9 +52,13 @@ def index():
             if not entry:
                 flask.abort(404)
             entries = [entry]
-            has_older = False
+            solo = True
         else:
-            if 'subscription' in flask.request.args:
+            if 'tag' in flask.request.args:
+                tag = flask.request.args.get('tag')
+                entry_query = entry_query.filter(
+                    Subscription.tags.like('%{}%'.format(tag)))
+            elif 'subscription' in flask.request.args:
                 subsc_id = flask.request.args.get('subscription')
                 subsc = Subscription.query.get(subsc_id)
                 if not subsc:
@@ -63,7 +74,8 @@ def index():
 
     entries = dedupe_copies(entries)
     return flask.render_template('feed.jinja2', entries=entries, page=page,
-                                 ws_topic=ws_topic, has_older=has_older)
+                                 ws_topic=ws_topic, solo=solo,
+                                 all_tags=all_tags)
 
 
 @views.route('/install')
@@ -75,10 +87,16 @@ def install():
 @views.route('/subscriptions')
 @flask_login.login_required
 def subscriptions():
-    subscs = flask_login.current_user.subscriptions
-    sorted_subscs = sorted(subscs, key=lambda s: s.name and s.name.lower())
+
+    subscs = Subscription\
+        .query\
+        .filter_by(user_id=flask_login.current_user.id)\
+        .options(sqlalchemy.orm.subqueryload(Subscription.feed))\
+        .order_by(db.func.lower(Subscription.name))\
+        .all()
+
     return flask.render_template('subscriptions.jinja2',
-                                 subscriptions=sorted_subscs)
+                                 subscriptions=subscs)
 
 
 @views.route('/settings', methods=['GET', 'POST'])
@@ -140,16 +158,19 @@ def unsubscribe():
 def edit_subscription():
     subsc_id = flask.request.form.get('id')
     subsc_name = flask.request.form.get('name')
-    #feed_url = flask.request.form.get('feed')
+    subsc_tags = flask.request.form.get('tags')
 
     subsc = Subscription.query.get(subsc_id)
     if subsc_name:
         subsc.name = subsc_name
-    #if feed_url:
-    #    feed.feed = feed_url
+    if subsc_tags:
+        tag_list = re.split(r'(?:\s|,)+', subsc_tags)
+        subsc.tags = ' '.join(t.strip() for t in tag_list if t.strip())
+    else:
+        subsc_tags = None
 
     db.session.commit()
-    flask.flash('Edited {} ({})'.format(subsc.name))
+    flask.flash('Edited {}'.format(subsc.name))
     return flask.redirect(flask.url_for('.subscriptions'))
 
 

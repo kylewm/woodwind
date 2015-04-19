@@ -20,6 +20,12 @@
       <input type="url" id="origin" name="origin" placeholder="Subscribe to URL" />
     </form>
   {% endif %}
+
+  <i class="fa fa-tags"></i>
+  {% for tag in all_tags %}
+    <a href="{{ url_for('.index', tag=tag) }}">{{ tag }}</a>{% if not loop.last %}, {% endif %}
+  {% endfor %}
+
 {% endblock header %}
 
 {% block body %}
@@ -28,7 +34,7 @@
     {% include '_entry.jinja2' with context %}
   {% endfor %}
 
-  {% if entries and has_older %}
+  {% if not solo %}
     <div class="pager">
       <a id="older-link" href="{{ url_for_other_page(page=page+1) }}">Older</a>
     </div>

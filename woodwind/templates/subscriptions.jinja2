@@ -1,5 +1,9 @@
 {% extends "base.jinja2" %}
 
+{% block head %}
+  <script src="{{url_for('static', filename='subscriptions.js', version='2015-04-19')}}"></script>
+{% endblock head %}
+
 {% block header %}
   {% if current_user.is_authenticated() %}
     <form action="{{ url_for('.subscribe') }}" method="POST">
@@ -24,12 +28,12 @@
       <form class="edit-subscription" action="{{ url_for('.edit_subscription') }}" method="POST">
         <input type="hidden" name="id" value="{{ s.id }}"/>
         <label>Name</label>
-        <input type="text" name="name" value="{{  s.name }}"/>
+        <input type="text" name="name" value="{{ s.name }}"/>
         <label>Tags</label>
-        <input type="text" name="tags" value="{{ (s.tags or []) | join(',') }}"/>
+        <input type="text" name="tags" value="{{ s.tags or ''}}"/>
         <label>URL</label>
         <input type="text" name="feed" value="{{ s.feed.feed }}" disabled />
-        <button type="submit">Save Edits</button>
+        <button type="submit">Save Edits</button> <span class="save-status"></span>
       </form>
 
 
@@ -69,19 +73,5 @@
 
 {% endblock body %}
 {% block foot %}
-  <script>
-    $(function() {
-
-    $(".feed-details").css({display: "none"});
-
-    $(".show-details").click(function(evt) {
-    evt.preventDefault();
-    var target = $(this).data("target");
-    $("#" + target).css({display: "inherit"});
-    $(this).css({display: "none"});
-    });
-
-    });
-  </script>
 
 {% endblock foot %}

@@ -51,7 +51,7 @@
   <footer>
     <a href="{{ entry.permalink }}">{{ entry.published | relative_time }}</a>
     <a href="{{ url_for('.index', entry=entry.permalink) }}" target="_blank">
-      <img src="{{ url_for('static', filename='open_in_new_window2.png') }}" style="vertical-align:middle;" />
+      <i class="fa fa-external-link"></i>
     </a>
 
   {% if entry._syndicated_copies %}

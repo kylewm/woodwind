@@ -23,7 +23,7 @@ def upgrade():
         sa.Column('user_id', sa.Integer(), sa.ForeignKey('user.id'), nullable=False),
         sa.Column('feed_id', sa.Integer(), sa.ForeignKey('feed.id'), nullable=False),
         sa.Column('name', sa.String(length=256), nullable=True),
-        sa.Column('tags', JsonType(), nullable=True),
+        sa.Column('tags', sa.String(length=256), nullable=True),
         sa.PrimaryKeyConstraint('id')
     )
 

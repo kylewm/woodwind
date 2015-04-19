@@ -112,7 +112,7 @@ class Subscription(db.Model):
 
     # user-editable name of this subscribed feed
     name = db.Column(db.String(256))
-    tags = db.Column(JsonType)
+    tags = db.Column(db.String(256))
 
     user = db.relationship(User, backref='subscriptions')
     feed = db.relationship(Feed, backref='subscriptions')
