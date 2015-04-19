@@ -10,6 +10,7 @@ import json
 import logging
 import mf2py
 import mf2util
+import os.path
 import re
 import requests
 import rq
@@ -19,8 +20,8 @@ import sys
 import time
 import urllib.parse
 
-config = FlaskConfig('/srv/www/kylewm.com/woodwind')
-config.from_pyfile('woodwind.cfg')
+config = FlaskConfig(os.path.dirname(os.path.realpath(__file__)))
+config.from_pyfile('../woodwind.cfg')
 
 # normal update interval for polling feeds
 UPDATE_INTERVAL = datetime.timedelta(hours=1)
