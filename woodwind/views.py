@@ -167,7 +167,7 @@ def edit_subscription():
         tag_list = re.split(r'(?:\s|,)+', subsc_tags)
         subsc.tags = ' '.join(t.strip() for t in tag_list if t.strip())
     else:
-        subsc_tags = None
+        subsc.tags = None
 
     db.session.commit()
     flask.flash('Edited {}'.format(subsc.name))
