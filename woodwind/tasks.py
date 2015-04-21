@@ -237,13 +237,16 @@ def notify_feed_updated(session, feed, entries):
     for s in feed.subscriptions:
         with flask_app.test_request_context():
             flask_login.login_user(s.user, remember=True)
+            rendered = []
+            for e in entries:
+                e.subscription = s
+                rendered.append(render_template('_entry.jinja2', entry=e))
+
             message = json.dumps({
                 'user': s.user.id,
                 'feed': feed.id,
-                'entries': [
-                    render_template('_entry.jinja2', feed=feed, entry=e)
-                    for e in entries
-                ],
+                'subscription': s.id,
+                'entries': rendered,
             })
             for topic in ('user:{}'.format(s.user.id),
                           'subsc:{}'.format(s.id)):

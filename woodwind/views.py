@@ -25,7 +25,7 @@ def index():
     ws_topic = None
     solo = False
     all_tags = set()
-        
+
     if flask_login.current_user.is_authenticated():
         for subsc in flask_login.current_user.subscriptions:
             if subsc.tags:
@@ -34,7 +34,7 @@ def index():
         per_page = flask.current_app.config.get('PER_PAGE', 30)
         offset = (page - 1) * per_page
 
-        entry_query = Entry.query\
+        entry_query = db.session.query(Entry, Subscription)\
             .options(
                 sqlalchemy.orm.subqueryload(Entry.feed),
                 sqlalchemy.orm.subqueryload(Entry.reply_context)
@@ -46,12 +46,12 @@ def index():
 
         if 'entry' in flask.request.args:
             entry_url = flask.request.args.get('entry')
-            entry = Entry.query.filter_by(permalink=entry_url)\
-                               .order_by(Entry.retrieved.desc())\
-                               .first()
-            if not entry:
+            entry_tup = entry_query.filter(Entry.permalink == entry_url)\
+                                   .order_by(Entry.retrieved.desc())\
+                                   .first()
+            if not entry_tup:
                 flask.abort(404)
-            entries = [entry]
+            entry_tups = [entry_tup]
             solo = True
         else:
             if 'tag' in flask.request.args:
@@ -68,9 +68,18 @@ def index():
             else:
                 ws_topic = 'user:{}'.format(flask_login.current_user.id)
 
-            entries = entry_query.order_by(Entry.retrieved.desc(),
-                                           Entry.published.desc())\
-                                 .offset(offset).limit(per_page).all()
+            entry_query = entry_query.order_by(Entry.retrieved.desc(),
+                                               Entry.published.desc())\
+                                     .offset(offset).limit(per_page)
+            print('found some entries:', len(entry_query.all()))
+            entry_tups = entry_query.all()
+
+    # stick the subscription into the entry.
+    # FIXME this is hacky
+    entries = []
+    for entry, subsc in entry_tups:
+        entry.subscription = subsc
+        entries.append(entry)
 
     entries = dedupe_copies(entries)
     return flask.render_template('feed.jinja2', entries=entries, page=page,
@@ -87,7 +96,6 @@ def install():
 @views.route('/subscriptions')
 @flask_login.login_required
 def subscriptions():
-
     subscs = Subscription\
         .query\
         .filter_by(user_id=flask_login.current_user.id)\

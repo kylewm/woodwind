@@ -142,6 +142,8 @@ class Entry(db.Model):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.subscription = None
         self._syndicated_copies = []
 
     def get_property(self, key, default=None):
