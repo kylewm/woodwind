@@ -21,10 +21,12 @@
     </form>
   {% endif %}
 
-  <i class="fa fa-tags"></i>
-  {% for tag in all_tags %}
-    <a href="{{ url_for('.index', tag=tag) }}">{{ tag }}</a>{% if not loop.last %}, {% endif %}
-  {% endfor %}
+  {% if all_tags %}
+    <i class="fa fa-tags"></i>
+    {% for tag in all_tags %}
+      <a href="{{ url_for('.index', tag=tag) }}">{{ tag }}</a>{% if not loop.last %}, {% endif %}
+    {% endfor %}
+  {% endif %}
 
 {% endblock header %}
 
@@ -34,7 +36,7 @@
     {% include '_entry.jinja2' with context %}
   {% endfor %}
 
-  {% if not solo %}
+  {% if entries and not solo %}
     <div class="pager">
       <a id="older-link" href="{{ url_for_other_page(page=page+1) }}">Older</a>
     </div>

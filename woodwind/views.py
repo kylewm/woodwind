@@ -24,9 +24,9 @@ def index():
     entries = []
     ws_topic = None
     solo = False
-
+    all_tags = set()
+        
     if flask_login.current_user.is_authenticated():
-        all_tags = set()
         for subsc in flask_login.current_user.subscriptions:
             if subsc.tags:
                 all_tags.update(subsc.tags.split())
