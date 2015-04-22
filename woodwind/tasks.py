@@ -116,13 +116,17 @@ def update_feed(feed_id, content=None, is_polling=True):
                 if not old:
                     # set a default value for published if none is provided
                     entry.published = entry.published or now
-                    new_ids.append(entry.id)
-                    for irt in entry.get_property('in-reply-to', []):
-                        reply_pairs.append((entry.id, irt))
+                    in_reply_tos = entry.get_property('in-reply-to', [])
                     feed.entries.append(entry)
                     db.session.commit()
+
+                    new_ids.append(entry.id)
+                    for irt in in_reply_tos:
+                        reply_pairs.append((entry.id, irt))
+
                 elif not is_content_equal(old, entry):
                     entry.published = entry.published or old.published
+                    in_reply_tos = entry.get_property('in-reply-to', [])
                     # we're updating an old entriy, use the original
                     # retrieved time
                     entry.retrieved = old.retrieved
@@ -130,11 +134,13 @@ def update_feed(feed_id, content=None, is_polling=True):
                     # punt on deleting for now, learn about cascade
                     # and stuff later
                     # session.delete(old)
-                    updated_ids.append(entry.id)
-                    for irt in entry.get_property('in-reply-to', []):
-                        reply_pairs.append((entry.id, irt))
                     feed.entries.append(entry)
                     db.session.commit()
+
+                    updated_ids.append(entry.id)
+                    for irt in in_reply_tos:
+                        reply_pairs.append((entry.id, irt))
+
                 else:
                     current_app.logger.debug(
                         'skipping previously seen post %s', old.permalink)
@@ -225,7 +231,9 @@ def notify_feed_updated(app, feed, entry_ids):
     """
     from flask import render_template
     import flask.ext.login as flask_login
-
+    current_app.logger.debug(
+        'notifying feed updated for entries %r', entry_ids)
+    
     entries = Entry.query\
                    .filter(Entry.id.in_(entry_ids))\
                    .order_by(Entry.retrieved.desc(),
