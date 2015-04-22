@@ -1,5 +1,6 @@
 from contextlib import contextmanager
 from flask import Config as FlaskConfig
+from logging import StreamHandler
 from redis import StrictRedis
 from woodwind import util
 from woodwind.models import Feed, Entry
@@ -39,6 +40,12 @@ VIDEO_ENCLOSURE_TMPL = '<p><video class="u-video" src="{href}" controls '\
                        'preload=none ><a href="{href}">video</a></video></p>'
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+stream_handler = StreamHandler()
+formatter = logging.Formatter(
+    '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+stream_handler.setFormatter(formatter)
+logger.addHandler(stream_handler)
 
 engine = sqlalchemy.create_engine(config['SQLALCHEMY_DATABASE_URI'])
 
@@ -89,6 +96,7 @@ def update_feed(feed_id, content=None, is_polling=True):
 
         now = datetime.datetime.utcnow()
         new_entries = []
+        updated_entries = []
         try:
             if content:
                 logger.info('using provided content. size=%d', len(content))
@@ -136,7 +144,7 @@ def update_feed(feed_id, content=None, is_polling=True):
 
                     feed.entries.append(entry)
                     session.commit()
-                    new_entries.append(entry)
+                    (updated_entries if old else new_entries).append(entry)
                 else:
                     logger.debug(
                         'skipping previously seen post %s', old.permalink)
@@ -148,7 +156,7 @@ def update_feed(feed_id, content=None, is_polling=True):
         finally:
             if is_polling:
                 feed.last_checked = now
-            if new_entries:
+            if new_entries or updated_entries:
                 feed.last_updated = now
             session.commit()
             if new_entries:

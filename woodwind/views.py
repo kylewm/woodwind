@@ -21,7 +21,7 @@ views = flask.Blueprint('views', __name__)
 @views.route('/')
 def index():
     page = int(flask.request.args.get('page', 1))
-    entries = []
+    entry_tups = []
     ws_topic = None
     solo = False
     all_tags = set()
