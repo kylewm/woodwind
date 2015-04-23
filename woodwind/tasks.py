@@ -174,8 +174,6 @@ def check_push_subscription(feed, response):
             'hub.callback': build_callback_url(),
             'hub.secret': feed.get_or_create_push_secret(),
             'hub.verify': 'sync',  # backcompat with 0.3
-            # TODO secret should only be used over HTTPS
-            # 'hub.secret': secret,
         })
         current_app.logger.debug('%s response %r', mode, r)
 
