@@ -77,6 +77,7 @@ def notify(feed_id):
                 signature, expected)
             return make_response('', 204)
         current_app.logger.info('Good X-Hub-Signature!')
+        current_app.logger.info('Fat ping content type: %s', request.headers.get('Content-Type'))
         content = request.data.decode('utf-8')
 
     tasks.q_high.enqueue(tasks.update_feed, feed.id,

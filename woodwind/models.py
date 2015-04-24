@@ -78,7 +78,7 @@ class Feed(db.Model):
     origin = db.Column(db.String(512))
     # url of the feed itself
     feed = db.Column(db.String(512))
-    # h-feed, xml, etc.
+    # html, xml, etc.
     type = db.Column(db.String(64))
     # last time this feed returned new data
     last_updated = db.Column(db.DateTime)

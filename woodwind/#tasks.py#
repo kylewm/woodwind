@@ -166,15 +166,19 @@ def check_push_subscription(feed, response):
             feed.id)
 
     def send_request(mode, hub, topic):
-        current_app.logger.debug(
-            'sending %s request for hub=%r, topic=%r', mode, hub, topic)
-        r = requests.post(hub, data={
+
+        data = {
             'hub.mode': mode,
             'hub.topic': topic,
             'hub.callback': build_callback_url(),
             'hub.secret': feed.get_or_create_push_secret(),
-            'hub.verify': 'sync',  # backcompat with 0.3
-        })
+            # backcompat with 0.3
+            'hub.verify': 'sync',
+        }
+
+        current_app.logger.debug(
+            'sending %s request data=%r headers=%r', mode, data, headers)        
+        r = requests.post(hub, data=data, headers=headers)
         current_app.logger.debug('%s response %r', mode, r)
 
     expiry = feed.push_expiry
