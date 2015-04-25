@@ -354,6 +354,7 @@ def find_possible_feeds(origin):
         'application/atom+xml',
         'application/rdf+xml',
         'application/xml',
+        'text/xml',
     ]
     xml_mime_types = xml_feed_types + [
         'text/xml',

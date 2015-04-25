@@ -67,6 +67,7 @@ def notify(feed_id):
 
     # try to process fat pings
     content = None
+    content_type = None
     signature = request.headers.get('X-Hub-Signature')
     if signature and feed.push_secret and request.data:
         expected = 'sha1=' + hmac.new(feed.push_secret.encode('utf-8'),
@@ -77,11 +78,13 @@ def notify(feed_id):
                 signature, expected)
             return make_response('', 204)
         current_app.logger.info('Good X-Hub-Signature!')
-        current_app.logger.info('Fat ping content type: %s', request.headers.get('Content-Type'))
+        content_type = request.headers.get('Content-Type')
+        current_app.logger.info('PuSH content type: %s', content_type)
         content = request.data.decode('utf-8')
 
     tasks.q_high.enqueue(tasks.update_feed, feed.id,
-                         content=content, is_polling=False)
+                         content=content, content_type=content_type, 
+                         is_polling=False)
     feed.last_pinged = datetime.datetime.utcnow()
     db.session.commit()
     return make_response('', 204)

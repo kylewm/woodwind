@@ -69,7 +69,23 @@ def tick():
                 q.enqueue(update_feed, feed.id)
 
 
-def update_feed(feed_id, content=None, is_polling=True):
+def update_feed(feed_id, content=None, 
+                content_type=None, is_polling=True):
+
+    def is_expected_content_type(feed_type):
+        if not content_type:
+            return True
+        if feed_type == 'html':
+            return content_type == 'text/html'
+        if feed_type == 'xml':
+            return content_type in [
+                'application/rss+xml',
+                'application/atom+xml',
+                'application/rdf+xml',
+                'application/xml',
+                'text/xml',
+            ]
+
     with flask_app() as app:
         feed = Feed.query.get(feed_id)
         current_app.logger.info('Updating {}'.format(feed))
@@ -81,7 +97,7 @@ def update_feed(feed_id, content=None, is_polling=True):
         reply_pairs = []
 
         try:
-            if content:
+            if content and is_expected_content_type(feed.type):
                 current_app.logger.info('using provided content. size=%d',
                                         len(content))
             else:
