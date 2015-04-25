@@ -205,14 +205,11 @@ def login_callback(resp):
     if resp.error:
         flask.flash(cgi.escape('Warning: ' + resp.error))
 
-    domain = urllib.parse.urlparse(resp.me).netloc
-    user = load_user(domain)
+    user = load_user(resp.me)
     if not user:
-        user = User()
-        user.domain = domain
+        user = User(url=resp.me)
         db.session.add(user)
 
-    user.url = resp.me
     db.session.commit()
     flask_login.login_user(user, remember=True)
     update_micropub_syndicate_to()
@@ -235,16 +232,17 @@ def micropub_callback(resp):
         flask.flash(cgi.escape('Authorize error: ' + resp.error))
         return flask.redirect(flask.url_for('.index'))
 
-    domain = urllib.parse.urlparse(resp.me).netloc
-    user = load_user(domain)
+    user = load_user(resp.me)
     if not user:
-        flask.flash(cgi.escape('Unknown user for domain: ' + domain))
+        flask.flash(cgi.escape('Unknown user for url: ' + resp.me))
         return flask.redirect(flask.url_for('.index'))
 
     user.micropub_endpoint = resp.micropub_endpoint
     user.access_token = resp.access_token
     db.session.commit()
     update_micropub_syndicate_to()
+
+    flask.flash('Logged in as ' + user.url)
     return flask.redirect(resp.next_url or flask.url_for('.index'))
 
 
@@ -280,8 +278,8 @@ def deauthorize():
 
 
 @login_mgr.user_loader
-def load_user(domain):
-    return User.query.filter_by(domain=domain).first()
+def load_user(url):
+    return User.query.filter_by(url=url).first()
 
 
 @views.route('/subscribe', methods=['GET', 'POST'])

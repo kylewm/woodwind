@@ -30,7 +30,7 @@ entry_to_reply_context = db.Table(
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     url = db.Column(db.String(256))
-    domain = db.Column(db.String(256))
+    #domain = db.Column(db.String(256))
     micropub_endpoint = db.Column(db.String(512))
     access_token = db.Column(db.String(512))
     settings = db.Column(JsonType)
@@ -46,7 +46,7 @@ class User(db.Model):
         return False
 
     def get_id(self):
-        return self.domain
+        return self.url
 
     def get_setting(self, key, default=None):
         if self.settings is None:

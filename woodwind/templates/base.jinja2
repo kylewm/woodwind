@@ -34,7 +34,7 @@
           <a href="{{ url_for('.settings') }}">Settings</a>
         </li>
         <li>
-          {{ current_user.domain }}
+          {{ current_user.url }}
           (<a href="{{ url_for('.logout') }}">Logout</a>)
         </li>
       </ul>
