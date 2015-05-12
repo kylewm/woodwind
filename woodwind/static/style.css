@@ -397,6 +397,12 @@ ul#navigation {
     border-radius: 4px;
     display: inline-block; }
 
+#fold {
+  display: none; }
+
+#unfold-link {
+  display: none; }
+
 article {
   margin-bottom: 2em;
   box-shadow: 0 0 2px #687d77;

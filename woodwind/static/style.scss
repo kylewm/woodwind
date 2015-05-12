@@ -67,6 +67,14 @@ ul#navigation {
     }
 }
 
+#fold {
+    display: none;
+}
+
+#unfold-link {
+    display: none;
+}
+
 article {
     margin-bottom: 2em;
     box-shadow: $box-shadow;

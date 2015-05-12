@@ -68,6 +68,20 @@ $(function(){
     }
 
 
+    function clickUnfoldLink(evt) {
+        $('#fold').after($('#fold').children())
+        $('#unfold-link').hide();
+    }
+
+
+    function foldNewEntries(entries) {
+        $('#fold').prepend(entries.join('\n'));
+        attachListeners();
+        $('#unfold-link').text($('#fold').children().length + " New Posts");
+        $('#unfold-link').off('click').click(clickUnfoldLink);
+        $('#unfold-link').show();
+    }
+
     // topic will be user:id or feed:id
     function webSocketSubscribe(topic) {
         if ('WebSocket' in window) {
@@ -82,9 +96,9 @@ $(function(){
                 ws.send(topic);
             };
             ws.onmessage = function(event) {
+                console.log(event);
                 var data = JSON.parse(event.data);
-                $('body main').prepend(data.entries.join('\n'));
-                attachListeners();
+                foldNewEntries(data.entries);
             };
         }
     }
