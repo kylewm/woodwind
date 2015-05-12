@@ -9,6 +9,7 @@
           <input type="radio" name="feed" id="radio-{{ loop.index  }}"
                  value="{{ feed.get('type')}}|{{ feed.get('feed') }}" />
           <label for="radio-{{loop.index}}">
+            {{ feed.get('title') }}:<br/>
             {{ feed.get('feed') }} ({{ feed.get('type') }})
           </label>
         </p>

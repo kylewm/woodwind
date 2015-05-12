@@ -367,6 +367,7 @@ def find_possible_feeds(origin):
             'origin': origin,
             'feed': origin,
             'type': 'xml',
+            'title': 'untitled xml feed',
         })
 
     elif content_type == 'text/html':
@@ -374,11 +375,25 @@ def find_possible_feeds(origin):
         # if text/html, then parse and look for h-entries
         hfeed = mf2util.interpret_feed(parsed, origin)
         if hfeed.get('entries'):
+            ftitle = hfeed.get('name') or 'untitled h-feed'
             feeds.append({
                 'origin': origin,
                 'feed': resp.url,
                 'type': 'html',
+                'title': ftitle[:140]
             })
+
+        # look for link="feed"
+        for furl, fprops in parsed.get('rel-urls', {}).items():
+            if 'feed' in fprops.get('rels', []) and (
+                    not fprops.get('type')
+                    or fprops.get('type') == 'text/html'):
+                feeds.append({
+                    'origin': origin,
+                    'feed': furl,
+                    'type': 'html',
+                    'title': fprops.get('title'),
+                })
 
         # then look for link rel="alternate"
         for link in parsed.get('alternates', []):
@@ -387,6 +402,7 @@ def find_possible_feeds(origin):
                     'origin': origin,
                     'feed': link.get('url'),
                     'type': 'xml',
+                    'title': link.get('title'),
                 })
     return feeds
 
