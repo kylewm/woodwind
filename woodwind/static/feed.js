@@ -3,7 +3,7 @@ $(function(){
     function updateTimestamps() {
         $(".permalink time").each(function() {
             var absolute = $(this).attr('datetime');
-            var formatted = moment(absolute).fromNow();
+            var formatted = moment.utc(absolute).fromNow();
             $(this).text(formatted);
         })
     }
