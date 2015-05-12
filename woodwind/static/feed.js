@@ -96,7 +96,6 @@ $(function(){
                 ws.send(topic);
             };
             ws.onmessage = function(event) {
-                console.log(event);
                 var data = JSON.parse(event.data);
                 foldNewEntries(data.entries);
             };

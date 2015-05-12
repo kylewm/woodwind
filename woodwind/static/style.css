@@ -415,11 +415,13 @@ article {
       max-height: 240px;
       max-width: 240px; }
   article div {
-    overflow: auto; }
-    article div p:first-child {
-      margin-top: 0; }
-    article div p:last-child {
-      margin-bottom: 0; }
+    overflow: auto;
+    /*p:first-child {
+        margin-top: 0;
+    }
+    p:last-child {
+        margin-bottom: 0;
+    }*/ }
   article img, article video {
     max-width: 100%; }
   article header {
