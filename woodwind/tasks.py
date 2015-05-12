@@ -349,7 +349,7 @@ def process_xml_feed_for_new_entries(feed, content, backfill, now):
                 title = None
 
         for link in p_entry.get('links', []):
-            if link.type == 'audio/mpeg':
+            if link.type == 'audio/mpeg' or link.type == 'audio/mp3':
                 audio = AUDIO_ENCLOSURE_TMPL.format(href=link.get('href'))
                 content = (content or '') + audio
             if (link.type == 'video/x-m4v'
