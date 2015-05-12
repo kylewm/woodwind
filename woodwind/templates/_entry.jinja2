@@ -18,7 +18,11 @@
       </div>
     {% endif %}
     <footer>
-      <a href="{{ context.permalink }}">{{ context.published | relative_time }}</a>
+      <a class="permalink" href="{{ context.permalink }}">
+        <time datetime="{{ context.published | isoformat }}">
+          {{ context.published | relative_time }}
+        </time>
+      </a>
     </footer>
   </article>
 {% endfor %}
@@ -49,7 +53,11 @@
 
 
   <footer>
-    <a href="{{ entry.permalink }}">{{ entry.published | relative_time }}</a>
+    <a class="permalink" href="{{ entry.permalink }}">
+      <time datetime="{{ entry.published | isoformat }}">
+        {{ entry.published | relative_time }}
+      </time>
+    </a>
     <a href="{{ url_for('.index', entry=entry.permalink) }}" target="_blank">
       <i class="fa fa-external-link"></i>
     </a>
