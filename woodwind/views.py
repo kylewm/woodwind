@@ -316,21 +316,28 @@ def subscribe():
 
 def add_subscription(origin, feed_url, type, tags=None):
     feed = Feed.query.filter_by(feed=feed_url, type=type).first()
+
     if not feed:
+        name = None
         if type == 'html':
             flask.current_app.logger.debug('mf2py parsing %s', feed_url)
             parsed = mf2util.interpret_feed(
                 mf2py.Parser(url=feed_url).to_dict(), feed_url)
             name = parsed.get('name')
-            if not name or len(name) > 140:
-                p = urllib.parse.urlparse(origin)
-                name = p.netloc + p.path
-            feed = Feed(name=name, origin=origin, feed=feed_url, type=type)
         elif type == 'xml':
             flask.current_app.logger.debug('feedparser parsing %s', feed_url)
             parsed = feedparser.parse(feed_url)
-            feed = Feed(name=parsed.feed and parsed.feed.title,
-                        origin=origin, feed=feed_url, type=type)
+            if parsed.feed:
+                name = parsed.feed.get('title')
+        else:
+            flask.current_app.logger.error('unknown feed type %s', type)
+            flask.abort(400)
+
+        if not name:
+            p = urllib.parse.urlparse(origin)
+            name = p.netloc + p.path
+        feed = Feed(name=name, origin=origin, feed=feed_url, type=type)
+
     if feed:
         db.session.add(feed)
 
@@ -386,10 +393,9 @@ def find_possible_feeds(origin):
             })
 
         # look for link="feed"
-        for furl, fprops in parsed.get('rel-urls', {}).items():
-            if 'feed' in fprops.get('rels', []) and (
-                    not fprops.get('type')
-                    or fprops.get('type') == 'text/html'):
+        for furl in parsed.get('rels', {}).get('feed', []):
+            fprops = parsed.get('rel-urls', {}).get(furl, {})
+            if not fprops.get('type') or fprops.get('type') == 'text/html':
                 feeds.append({
                     'origin': origin,
                     'feed': furl,
@@ -406,6 +412,7 @@ def find_possible_feeds(origin):
                     'type': 'xml',
                     'title': link.get('title'),
                 })
+
     return feeds
 
 
