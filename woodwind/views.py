@@ -279,7 +279,9 @@ def deauthorize():
 
 @login_mgr.user_loader
 def load_user(url):
-    return User.query.filter_by(url=url).first()
+    alt = url.rstrip('/') if url.endswith('/') else url + '/'
+    return User.query.filter(
+        (User.url == url) | (User.url == alt)).first()
 
 
 @views.route('/subscribe', methods=['GET', 'POST'])
