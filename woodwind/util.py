@@ -4,7 +4,7 @@ import re
 bleach.ALLOWED_TAGS += [
     'a', 'img', 'p', 'br', 'marquee', 'blink',
     'audio', 'video', 'table', 'tbody', 'td', 'tr', 'div', 'span',
-    'pre',
+    'pre', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
 ]
 
 bleach.ALLOWED_ATTRIBUTES.update({

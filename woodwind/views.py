@@ -336,7 +336,7 @@ def add_subscription(origin, feed_url, type, tags=None):
         if not name:
             p = urllib.parse.urlparse(origin)
             name = p.netloc + p.path
-        feed = Feed(name=name, origin=origin, feed=feed_url, type=type)
+        feed = Feed(name=name[:140], origin=origin, feed=feed_url, type=type)
 
     if feed:
         db.session.add(feed)

@@ -32,6 +32,15 @@ a:hover {
 }
 
 
+p {
+    &:first-child {
+        margin-top:0;
+    }
+    &:last-child {
+        margin-bottom:0;
+    }
+}
+
 header, main {
     max-width: 600px;
     margin: 0 auto;
@@ -53,7 +62,7 @@ ul#navigation {
     }
 }
 
-.pager {
+.button-link {
     text-align: center;
     margin: 1em 0;
 

@@ -370,6 +370,11 @@ a {
 a:hover {
   color: #993366; }
 
+p:first-child {
+  margin-top: 0; }
+p:last-child {
+  margin-bottom: 0; }
+
 header, main {
   max-width: 600px;
   margin: 0 auto; }
@@ -386,10 +391,10 @@ ul#navigation {
     display: inline-block;
     padding: 3px; }
 
-.pager {
+.button-link {
   text-align: center;
   margin: 1em 0; }
-  .pager a {
+  .button-link a {
     padding: 0.5em;
     background-color: #353129;
     color: #ecebf0;
