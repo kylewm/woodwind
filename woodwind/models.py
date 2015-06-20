@@ -107,8 +107,8 @@ class Feed(db.Model):
 
 class Subscription(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey(User.id))
-    feed_id = db.Column(db.Integer, db.ForeignKey(Feed.id))
+    user_id = db.Column(db.Integer, db.ForeignKey(User.id), index=True)
+    feed_id = db.Column(db.Integer, db.ForeignKey(Feed.id), index=True)
 
     # user-editable name of this subscribed feed
     name = db.Column(db.String(256))

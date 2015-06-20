@@ -37,8 +37,7 @@ def index():
         entry_query = db.session.query(Entry, Subscription)\
             .options(
                 sqlalchemy.orm.subqueryload(Entry.feed),
-                sqlalchemy.orm.subqueryload(Entry.reply_context)
-            )\
+                sqlalchemy.orm.subqueryload(Entry.reply_context))\
             .join(Entry.feed)\
             .join(Feed.subscriptions)\
             .join(Subscription.user)\
@@ -71,7 +70,6 @@ def index():
             entry_query = entry_query.order_by(Entry.retrieved.desc(),
                                                Entry.published.desc())\
                                      .offset(offset).limit(per_page)
-            print('found some entries:', len(entry_query.all()))
             entry_tups = entry_query.all()
 
     # stick the subscription into the entry.
