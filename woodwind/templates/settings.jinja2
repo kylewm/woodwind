@@ -1,12 +1,14 @@
 {% extends "base.jinja2" %}
 {% block body %}
   <main>
+    {% set reply_method = settings.get('reply-method') %}
 
-    <form name="settings" action="{{ url_for('.settings') }}" method="POST">
+    <form id="settings" name="settings" action="{{ url_for('.settings') }}" 
+          method="POST" data-reply-method="{{reply_method}}">
+          
       <button type="submit">Save Changes</button>
 
       <div id="reply-mechanism-settings">
-        {% set reply_method = settings.get('reply-method') %}
 
         <h2>Reply Mechanism</h2>
         <p>
@@ -66,6 +68,7 @@
         </p>
         {% set selectedActions = settings.get('indie-config-actions', []) %}
 
+        <p>
         {% for action in ['like', 'favorite', 'reply', 'repost', 'bookmark'] %}
           <label>
             <input type="checkbox" name="indie-config-action" value="{{ action }}"
@@ -91,6 +94,9 @@
         </div>
         <button id="add-action">Add</button>
 
+      </div>
+      <button type="submit">Save Changes</button>
+
     </form>
   </main>
 
@@ -103,11 +109,12 @@ $('#add-action').click(function(evt) {
 });
 
 function showRelevantSection() {
+    var savedReplyMethod = $('form').data('reply-method')
     var replyMethod = $('input[name=reply-method]:checked').val();
     $('#micropub-settings').hide();
     $('#indie-config-settings').hide();
     $('#action-urls-settings').hide();
-    if (replyMethod == 'micropub') {
+    if (replyMethod == 'micropub' && savedReplyMethod == 'micropub') {
         $('#micropub-settings').show();
     } else if (replyMethod == 'indie-config') {
         $('#indie-config-settings').show();

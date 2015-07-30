@@ -11,7 +11,7 @@
       <button type="submit" name="action" value="repost"><i class="fa fa-retweet"></i></button>
       <button type="submit" name="action" value="like"><i class="fa fa-star"></i></button>
     </div>
-    <div>
+    <div class="syndication-toggles">
       {% for target in current_user.get_setting('syndicate-to', []) %}
         <div class="syndication-toggle">
           <input id="sc-{{entry.id}}-{{loop.index}}" type="checkbox" name="syndicate-to[]" value="{{ target }}"/>

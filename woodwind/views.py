@@ -285,29 +285,29 @@ def load_user(url):
 @views.route('/subscribe', methods=['GET', 'POST'])
 @flask_login.login_required
 def subscribe():
-    if flask.request.method == 'POST':
-        origin = flask.request.form.get('origin')
-        if origin:
-            type = None
-            feed = None
-            typed_feed = flask.request.form.get('feed')
-            if typed_feed:
-                type, feed = typed_feed.split('|', 1)
-            else:
-                feeds = find_possible_feeds(origin)
-                if not feeds:
-                    flask.flash('No feeds found for: ' + origin)
-                    return flask.redirect(flask.url_for('.index'))
-                if len(feeds) > 1:
-                    return flask.render_template(
-                        'select-feed.jinja2', origin=origin, feeds=feeds)
-                feed = feeds[0]['feed']
-                type = feeds[0]['type']
-            new_feed = add_subscription(origin, feed, type)
-            flask.flash('Successfully subscribed to: {}'.format(new_feed.name))
-            return flask.redirect(flask.url_for('.index'))
+    origin = flask.request.form.get('origin') or flask.request.args.get('origin')
+    if origin:
+        type = None
+        feed = None
+        typed_feed = flask.request.form.get('feed')
+        if typed_feed:
+            type, feed = typed_feed.split('|', 1)
         else:
-            flask.abort(400)
+            feeds = find_possible_feeds(origin)
+            if not feeds:
+                flask.flash('No feeds found for: ' + origin)
+                return flask.redirect(flask.url_for('.index'))
+            if len(feeds) > 1:
+                return flask.render_template(
+                    'select-feed.jinja2', origin=origin, feeds=feeds)
+            feed = feeds[0]['feed']
+            type = feeds[0]['type']
+        new_feed = add_subscription(origin, feed, type)
+        flask.flash('Successfully subscribed to: {}'.format(new_feed.name))
+        return flask.redirect(flask.url_for('.index'))
+
+    if flask.request.method == 'POST':
+        flask.abort(400)
 
     return flask.render_template('subscribe.jinja2')
 

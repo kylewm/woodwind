@@ -432,7 +432,8 @@ article {
   article header {
     color: #484a47;
     border-bottom: 1px solid #687d77;
-    margin-bottom: 0.5em; }
+    margin-bottom: 0.5em;
+    overflow: auto; }
     article header img {
       vertical-align: middle;
       margin: inherit;

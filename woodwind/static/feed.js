@@ -69,7 +69,6 @@ $(function(){
         $(".show-like-form").off('click').click(clickShowLikeForm);
 
         $(".micropub-form button[type='submit']").off('click').click(submitMicropubForm);
-
         $(".micropub-form .content").focus(function (){
             $(this).animate({ height: "4em" }, 200);
         });
@@ -111,9 +110,17 @@ $(function(){
     }
 
     attachListeners();
+
+    $(document).on("keypress", function(e) {
+        if (e.which === 46) {
+            clickUnfoldLink();
+        }
+    });
+    
     if (WS_TOPIC) {
         webSocketSubscribe(WS_TOPIC);
     }
+    
     updateTimestamps();
     window.setInterval(updateTimestamps, 60 * 1000);
 
