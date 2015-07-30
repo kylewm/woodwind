@@ -1,8 +1,7 @@
 {% set settings = current_user.settings or {} %}
-{% set replyMethod = settings.get('reply-method') %}
+{% set reply_method = settings.get('reply-method') %}
 
-{% if replyMethod == 'micropub' and current_user.micropub_endpoint %}
-
+{% if reply_method == 'micropub' and current_user.micropub_endpoint %}
   <form class="micropub-form" action="{{ url_for('api.publish') }}" method="POST">
     <input type="hidden" name="target" value="{{ entry.permalink }}"/>
     <div>
@@ -22,14 +21,13 @@
   </form>
   <div class="micropub-response">
   </div>
-
-{% elif replyMethod == 'indie-config' %}
+{% elif reply_method == 'indie-config' %}
   {% for action in settings.get('indie-config-actions', []) %}
     <indie-action with="{{ entry.permalink }}" do="{{ action }}">
       <a class="reply-link" href="#">{{ action | capitalize }}</a>
     </indie-action>
   {% endfor %}
-{% elif replyMethod == 'action-urls' %}
+{% elif reply_method == 'action-urls' %}
   {% for action, url in settings.get('action-urls', []) %}
     <a class="reply-link" href="{{ url | replace('{url}', entry.permalink) }}" target="_blank">{{ action | capitalize }}</a>
   {% endfor %}

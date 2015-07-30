@@ -1,0 +1,22 @@
+{% extends "base.jinja2" %}
+{% block body %}
+  <main>
+    <form method="POST">
+      <!-- reply via indie-config -->
+      <h2>Indie-Config</h2>
+      <p>
+        Clicking an indie-action link will invoke your <code>web+action</code> handler if registered. See <a href="https://indiewebcamp.com/indie-config">indie-config</a> for details.
+      </p>
+      {% set selectedActions = settings.get('indie-config-actions', []) %}
+
+      {% for action in ['like', 'favorite', 'reply', 'repost', 'bookmark'] %}
+        <label>
+          <input type="checkbox" name="indie-config-action" value="{{ action }}"
+                 {% if action in selectedActions %}checked{% endif %} />
+                 {{ action | capitalize }}
+        </label><br/>
+      {% endfor %}
+      <button type="submit">Save Changes</button>
+    </form>
+  </main>
+{% endblock body %}

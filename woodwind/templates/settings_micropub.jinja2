@@ -1,0 +1,27 @@
+{% extends "base.jinja2" %}
+{% block body %}
+  <main>
+    <!-- reply via micropub -->
+    <h2>Micropub</h2>
+    <p>
+      Each post will have Like, Repost, and Reply buttons that will post content to your site directly via micropub. See <a href="https://indiewebcamp.com/Micropub">Micropub</a> for details.
+    </p>
+    <p>
+      Configure micropub credentials.
+    </p>
+    {% if current_user.micropub_endpoint or current_user.access_token %}
+      <input type="text" value="{{ current_user.micropub_endpoint }}" readonly />
+      <input type="text" value="{{ current_user.access_token }}" readonly />
+      <p>
+        <a href="{{url_for('.authorize', next=request.path)}}">Reauthorize Micropub</a>
+      </p>
+      <p>
+        <a href="{{url_for('.deauthorize', next=request.path)}}">Revoke Credentials</a>
+      </p>
+    {% else %}
+      <p>
+        <a href="{{url_for('.authorize', next=request.path)}}">Authorize Micropub</a>
+      </p>
+    {% endif %}
+  </main>
+{% endblock body %}

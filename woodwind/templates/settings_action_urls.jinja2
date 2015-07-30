@@ -1,0 +1,36 @@
+{% extends "base.jinja2" %}
+{% block body %}
+  <main>
+    <form method="POST">
+      <!-- configure endpoints manually -->
+      <h2>Action URLs</h2>
+      <p>
+        Manually configure your own web action handlers. The placeholder <code>{url}</code> will be replaced with the permalink URL of each entry.
+      </p>
+      <div id="action-urls-inputs">
+        {% set actionUrls = settings.get('action-urls', {}) %}
+        {% for action, url in actionUrls %}
+          <input type="text" name="action" class="input-25" value="{{action}}" />
+          <input type="text" name="action-url" class="input-75" value="{{url}}" />
+        {% endfor %}
+        <input type="text" id="action-1" name="action" class="input-25" placeholder="Like" />
+        <input type="text" id="action-url-1" name="action-url" class="input-75" placeholder="http://example.com/new/like?url={url}" />
+
+      </div>
+      <div style="text-align: center">
+        <button style="" id="add-action">Add</button>
+      </div>
+      <div>
+        <button type="submit">Save Changes</button>
+      </div>
+      </p>
+    </form>
+  </main>
+  <script>
+$('#add-action').click(function(evt) {
+    evt.preventDefault();
+    $('#action-1').clone().appendTo('#action-urls-inputs');
+    $('#action-url-1').clone().appendTo('#action-urls-inputs');
+});
+  </script>
+{% endblock body %}

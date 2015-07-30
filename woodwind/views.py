@@ -115,21 +115,61 @@ def settings():
     settings = dict(settings)
     reply_method = flask.request.form.get('reply-method')
     settings['reply-method'] = reply_method
-
-    if reply_method == 'micropub':
-        pass
-    elif reply_method == 'indie-config':
-        settings['indie-config-actions'] = flask.request.form.getlist(
-            'indie-config-action')
-    elif reply_method == 'action-urls':
-        zipped = zip(
-            flask.request.form.getlist('action'),
-            flask.request.form.getlist('action-url'))
-        settings['action-urls'] = [[k, v] for k, v in zipped if k and v]
-
     flask_login.current_user.settings = settings
     db.session.commit()
-    return flask.render_template('settings.jinja2', settings=settings)
+
+    next_page = '.settings'
+    if reply_method == 'micropub':
+        next_page = '.settings_micropub'
+    elif reply_method == 'indie-config':
+        next_page = '.settings_indie_config'
+    elif reply_method == 'action-urls':
+        next_page = '.settings_action_urls'
+
+    return flask.redirect(flask.url_for(next_page))
+
+
+@views.route('/settings/micropub')
+@flask_login.login_required
+def settings_micropub():
+    settings = flask_login.current_user.settings or {}
+    return flask.render_template('settings_micropub.jinja2', settings=settings)
+
+
+@views.route('/settings/indie-config', methods=['GET', 'POST'])
+@flask_login.login_required
+def settings_indie_config():
+    settings = flask_login.current_user.settings or {}
+
+    if flask.request.method == 'GET':
+        return flask.render_template('settings_indie_config.jinja2',
+                                     settings=settings)
+
+    settings = dict(settings)
+    settings['indie-config-actions'] = flask.request.form.getlist(
+        'indie-config-action')
+    flask_login.current_user.settings = settings
+    print('new settings: ', settings)
+    db.session.commit()
+    return flask.redirect(flask.url_for('.index'))
+
+
+@views.route('/settings/action-urls', methods=['GET', 'POST'])
+@flask_login.login_required
+def settings_action_urls():
+    settings = flask_login.current_user.settings or {}
+    if flask.request.method == 'GET':
+        return flask.render_template('settings_action_urls.jinja2',
+                                     settings=settings)
+
+    settings = dict(settings)
+    zipped = zip(
+        flask.request.form.getlist('action'),
+        flask.request.form.getlist('action-url'))
+    settings['action-urls'] = [[k, v] for k, v in zipped if k and v]
+    flask_login.current_user.settings = settings
+    db.session.commit()
+    return flask.redirect(flask.url_for('.index'))
 
 
 @views.route('/update_feed', methods=['POST'])
