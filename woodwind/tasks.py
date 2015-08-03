@@ -69,7 +69,7 @@ def tick():
                 q.enqueue(update_feed, feed.id)
 
 
-def update_feed(feed_id, content=None, 
+def update_feed(feed_id, content=None,
                 content_type=None, is_polling=True):
 
     def is_expected_content_type(feed_type):

@@ -13,34 +13,35 @@
   <script src="//code.jquery.com/jquery-2.1.3.min.js"></script>
   <script src="{{ url_for('static', filename='moment.min.js') }}"></script>
   <script src="{{ url_for('static', filename='cassis.js') }}"></script>
-  
+
   <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
 
   {% block head %}{% endblock %}
 </head>
 <body>
-
   <header>
     {% if current_user.is_authenticated() %}
-      <span class="h-x-app" style="font-weight: bold">
-        <img class="u-logo" src="{{ url_for('static', filename='logo.png') }}" style="max-height: 1.5em; vertical-align: middle;" />
-        Woodwind
-      </span>
-      <ul id="navigation">
-        <li>
-          <a href="{{ url_for('.index') }}">Home</a>
-        </li>
-        <li>
-          <a href="{{ url_for('.subscriptions') }}">Subscriptions</a>
-        </li>
-        <li>
-          <a href="{{ url_for('.settings') }}">Settings</a>
-        </li>
-        <li>
-          {{ current_user.url }}
-          (<a href="{{ url_for('.logout') }}">Logout</a>)
-        </li>
-      </ul>
+      <div style="overflow: auto;">
+        <span class="h-x-app" style="font-weight: bold">
+          <img class="u-logo" src="{{ url_for('static', filename='logo.png') }}" style="max-height: 1.5em; vertical-align: middle;" />
+          Woodwind
+        </span>
+        <ul id="navigation">
+          <li>
+            <a href="{{ url_for('.index') }}">Home</a>
+          </li>
+          <li>
+            <a href="{{ url_for('.subscriptions') }}">Subscriptions</a>
+          </li>
+          <li>
+            <a href="{{ url_for('.settings') }}">Settings</a>
+          </li>
+          <li>
+            {{ current_user.url }}
+            (<a href="{{ url_for('.logout') }}">Logout</a>)
+          </li>
+        </ul>
+      </div>
 
     {% else %}
       <h1 class="h-x-app">
@@ -48,6 +49,11 @@
         Woodwind
       </h1>
     {% endif %}
+
+    {% for message in get_flashed_messages() %}
+      <div class="flash">{{ message }}</div>
+    {% endfor %}
+
     {% if not current_user.is_authenticated() %}
       <form action="{{ url_for('.login') }}" method="POST">
         <input type="url" name="me" placeholder="https://yourdomain.com" />
@@ -59,9 +65,7 @@
     {% endif %}
 
     {% block header %}{% endblock %}
-    {% for message in get_flashed_messages() %}
-      <div class="flash">{{ message | safe }}</div>
-    {% endfor %}
+
   </header>
 
   <main>
@@ -70,27 +74,35 @@
   {% block foot %}{% endblock %}
 
   <script>
-    $("input[type='url']").blur(function() {
-      if (this.value.trim() != '') {
+$("input[type='url']").blur(function() {
+    if (this.value.trim() != '') {
         this.value = web_address_to_uri(this.value, true);
-      }
-    });
-
-  $("input[type='url']").on("invalid", function() {
-    this.value = web_address_to_uri(this.value, true);
-    if (this.willValidate) {
-      this.setCustomValidity('');
-      this.parentNode.submit();
-      return false;
-    } else if (document.getElementById('error')) {
-
-    } else {
-      var html = document.createElement("div");
-      html.id = 'error';
-      html.innerHTML = "Oops! looks like you didn't enter a URL. Try starting with http://";
-      this.parentNode.appendChild($html)
     }
-  });
+});
+
+
+$("input[type='url']").on("invalid", function() {
+    if (this.value.trim() == '') {
+      console.log('value is empty');
+      return true;
+    }
+    else {
+        this.value = web_address_to_uri(this.value, true);
+        if (this.willValidate) {
+            this.setCustomValidity('');
+            this.parentNode.submit();
+            return false;
+        } else if (document.getElementById('error')) {
+            return true;
+        } else {
+            var html = document.createElement("div");
+            html.id = 'error';
+            html.innerHTML = "Oops! looks like you didn't enter a URL. Try starting with http://";
+            this.parentNode.appendChild(html);
+            return true;
+        }
+    }
+});
   </script>
 </body>
 </html>

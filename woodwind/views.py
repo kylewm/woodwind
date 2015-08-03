@@ -228,9 +228,13 @@ def logout():
 
 @views.route('/login', methods=['POST'])
 def login():
+    me = flask.request.form.get('me')
+    if not me or me == 'http://':
+        flask.flash('Sign in with your personal web address.')
+        return flask.redirect(flask.url_for('.index'))
+
     return micropub.authenticate(
-        flask.request.form.get('me'),
-        next_url=flask.request.form.get('next'))
+        me=me, next_url=flask.request.form.get('next'))
 
 
 @views.route('/login-callback')
@@ -325,7 +329,8 @@ def load_user(url):
 @views.route('/subscribe', methods=['GET', 'POST'])
 @flask_login.login_required
 def subscribe():
-    origin = flask.request.form.get('origin') or flask.request.args.get('origin')
+    origin = (flask.request.form.get('origin')
+              or flask.request.args.get('origin'))
     if origin:
         type = None
         feed = None
@@ -390,7 +395,13 @@ def add_subscription(origin, feed_url, type, tags=None):
 
 def find_possible_feeds(origin):
     # scrape an origin source to find possible alternative feeds
-    resp = requests.get(origin)
+    try:
+        resp = requests.get(origin)
+    except requests.exceptions.RequestException as e:
+        flask.flash('Error fetching source {}'.format(repr(e)))
+        flask.current_app.logger.warn(
+            'Subscribe failed for %s with error %s', origin, repr(e))
+        return None
 
     feeds = []
 
