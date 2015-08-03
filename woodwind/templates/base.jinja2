@@ -83,14 +83,14 @@
       this.parentNode.submit();
       return false;
     } else if (document.getElementById('error')) {
-      return;
+
     } else {
-      $html = document.createElement("div");
-      $html.id = 'error';
-      $html.innerHTML = "Oops! looks like you didn't enter a URL. Try starting with http://";
+      var html = document.createElement("div");
+      html.id = 'error';
+      html.innerHTML = "Oops! looks like you didn't enter a URL. Try starting with http://";
       this.parentNode.appendChild($html)
     }
-  })
+  });
   </script>
 </body>
 </html>
