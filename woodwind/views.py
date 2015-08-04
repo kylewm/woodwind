@@ -80,9 +80,12 @@ def index():
         entries.append(entry)
 
     entries = dedupe_copies(entries)
-    return flask.render_template('feed.jinja2', entries=entries, page=page,
-                                 ws_topic=ws_topic, solo=solo,
-                                 all_tags=all_tags)
+    resp = flask.make_response(
+        flask.render_template('feed.jinja2', entries=entries, page=page,
+                              ws_topic=ws_topic, solo=solo,
+                              all_tags=all_tags))
+    resp.headers['Cache-control'] = 'no-cache'
+    return resp
 
 
 @views.route('/install')
