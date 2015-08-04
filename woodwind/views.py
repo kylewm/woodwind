@@ -609,3 +609,13 @@ def dedupe_copies(entries):
             entry._syndicated_copies = copies
             all_copies.update(copies)
     return [e for e in entries if e not in all_copies]
+
+
+@views.app_template_test('syndicated_to')
+def is_syndicated_to(entry, target):
+    def same_domain(u1, u2):
+        return domain_for_url(u1) == domain_for_url(u2)
+
+    return same_domain(entry.permalink, target) or any(
+        same_domain(syndurl, target)
+        for syndurl in entry.get_property('syndication', []))

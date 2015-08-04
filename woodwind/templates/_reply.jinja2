@@ -13,7 +13,7 @@
     <div class="syndication-toggles">
       {% for target in current_user.get_setting('syndicate-to', []) %}
         <div class="syndication-toggle">
-          <input id="sc-{{entry.id}}-{{loop.index}}" type="checkbox" name="syndicate-to[]" value="{{ target }}"/>
+          <input id="sc-{{entry.id}}-{{loop.index}}" type="checkbox" name="syndicate-to[]" value="{{ target }}"{% if entry is syndicated_to(target) %} checked{% endif %} />
           <label for="sc-{{entry.id}}-{{loop.index}}"><img src="{{ target | favicon_for_url }}" /></label>
         </div>
       {% endfor %}
