@@ -378,6 +378,10 @@ def process_xml_feed_for_new_entries(feed, content, backfill, now):
 
 
 def process_html_feed_for_new_entries(feed, content, backfill, now):
+    # strip noscript tags before parsing, since we definitely aren't
+    # going to preserve js
+    content = re.sub('</?noscript[^>]*>', '', content)
+
     parsed = mf2util.interpret_feed(
         mf2py.parse(url=feed.feed, doc=content), feed.feed)
     hfeed = parsed.get('entries', [])
