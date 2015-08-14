@@ -1,0 +1,13 @@
+import os
+
+DEBUG = True
+# do not intercept redirects when using debug toolbar
+DEBUG_TB_INTERCEPT_REDIRECTS = False
+SECRET_KEY = 'super secret key'
+
+SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.getcwd() + '/db.sqlite'
+PER_PAGE = 100
+
+# client secret and key for fetch twitter contexts from granary.appspot.com
+TWITTER_AU_KEY = '...'
+TWITTER_AU_SECRET = '...'
