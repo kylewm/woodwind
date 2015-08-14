@@ -1,4 +1,4 @@
-from . import tasks
+from . import tasks, util
 from .extensions import db, login_mgr, micropub
 from .models import Feed, Entry, User, Subscription
 import flask.ext.login as flask_login
@@ -84,7 +84,7 @@ def index():
         flask.render_template('feed.jinja2', entries=entries, page=page,
                               ws_topic=ws_topic, solo=solo,
                               all_tags=all_tags))
-    resp.headers['Cache-control'] = 'no-cache'
+    resp.headers['Cache-control'] = 'max-age=0'
     return resp
 
 
@@ -297,7 +297,7 @@ def update_micropub_syndicate_to():
     token = flask_login.current_user.access_token
     if not endpt or not token:
         return
-    resp = requests.get(endpt, params={
+    resp = util.requests_get(endpt, params={
         'q': 'syndicate-to',
     }, headers={
         'Authorization': 'Bearer ' + token,
@@ -367,12 +367,14 @@ def add_subscription(origin, feed_url, type, tags=None):
         name = None
         if type == 'html':
             flask.current_app.logger.debug('mf2py parsing %s', feed_url)
+            resp = util.requests_get(feed_url)
+            feed_text = resp.text if 'charset' in resp.headers.get('content-type', '') else resp.content
             parsed = mf2util.interpret_feed(
-                mf2py.Parser(url=feed_url).to_dict(), feed_url)
+                mf2py.parse(doc=feed_text, url=feed_url), feed_url)
             name = parsed.get('name')
         elif type == 'xml':
             flask.current_app.logger.debug('feedparser parsing %s', feed_url)
-            parsed = feedparser.parse(feed_url)
+            parsed = feedparser.parse(feed_url, agent=util.USER_AGENT)
             if parsed.feed:
                 name = parsed.feed.get('title')
         else:
@@ -399,7 +401,7 @@ def add_subscription(origin, feed_url, type, tags=None):
 def find_possible_feeds(origin):
     # scrape an origin source to find possible alternative feeds
     try:
-        resp = requests.get(origin)
+        resp = util.requests_get(origin)
     except requests.exceptions.RequestException as e:
         flask.flash('Error fetching source {}'.format(repr(e)))
         flask.current_app.logger.warn(

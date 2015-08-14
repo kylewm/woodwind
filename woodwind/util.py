@@ -1,5 +1,6 @@
 import bleach
 import re
+import requests
 
 bleach.ALLOWED_TAGS += [
     'a', 'img', 'p', 'br', 'marquee', 'blink',
@@ -14,7 +15,14 @@ bleach.ALLOWED_ATTRIBUTES.update({
     'td': ['colspan'],
 })
 
+USER_AGENT = 'Woodwind (https://github.com/kylewm/woodwind)'
 
+
+def requests_get(url, **kwargs):
+    kwargs.setdefault('headers', {})['User-Agent'] = USER_AGENT
+    return requests.get(url, **kwargs)
+
+    
 def clean(text):
     """Strip script tags and other possibly dangerous content
     """

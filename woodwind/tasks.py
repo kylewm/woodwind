@@ -102,7 +102,7 @@ def update_feed(feed_id, content=None,
                                         len(content))
             else:
                 current_app.logger.info('fetching feed: %s', feed)
-                response = requests.get(feed.feed)
+                response = util.requests_get(feed.feed)
                 if response.status_code // 100 != 2:
                     current_app.logger.warn('bad response from %s. %r: %r',
                                             feed.feed, response, response.text)
