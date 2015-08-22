@@ -442,7 +442,10 @@ def hentry_to_entry(hentry, feed, backfill, now):
 def fetch_reply_context(entry_id, in_reply_to, now):
     with flask_app():
         entry = Entry.query.get(entry_id)
-        context = Entry.query.filter_by(permalink=in_reply_to).first()
+        context = Entry.query\
+                       .join(Entry.feed)\
+                       .filter(Entry.permalink==in_reply_to, Feed.type == 'html')\
+                       .first()
 
         if not context:
             current_app.logger.info('fetching in-reply-to url: %s',
