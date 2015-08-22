@@ -102,7 +102,7 @@ def update_feed(feed_id, content=None,
                                         len(content))
             else:
                 current_app.logger.info('fetching feed: %s', feed)
-                response = requests.get(feed.feed)
+                response = util.requests_get(feed.feed)
                 if response.status_code // 100 != 2:
                     current_app.logger.warn('bad response from %s. %r: %r',
                                             feed.feed, response, response.text)
@@ -443,7 +443,10 @@ def hentry_to_entry(hentry, feed, backfill, now):
 def fetch_reply_context(entry_id, in_reply_to, now):
     with flask_app():
         entry = Entry.query.get(entry_id)
-        context = Entry.query.filter_by(permalink=in_reply_to).first()
+        context = Entry.query\
+                       .join(Entry.feed)\
+                       .filter(Entry.permalink==in_reply_to, Feed.type == 'html')\
+                       .first()
 
         if not context:
             current_app.logger.info('fetching in-reply-to url: %s',
