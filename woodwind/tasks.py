@@ -299,8 +299,9 @@ def is_content_equal(e1, e2):
 
 def process_xml_feed_for_new_entries(feed, content, backfill, now):
     current_app.logger.debug('fetching xml feed: %s', feed)
-
-    parsed = feedparser.parse(content)
+    parsed = feedparser.parse(content, response_headers={
+        'content-location': feed.feed,
+    })
     feed_props = parsed.get('feed', {})
     default_author_url = feed_props.get('author_detail', {}).get('href')
     default_author_name = feed_props.get('author_detail', {}).get('name')

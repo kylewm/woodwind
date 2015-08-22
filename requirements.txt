@@ -32,3 +32,4 @@ rq==0.5.2
 six==1.9.0
 uWSGI==2.0.10
 websockets==2.4
+sgmllib3k==1.0.0
