@@ -47,7 +47,10 @@ def flask_app():
         from woodwind import create_app
         _app = create_app()
     with _app.app_context():
-        yield _app
+        try:
+            yield _app
+        except:
+            _app.logger.exception('Unhandled exception')
 
 
 def tick():
@@ -319,13 +322,13 @@ def process_xml_feed_for_new_entries(feed, content, backfill, now):
         if not uid:
             continue
 
-        if 'updated_parsed' in p_entry:
+        if 'updated_parsed' in p_entry and p_entry.updated_parsed:
             updated = datetime.datetime.fromtimestamp(
                 time.mktime(p_entry.updated_parsed))
         else:
             updated = None
 
-        if 'published_parsed' in p_entry:
+        if 'published_parsed' in p_entry and p_entry.published_parsed:
             published = datetime.datetime.fromtimestamp(
                 time.mktime(p_entry.published_parsed))
         else:
@@ -381,7 +384,13 @@ def process_xml_feed_for_new_entries(feed, content, backfill, now):
 def process_html_feed_for_new_entries(feed, content, backfill, now):
     # strip noscript tags before parsing, since we definitely aren't
     # going to preserve js
-    content = re.sub('</?noscript[^>]*>', '', content)
+    was_bytes = isinstance(content, bytes) # ugly hack to deal with unknown encodings
+    if was_bytes:
+        content = content.decode()
+    content = re.sub('</?noscript[^>]*>', '', content, flags=re.IGNORECASE)
+    if was_bytes:
+        content = content.encode()
+
 
     parsed = mf2util.interpret_feed(
         mf2py.parse(url=feed.feed, doc=content), feed.feed)
@@ -432,7 +441,14 @@ def hentry_to_entry(hentry, feed, backfill, now):
         or (feed and fallback_photo(feed.origin)),
         author_url=hentry.get('author', {}).get('url'))
 
-    for prop in 'in-reply-to', 'like-of', 'repost-of', 'syndication':
+    # complex properties, convert from list of complex objects to a list of URLs
+    for prop in ('in-reply-to', 'like-of', 'repost-of'):
+        values = hentry.get(prop)
+        if values:
+            entry.set_property(prop, [value['url'] for value in values if 'url' in value])
+        
+    # simple properties, just transfer them over wholesale
+    for prop in ('syndication', 'location'):
         value = hentry.get(prop)
         if value:
             entry.set_property(prop, value)
@@ -454,7 +470,7 @@ def fetch_reply_context(entry_id, in_reply_to, now):
             parsed = mf2util.interpret(
                 mf2py.parse(url=proxy_url(in_reply_to)), in_reply_to)
             if parsed:
-                context = hentry_to_entry(parsed, in_reply_to, False, now)
+                context = hentry_to_entry(parsed, None, False, now)
 
         if context:
             entry.reply_context.append(context)

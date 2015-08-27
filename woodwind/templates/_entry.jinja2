@@ -53,6 +53,13 @@
 
 
   <footer>
+    {% set location = entry.get_property('location') %}
+    {% if location and 'name' in location %}
+      <div>
+        <code>@</code> {% if 'url' in location %}<a href="{{ location.url }}">{{ location.name }}</a>{% else %}{{ location.name }}{% endif %}
+      </div>
+    {% endif %}
+    
     <a class="permalink" href="{{ entry.permalink }}">
       <time datetime="{{ entry.published | isoformat }}">
         {{ entry.published | relative_time }}
@@ -62,9 +69,9 @@
       <i class="fa fa-external-link"></i>
     </a>
 
-  {% if entry._syndicated_copies %}
-    (also on{% for copy in entry._syndicated_copies %} <a href="{{ copy.permalink }}">{{ copy.permalink | domain_for_url }}</a>{% endfor %})
-  {% endif %}
+    {% if entry.get_property('syndication') %} 
+      | {% for synd in entry.get_property('syndication') %} <a href="{{ synd }}">{{ synd | domain_for_url}}</a>{% endfor %}
+    {% endif %}
 
     <div class="reply-area">
       {% include '_reply.jinja2' with context %}
