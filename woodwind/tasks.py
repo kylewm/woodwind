@@ -127,7 +127,7 @@ def update_feed(feed_id, content=None,
                 except:
                     feed.last_response = 'exception while retrieving: {}'.format(
                         sys.exc_info()[0])
-                    feed.failure_count += 1
+                    feed.failure_count = (feed.failure_count or 0) + 1
                     return
 
                 if response.status_code // 100 != 2:
@@ -136,7 +136,7 @@ def update_feed(feed_id, content=None,
                         response.text)
                     feed.last_response = 'bad response while retrieving: {}: {}'.format(
                         response, response.text)
-                    feed.failure_count += 1
+                    feed.failure_count = (feed.failure_count or 0) + 1
                     return
 
                 feed.failure_count = 0
