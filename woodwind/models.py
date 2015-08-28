@@ -1,24 +1,7 @@
 from .extensions import db
-import json
+
+from sqlalchemy.dialects.postgresql import JSONB
 import uuid
-
-
-class JsonType(db.TypeDecorator):
-    """Represents an immutable structure as a json-encoded string.
-    http://docs.sqlalchemy.org/en/rel_0_9/core/types.html#marshal-json-strings
-    """
-    impl = db.Text
-
-    def process_bind_param(self, value, dialect):
-        if value is not None:
-            value = json.dumps(value)
-
-        return value
-
-    def process_result_value(self, value, dialect):
-        if value is not None:
-            value = json.loads(value)
-        return value
 
 
 entry_to_reply_context = db.Table(
@@ -30,10 +13,10 @@ entry_to_reply_context = db.Table(
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     url = db.Column(db.String(256))
-    #domain = db.Column(db.String(256))
+    # domain = db.Column(db.String(256))
     micropub_endpoint = db.Column(db.String(512))
     access_token = db.Column(db.String(512))
-    settings = db.Column(JsonType)
+    settings = db.Column(JSONB)
 
     # Flask-Login integration
     def is_authenticated(self):
@@ -134,7 +117,7 @@ class Entry(db.Model):
     content = db.Column(db.Text)
     content_cleaned = db.Column(db.Text)
     # other properties
-    properties = db.Column(JsonType)
+    properties = db.Column(JSONB)
     reply_context = db.relationship(
         'Entry', secondary='entry_to_reply_context',
         primaryjoin=id == entry_to_reply_context.c.entry_id,
@@ -142,7 +125,6 @@ class Entry(db.Model):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
         self.subscription = None
         self._syndicated_copies = []
 
@@ -152,8 +134,8 @@ class Entry(db.Model):
         return self.properties.get(key, default)
 
     def set_property(self, key, value):
-        self.properties = ({} if self.properties is None
-                           else dict(self.properties))
+        if self.properties is None:
+            self.properties = {}
         self.properties[key] = value
 
     def __repr__(self):

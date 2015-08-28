@@ -391,7 +391,6 @@ def process_html_feed_for_new_entries(feed, content, backfill, now):
     if was_bytes:
         content = content.encode()
 
-
     parsed = mf2util.interpret_feed(
         mf2py.parse(url=feed.feed, doc=content), feed.feed)
     hfeed = parsed.get('entries', [])
@@ -446,13 +445,14 @@ def hentry_to_entry(hentry, feed, backfill, now):
         values = hentry.get(prop)
         if values:
             entry.set_property(prop, [value['url'] for value in values if 'url' in value])
-        
+
     # simple properties, just transfer them over wholesale
     for prop in ('syndication', 'location'):
         value = hentry.get(prop)
         if value:
             entry.set_property(prop, value)
 
+    current_app.logger.debug('entry properties %s', entry.properties)
     return entry
 
 
