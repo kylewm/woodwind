@@ -1,6 +1,6 @@
 from .extensions import db
 
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import JSON
 import uuid
 
 
@@ -16,7 +16,7 @@ class User(db.Model):
     # domain = db.Column(db.String(256))
     micropub_endpoint = db.Column(db.String(512))
     access_token = db.Column(db.String(512))
-    settings = db.Column(JSONB)
+    settings = db.Column(JSON)
 
     # Flask-Login integration
     def is_authenticated(self):
@@ -76,6 +76,9 @@ class Feed(db.Model):
     push_secret = db.Column(db.String(200))
     last_pinged = db.Column(db.DateTime)
 
+    last_response = db.Column(db.Text)
+    failure_count = db.Column(db.Integer)
+
     def get_feed_code(self):
         return self.feed  # binascii.hexlify(self.feed.encode())
 
@@ -117,7 +120,7 @@ class Entry(db.Model):
     content = db.Column(db.Text)
     content_cleaned = db.Column(db.Text)
     # other properties
-    properties = db.Column(JSONB)
+    properties = db.Column(JSON)
     reply_context = db.relationship(
         'Entry', secondary='entry_to_reply_context',
         primaryjoin=id == entry_to_reply_context.c.entry_id,

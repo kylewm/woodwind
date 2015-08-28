@@ -1,9 +1,9 @@
 from contextlib import contextmanager
+from flask import current_app
 from redis import StrictRedis
 from woodwind import util
-from woodwind.models import Feed, Entry
 from woodwind.extensions import db
-from flask import current_app
+from woodwind.models import Feed, Entry
 import bs4
 import datetime
 import feedparser
@@ -14,6 +14,7 @@ import mf2util
 import re
 import requests
 import rq
+import sys
 import time
 import urllib.parse
 
@@ -58,17 +59,32 @@ def tick():
     Makes use of uWSGI timers to run every 5 minutes, without needing
     a separate process to fire ticks.
     """
+    def should_update(feed, now):
+        if not feed.last_checked:
+            return True
+
+        if feed.failure_count > 8:
+            update_interval = datetime.timedelta(days=1)
+        elif feed.failure_count > 4:
+            update_interval = datetime.timedelta(hours=8)
+        elif feed.failure_count > 2:
+            update_interval = datetime.timedelta(hours=4)
+        else:
+            update_interval = UPDATE_INTERVAL
+
+        # PuSH feeds don't need to poll very frequently
+        if feed.push_verified:
+            update_interval = max(update_interval, UPDATE_INTERVAL_PUSH)
+
+        return now - feed.last_checked > update_interval
+
     with flask_app():
         now = datetime.datetime.utcnow()
         current_app.logger.info('Tick {}'.format(now))
         for feed in Feed.query.all():
-            current_app.logger.debug('Feed {} last checked {}'.format(
-                feed, feed.last_checked))
-            if (not feed.last_checked
-                or (not feed.push_verified
-                    and now - feed.last_checked > UPDATE_INTERVAL)
-                or (feed.push_verified
-                    and now - feed.last_checked > UPDATE_INTERVAL_PUSH)):
+            current_app.logger.debug(
+                'Feed %s last checked %s', feed, feed.last_checked)
+            if should_update(feed, now):
                 q.enqueue(update_feed, feed.id)
 
 
@@ -105,11 +121,27 @@ def update_feed(feed_id, content=None,
                                         len(content))
             else:
                 current_app.logger.info('fetching feed: %s', feed)
-                response = util.requests_get(feed.feed)
-                if response.status_code // 100 != 2:
-                    current_app.logger.warn('bad response from %s. %r: %r',
-                                            feed.feed, response, response.text)
+
+                try:
+                    response = util.requests_get(feed.feed)
+                except:
+                    feed.last_response = 'exception while retrieving: {}'.format(
+                        sys.exc_info()[0])
+                    feed.failure_count += 1
                     return
+
+                if response.status_code // 100 != 2:
+                    current_app.logger.warn(
+                        'bad response from %s. %r: %r', feed.feed, response,
+                        response.text)
+                    feed.last_response = 'bad response while retrieving: {}: {}'.format(
+                        response, response.text)
+                    feed.failure_count += 1
+                    return
+
+                feed.failure_count = 0
+                feed.last_response = 'success: {}'.format(response)
+
                 if is_polling:
                     check_push_subscription(feed, response)
                 content = get_response_content(response)
