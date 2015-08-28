@@ -25,6 +25,8 @@
   {% for s in subscriptions %}
 
     <article>
+      {% if s.feed.failure_count > 0 %}<i class="fa fa-warning"></i> {{ s.feed.failure_count }} Failure(s){% endif %}
+
       <form class="edit-subscription" action="{{ url_for('.edit_subscription') }}" method="POST">
         <input type="hidden" name="id" value="{{ s.id }}"/>
         <label>Name</label>
