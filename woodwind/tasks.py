@@ -63,6 +63,9 @@ def tick():
         if not feed.last_checked:
             return True
 
+        if not feed.subscriptions:
+            return False
+
         if feed.failure_count > 8:
             update_interval = datetime.timedelta(days=1)
         elif feed.failure_count > 4:
@@ -127,7 +130,7 @@ def update_feed(feed_id, content=None,
                 except:
                     feed.last_response = 'exception while retrieving: {}'.format(
                         sys.exc_info()[0])
-                    feed.failure_count = (feed.failure_count or 0) + 1
+                    feed.failure_count += 1
                     return
 
                 if response.status_code // 100 != 2:
@@ -136,7 +139,7 @@ def update_feed(feed_id, content=None,
                         response.text)
                     feed.last_response = 'bad response while retrieving: {}: {}'.format(
                         response, response.text)
-                    feed.failure_count = (feed.failure_count or 0) + 1
+                    feed.failure_count += 1
                     return
 
                 feed.failure_count = 0
@@ -428,6 +431,7 @@ def process_html_feed_for_new_entries(feed, content, backfill, now):
     hfeed = parsed.get('entries', [])
 
     for hentry in hfeed:
+        current_app.logger.debug('building entry: %s', hentry.get('url'))
         entry = hentry_to_entry(hentry, feed, backfill, now)
         if entry:
             current_app.logger.debug('built entry: %s', entry.permalink)

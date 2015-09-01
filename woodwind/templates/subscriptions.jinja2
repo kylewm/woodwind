@@ -25,8 +25,11 @@
   {% for s in subscriptions %}
 
     <article>
-      {% if s.feed.failure_count > 0 %}<i class="fa fa-warning"></i> {{ s.feed.failure_count }} Failure(s){% endif %}
-
+      {% if s.feed.failure_count > 0 %}
+        <div>
+          <i class="fa fa-warning"></i> Last {{ s.feed.failure_count }} Attempt(s) Failed
+        </div>
+      {% endif %}
       <form class="edit-subscription" action="{{ url_for('.edit_subscription') }}" method="POST">
         <input type="hidden" name="id" value="{{ s.id }}"/>
         <label>Name</label>
@@ -34,7 +37,7 @@
         <label>Tags</label>
         <input type="text" name="tags" value="{{ s.tags or ''}}"/>
         <label>URL</label>
-        <input type="text" name="feed" value="{{ s.feed.feed }}" disabled />
+        <input type="text" name="feed" value="{{ s.feed.feed }}" readonly />
         <button type="submit">Save Edits</button> <span class="save-status"></span>
       </form>
 

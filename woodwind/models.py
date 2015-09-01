@@ -77,7 +77,7 @@ class Feed(db.Model):
     last_pinged = db.Column(db.DateTime)
 
     last_response = db.Column(db.Text)
-    failure_count = db.Column(db.Integer)
+    failure_count = db.Column(db.Integer, default=0)
 
     def get_feed_code(self):
         return self.feed  # binascii.hexlify(self.feed.encode())
@@ -116,7 +116,7 @@ class Entry(db.Model):
     author_name = db.Column(db.String(512))
     author_url = db.Column(db.String(512))
     author_photo = db.Column(db.String(512))
-    title = db.Column(db.String(512))
+    title = db.Column(db.Text)
     content = db.Column(db.Text)
     content_cleaned = db.Column(db.Text)
     # other properties
