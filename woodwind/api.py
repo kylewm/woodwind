@@ -40,8 +40,6 @@ def publish():
     })
 
 
-
-
 @api.route('/_forward', methods=['GET', 'POST'])
 def forward_request():
     if flask.request.method == 'GET':
