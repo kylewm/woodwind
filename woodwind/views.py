@@ -64,6 +64,8 @@ def index():
                     flask.abort(404)
                 entry_query = entry_query.filter(Subscription.id == subsc_id)
                 ws_topic = 'subsc:{}'.format(subsc.id)
+            elif 'jam' in flask.request.args:
+                entry_query = entry_query.filter(Entry.properties['jam'] == 'true')
             else:
                 ws_topic = 'user:{}'.format(flask_login.current_user.id)
 
@@ -564,6 +566,7 @@ def add_preview(content):
     instagram_regex = 'https?://instagram.com/p/[\w\-]+/?'
     vimeo_regex = 'https?://vimeo.com/(\d+)/?'
     youtube_regex = 'https?://(?:www.)youtube.com/watch\?v=([\w\-]+)'
+    youtube_short_regex = 'https://youtu.be/([\w\-]+)'
 
     m = re.search(instagram_regex, content)
     if m:
@@ -583,6 +586,9 @@ def add_preview(content):
         ).format(content, vimeo_id)
 
     m = re.search(youtube_regex, content)
+    if not m:
+        m = re.search(youtube_short_regex, content)
+
     if m:
         youtube_id = m.group(1)
         return (

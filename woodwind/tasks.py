@@ -27,6 +27,8 @@ TWITTER_RE = re.compile(
     r'https?://(?:www\.|mobile\.)?twitter\.com/(\w+)/status(?:es)?/(\w+)')
 TAG_RE = re.compile(r'</?\w+[^>]*?>')
 COMMENT_RE = re.compile(r'<!--[^>]*?-->')
+JAM_RE = re.compile(
+    '\s*\u266b (?:https?://)?[a-z0-9._\-]+\.[a-z]{2,9}(?:/\S*)?')
 
 AUDIO_ENCLOSURE_TMPL = '<p><audio class="u-audio" src="{href}" controls '\
                        'preload=none ><a href="{href}">audio</a></audio></p>'
@@ -419,13 +421,7 @@ def process_xml_feed_for_new_entries(feed, content, backfill, now):
 def process_html_feed_for_new_entries(feed, content, backfill, now):
     # strip noscript tags before parsing, since we definitely aren't
     # going to preserve js
-    was_bytes = isinstance(content, bytes) # ugly hack to deal with unknown encodings
-    if was_bytes:
-        content = content.decode()
     content = re.sub('</?noscript[^>]*>', '', content, flags=re.IGNORECASE)
-    if was_bytes:
-        content = content.encode()
-
     parsed = mf2util.interpret_feed(
         mf2py.parse(url=feed.feed, doc=content), feed.feed)
     hfeed = parsed.get('entries', [])
@@ -448,6 +444,8 @@ def hentry_to_entry(hentry, feed, backfill, now):
     # permalink = hentry.get('url') or url
     # uid = hentry.get('uid') or uid
 
+    # TODO repost = next(iter(hentry.get('repost-of', [])), None)
+
     title = hentry.get('name')
     content = hentry.get('content')
     if not content:
@@ -462,6 +460,11 @@ def hentry_to_entry(hentry, feed, backfill, now):
     if backfill and published:
         retrieved = published
 
+    author = hentry.get('author', {})
+    author_name = author.get('name')
+    author_photo = author.get('photo')
+    author_url = author.get('url')
+
     entry = Entry(
         uid=uid,
         retrieved=retrieved,
@@ -471,22 +474,28 @@ def hentry_to_entry(hentry, feed, backfill, now):
         title=title,
         content=content,
         content_cleaned=util.clean(content),
-        author_name=hentry.get('author', {}).get('name'),
-        author_photo=hentry.get('author', {}).get('photo')
-        or (feed and fallback_photo(feed.origin)),
-        author_url=hentry.get('author', {}).get('url'))
+        author_name=author_name,
+        author_photo=author_photo or (feed and fallback_photo(feed.origin)),
+        author_url=author_url)
 
-    # complex properties, convert from list of complex objects to a list of URLs
+    # complex properties, convert from list of complex objects to a
+    # list of URLs
     for prop in ('in-reply-to', 'like-of', 'repost-of'):
         values = hentry.get(prop)
         if values:
-            entry.set_property(prop, [value['url'] for value in values if 'url' in value])
+            entry.set_property(prop, [value['url'] for value in values
+                                      if 'url' in value])
 
     # simple properties, just transfer them over wholesale
     for prop in ('syndication', 'location'):
         value = hentry.get(prop)
         if value:
             entry.set_property(prop, value)
+
+    # does it look like a jam?
+    plain = hentry.get('content-plain')
+    if plain and JAM_RE.match(plain):
+        entry.set_property('jam', True)
 
     current_app.logger.debug('entry properties %s', entry.properties)
     return entry
@@ -540,9 +549,10 @@ def fallback_photo(url):
 
 
 def get_response_content(response):
-    """Kartik's trick for handling responses that don't specify their
-    encoding. Response.text will guess badly if they don't.
-    """
+    # if no charset is provided in the headers, figure out the
+    # encoding from the content
     if 'charset' not in response.headers.get('content-type', ''):
-        return response.content
+        encodings = requests.utils.get_encodings_from_content(response.text)
+        if encodings:
+            response.encoding = encodings[0]
     return response.text
