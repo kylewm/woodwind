@@ -7,6 +7,8 @@ import bs4
 import datetime
 import feedparser
 import flask
+import hashlib
+import hmac
 import mf2py
 import mf2util
 import requests
@@ -14,6 +16,9 @@ import re
 import urllib
 import cgi
 import sqlalchemy
+
+IMAGE_TAG_RE = re.compile(r'<img([^>]*) src="(https?://[^">]+)"')
+
 
 views = flask.Blueprint('views', __name__)
 
@@ -558,7 +563,7 @@ def add_preview(content):
     """If a post ends with the URL of a known media source (youtube,
     instagram, etc.), add the content inline.
     """
-    if any('<' + tag in content for tag in (
+    if not content or any('<' + tag in content for tag in (
             'img', 'iframe', 'embed', 'audio', 'video')):
         # don't add  a preview to a post that already has one
         return content
@@ -598,6 +603,28 @@ def add_preview(content):
         ).format(content, youtube_id)
 
     return content
+
+    
+@views.app_template_filter()
+def proxy_image(url):
+    camo_url = flask.current_app.config.get('CAMO_URL')
+    camo_key = flask.current_app.config.get('CAMO_KEY')
+    if not camo_url or not camo_key:
+        return url
+    digest = hmac.new(camo_key.encode(), url.encode(), hashlib.sha1).hexdigest()
+    return (urllib.parse.urljoin(camo_url, digest)
+            + '?url=' + urllib.parse.quote_plus(url))
+    
+        
+@views.app_template_filter()
+def proxy_all(content):
+    def repl(m):
+        attrs = m.group(1)
+        url = m.group(2)
+        url = url.replace('&amp;', '&')
+        return '<img{} src="{}"'.format(attrs, proxy_image(url))
+    if content:
+        return IMAGE_TAG_RE.sub(repl, content)
 
 
 @views.app_template_global()

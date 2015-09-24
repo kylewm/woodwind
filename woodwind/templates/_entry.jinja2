@@ -2,7 +2,7 @@
   <article class="reply-context">
     <header>
       {% if context.author_photo %}
-        <img src="{{context.author_photo}}"/>
+        <img src="{{context.author_photo|proxy_image}}"/>
       {% endif %}
       {% if context.author_name %}
         {{ context.author_name }} -
@@ -14,7 +14,7 @@
     {% endif %}
     {% if context.content %}
       <div class="content">
-        {{ context.content_cleaned | add_preview }}
+        {{ context.content_cleaned | proxy_all | add_preview }}
       </div>
     {% endif %}
     <footer>
@@ -30,7 +30,7 @@
 <article>
   <header>
     {% if entry.author_photo %}
-      <img src="{{entry.author_photo}}"/>
+      <img src="{{entry.author_photo|proxy_image}}"/>
     {% endif %}
     {% if entry.author_name %}
       {{ entry.author_name }} -
@@ -47,7 +47,7 @@
   {% endif %}
   {% if entry.content %}
     <div class="content">
-      {{ entry.content_cleaned | add_preview }}
+      {{ entry.content_cleaned | proxy_all | add_preview }}
     </div>
   {% endif %}
 
