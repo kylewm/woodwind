@@ -129,16 +129,13 @@ class Entry(db.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.subscription = None
+        self.properties = {}
         self._syndicated_copies = []
 
     def get_property(self, key, default=None):
-        if self.properties is None:
-            return default
         return self.properties.get(key, default)
 
     def set_property(self, key, value):
-        if self.properties is None:
-            self.properties = {}
         self.properties[key] = value
 
     def __repr__(self):
