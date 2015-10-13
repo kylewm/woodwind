@@ -16,6 +16,7 @@ import re
 import urllib
 import cgi
 import sqlalchemy
+import sqlalchemy.sql.expression
 
 IMAGE_TAG_RE = re.compile(r'<img([^>]*) src="(https?://[^">]+)"')
 
@@ -70,7 +71,8 @@ def index():
                 entry_query = entry_query.filter(Subscription.id == subsc_id)
                 ws_topic = 'subsc:{}'.format(subsc.id)
             elif 'jam' in flask.request.args:
-                entry_query = entry_query.filter(Entry.properties['jam'] == 'true')
+                entry_query = entry_query.filter(
+                    sqlalchemy.sql.expression.cast(Entry.properties['jam'], sqlalchemy.TEXT) == 'true')
             else:
                 ws_topic = 'user:{}'.format(flask_login.current_user.id)
 

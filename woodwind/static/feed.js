@@ -62,16 +62,17 @@ $(function(){
     }
 
     function attachListeners() {
-        $(".reply-form, .like-form").css('display', 'none');
-
         $("#older-link").off('click').click(clickOlderLink);
-        $(".show-reply-form").off('click').click(clickShowReplyForm);
-        $(".show-like-form").off('click').click(clickShowLikeForm);
-
         $(".micropub-form button[type='submit']").off('click').click(submitMicropubForm);
-        $(".micropub-form .content").focus(function (){
-            $(this).animate({ height: "4em" }, 200);
+        $(".reply-area").hide();
+        
+        $("article").off('click').click(function(evt) {
+            var $target = $(evt.target);
+            if ($target.closest("form, a, video, audio").length == 0) {
+                $(".reply-area", this).slideToggle(200);
+            }
         });
+        
     }
 
 
@@ -84,7 +85,7 @@ $(function(){
     function foldNewEntries(entries) {
         $('#fold').prepend(entries.join('\n'));
         attachListeners();
-        $('#unfold-link').text($('#fold').children().length + " New Posts");
+        $('#unfold-link').text($('#fold>article:not(.reply-context)').length + " New Posts");
         $('#unfold-link').off('click').click(clickUnfoldLink);
         $('#unfold-link').show();
     }

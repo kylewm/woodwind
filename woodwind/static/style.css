@@ -527,6 +527,8 @@ button {
 .reply-area {
   text-align: center;
   margin-top: 0.5em; }
+  .reply-area .content {
+    height: 4em; }
   .reply-area .reply-link {
     display: inline-block;
     padding: 0.2em;
