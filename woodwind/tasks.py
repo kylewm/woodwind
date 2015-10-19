@@ -457,7 +457,7 @@ def hentry_to_entry(hentry, feed, backfill, now):
 
     # retrieved time is now unless we're backfilling old posts
     retrieved = now
-    if backfill and published:
+    if backfill and published and published < retrieved:
         retrieved = published
 
     author = hentry.get('author', {})
