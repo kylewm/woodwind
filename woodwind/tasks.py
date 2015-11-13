@@ -455,6 +455,11 @@ def hentry_to_entry(hentry, feed, backfill, now):
     published = hentry.get('published')
     updated = hentry.get('updated')
 
+    # make sure published timezone aware
+    if published and hasattr(published, 'tzinfo') and published.tzinfo:
+        published = published.astimezone(datetime.timezone.utc)\
+                             .replace(tzinfo=None)
+
     # retrieved time is now unless we're backfilling old posts
     retrieved = now
     if backfill and published and published < retrieved:
