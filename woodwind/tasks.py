@@ -222,6 +222,8 @@ def check_push_subscription(feed, response):
             feed.id)
 
     def send_request(mode, hub, topic):
+        hub = urllib.parse.urljoin(feed.feed, hub)
+        topic = urllib.parse.urljoin(feed.feed, topic)
         current_app.logger.debug(
             'sending %s request for hub=%r, topic=%r', mode, hub, topic)
         r = requests.post(hub, data={
