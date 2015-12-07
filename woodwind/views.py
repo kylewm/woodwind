@@ -573,11 +573,11 @@ def add_preview(content):
         # don't add  a preview to a post that already has one
         return content
 
-    # flatten links
-    soup = bs4.BeautifulSoup(content)
-    for link in soup.find_all('a'):
-        link.replace_with(link.get('href'))
-    flat = soup.get_text().strip()
+    # flatten links and strip tags
+    flat = content
+    flat = re.sub(r'<a [^>]*href="([^"]+)"[^>]*>[^<]*</a>', r'\1', flat)
+    flat = re.sub(r'</?\w+[^>]*>', '', flat)
+    flat = flat.strip()
 
     instagram_regex = r'https?://(?:www\.)?instagram.com/p/[\w\-]+/?'
     vimeo_regex = r'https?://(?:www\.)?vimeo.com/(\d+)/?'
