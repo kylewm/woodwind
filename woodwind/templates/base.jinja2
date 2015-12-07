@@ -80,7 +80,6 @@ $("input[type='url']").blur(function() {
     }
 });
 
-
 $("input[type='url']").on("invalid", function() {
     if (this.value.trim() == '') {
       console.log('value is empty');
@@ -104,5 +103,9 @@ $("input[type='url']").on("invalid", function() {
     }
 });
   </script>
+
+  <!-- load Tweet embeds -->
+  <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+
 </body>
 </html>

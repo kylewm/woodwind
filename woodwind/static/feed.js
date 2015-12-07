@@ -11,8 +11,11 @@ $(function(){
     function clickOlderLink(evt) {
         evt.preventDefault();
         $.get(this.href, function(result) {
-            $(".pager").replaceWith(
-                $("article,.pager", $(result)));
+            var $newElements = $("article,.pager", $(result));
+            $(".pager").replaceWith($newElements);
+            $newElements.each(function () {
+                twttr.widgets.load(this);
+            });
             attachListeners();
         });
     }
@@ -65,11 +68,11 @@ $(function(){
         $("#older-link").off('click').click(clickOlderLink);
         $(".micropub-form button[type='submit']").off('click').click(submitMicropubForm);
         $(".reply-area.closed").hide();
-        
+
         $("article").off('click').click(function(evt) {
             var $target = $(evt.target);
             if ($target.closest("form, a, video, audio").length == 0) {
-                
+
                 $(".reply-area", this).toggleClass("closed");
                 $(".reply-area", this).slideToggle(200);
             }
@@ -89,6 +92,9 @@ $(function(){
         $('#unfold-link').text($('#fold>article:not(.reply-context)').length + " New Posts");
         $('#unfold-link').off('click').click(clickUnfoldLink);
         $('#unfold-link').show();
+
+        // load twitter embeds
+        twttr.widgets.load($('#fold').get(0));
     }
 
     // topic will be user:id or feed:id
@@ -118,11 +124,11 @@ $(function(){
             clickUnfoldLink();
         }
     });
-    
+
     if (WS_TOPIC) {
         webSocketSubscribe(WS_TOPIC);
     }
-    
+
     updateTimestamps();
     window.setInterval(updateTimestamps, 60 * 1000);
 

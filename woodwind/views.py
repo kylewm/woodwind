@@ -573,10 +573,11 @@ def add_preview(content):
         # don't add  a preview to a post that already has one
         return content
 
-    instagram_regex = 'https?://instagram.com/p/[\w\-]+/?'
-    vimeo_regex = 'https?://vimeo.com/(\d+)/?'
-    youtube_regex = 'https?://(?:www.)youtube.com/watch\?v=([\w\-]+)'
-    youtube_short_regex = 'https://youtu.be/([\w\-]+)'
+    instagram_regex = r'https?://(?:www\.)?instagram.com/p/[\w\-]+/?'
+    vimeo_regex = r'https?://(?:www\.)?vimeo.com/(\d+)/?'
+    youtube_regex = r'https?://(?:www\.)?youtube.com/watch\?v=([\w\-]+)'
+    youtube_short_regex = r'https://youtu.be/([\w\-]+)'
+    twitter_regex = r'https?://(?:www\.)?twitter.com/(\w+)/status/(\d+)'
 
     m = re.search(instagram_regex, content)
     if m:
@@ -607,9 +608,19 @@ def add_preview(content):
             'allowfullscreen></iframe>'
         ).format(content, youtube_id)
 
+    # flatten links
+    flat = re.sub(r'<a[^>]+href="([^"]*)"[^>]*>[^<]*</a>', r'\1', content)
+    m = re.search(twitter_regex + '$', flat)
+    if m:
+        tweet_url = m.group()
+        return content + (
+            '<blockquote class="twitter-tweet" lang="en" data-cards="hidden">'
+            '<a href="{}"></a></blockquote>'
+        ).format(tweet_url)
+
     return content
 
-    
+
 @views.app_template_filter()
 def proxy_image(url):
     proxy_url = flask.current_app.config.get('IMAGEPROXY_URL')
@@ -635,8 +646,8 @@ def proxy_image(url):
         return (urllib.parse.urljoin(camo_url, digest)
                 + '?url=' + urllib.parse.quote_plus(url))
     return url
-    
-        
+
+
 @views.app_template_filter()
 def proxy_all(content):
     def repl(m):
