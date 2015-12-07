@@ -573,20 +573,26 @@ def add_preview(content):
         # don't add  a preview to a post that already has one
         return content
 
+    # flatten links
+    soup = bs4.BeautifulSoup(content)
+    for link in soup.find_all('a'):
+        link.replace_with(link.get('href'))
+    flat = soup.get_text().strip()
+
     instagram_regex = r'https?://(?:www\.)?instagram.com/p/[\w\-]+/?'
     vimeo_regex = r'https?://(?:www\.)?vimeo.com/(\d+)/?'
     youtube_regex = r'https?://(?:www\.)?youtube.com/watch\?v=([\w\-]+)'
     youtube_short_regex = r'https://youtu.be/([\w\-]+)'
     twitter_regex = r'https?://(?:www\.)?twitter.com/(\w+)/status/(\d+)'
 
-    m = re.search(instagram_regex, content)
+    m = re.search(instagram_regex, flat)
     if m:
         ig_url = m.group(0)
         media_url = urllib.parse.urljoin(ig_url, 'media/?size=l')
         return '{}<a href="{}"><img src="{}" /></a>'.format(
             content, ig_url, media_url)
 
-    m = re.search(vimeo_regex, content)
+    m = re.search(vimeo_regex, flat)
     if m:
         # vimeo_url = m.group(0)
         vimeo_id = m.group(1)
@@ -596,7 +602,7 @@ def add_preview(content):
             'mozallowfullscreen allowfullscreen></iframe>'
         ).format(content, vimeo_id)
 
-    m = re.search(youtube_regex, content)
+    m = re.search(youtube_regex, flat)
     if not m:
         m = re.search(youtube_short_regex, content)
 
@@ -608,8 +614,6 @@ def add_preview(content):
             'allowfullscreen></iframe>'
         ).format(content, youtube_id)
 
-    # flatten links
-    flat = re.sub(r'<a[^>]+href="([^"]*)"[^>]*>[^<]*</a>', r'\1', content)
     m = re.search(twitter_regex + '$', flat)
     if m:
         tweet_url = m.group()
