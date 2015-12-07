@@ -360,7 +360,8 @@ th {
 /* Subtlety of Hue */
 body {
   font: 12pt Helvetica, Arial, sans-serif;
-  background: #ecebf0;
+  /*background: $athens-gray;*/
+  background: #f4f4f4;
   padding-top: 1em; }
 
 a {
@@ -410,12 +411,13 @@ ul#navigation {
 
 article {
   margin-bottom: 2em;
-  box-shadow: 0 0 2px #687d77;
-  background-color: white;
+  /*box-shadow: $box-shadow;
+  background-color: white;*/
   padding: 0.5em; }
   article.reply-context {
     margin-bottom: 0;
-    background-color: #f3f3f3; }
+    background-color: #e0e0e0;
+    color: #555; }
     article.reply-context .content img {
       max-height: 240px;
       max-width: 240px; }

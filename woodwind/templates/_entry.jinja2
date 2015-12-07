@@ -73,7 +73,7 @@
       | {% for synd in entry.get_property('syndication') %} <a href="{{ synd }}">{{ synd | domain_for_url}}</a>{% endfor %}
     {% endif %}
 
-    <div class="reply-area">
+    <div class="reply-area closed">
       {% include '_reply.jinja2' with context %}
     </div>
   </footer>

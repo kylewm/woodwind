@@ -64,15 +64,16 @@ $(function(){
     function attachListeners() {
         $("#older-link").off('click').click(clickOlderLink);
         $(".micropub-form button[type='submit']").off('click').click(submitMicropubForm);
-        $(".reply-area").hide();
+        $(".reply-area.closed").hide();
         
         $("article").off('click').click(function(evt) {
             var $target = $(evt.target);
             if ($target.closest("form, a, video, audio").length == 0) {
+                
+                $(".reply-area", this).toggleClass("closed");
                 $(".reply-area", this).slideToggle(200);
             }
         });
-        
     }
 
 

@@ -18,8 +18,20 @@ $(function() {
         }).fail(function failure() {
             $(".save-status", form).html("Save Failed!");
         });
+    });
 
+    $("form.poll-now").submit(function(evt) {
+        var form = $(this);
+        evt.preventDefault();
 
+        $(".poll-status", form).html("");
+        
+        $.post(form.attr('action'), form.serialize(), function success(){
+            $(".poll-status", form).html("Poll Requested.");
+        }).fail(function failure() {
+            $(".poll-status", form).html("Polling Failed!");
+        });
+        
     });
 
 });

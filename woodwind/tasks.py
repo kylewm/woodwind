@@ -311,8 +311,13 @@ def notify_feed_updated(app, feed_id, entry_ids):
                 'subscription': s.id,
                 'entries': rendered,
             })
-            for topic in ('user:{}'.format(s.user.id),
-                          'subsc:{}'.format(s.id)):
+
+            topics = []
+            if not s.exclude:
+                topics.append('user:{}'.format(s.user.id))
+            topics.append('subsc:{}'.format(s.id))
+
+            for topic in topics:
                 redis.publish('woodwind_notify:{}'.format(topic), message)
 
 

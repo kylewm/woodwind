@@ -17,7 +17,8 @@ $box-shadow: 0 0 2px $sirocco;
 
 body {
     font: 12pt $body-font;
-    background: $athens-gray;
+    /*background: $athens-gray;*/
+    background: #f4f4f4;
     padding-top: 1em;
 }
 
@@ -86,13 +87,14 @@ ul#navigation {
 
 article {
     margin-bottom: 2em;
-    box-shadow: $box-shadow;
-    background-color: white;
+    /*box-shadow: $box-shadow;
+    background-color: white;*/
     padding: 0.5em;
 
     &.reply-context {
         margin-bottom: 0;
-        background-color: #f3f3f3;
+        background-color: #e0e0e0;
+        color: #555;
         .content img {
             max-height: 240px;
             max-width: 240px;
@@ -246,10 +248,10 @@ button {
 .reply-area {
     text-align: center;
     margin-top: 0.5em;
-
+    
     .content {
         height: 4em;
-    }
+    }    
 
     .reply-link {
         display: inline-block;

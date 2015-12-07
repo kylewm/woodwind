@@ -2,7 +2,8 @@ from . import tasks, util
 from .extensions import db, login_mgr, micropub
 from .models import Feed, Entry, User, Subscription
 import flask.ext.login as flask_login
-import binascii
+
+import base64
 import bs4
 import datetime
 import feedparser
@@ -74,6 +75,7 @@ def index():
                 entry_query = entry_query.filter(
                     sqlalchemy.sql.expression.cast(Entry.properties['jam'], sqlalchemy.TEXT) == 'true')
             else:
+                entry_query = entry_query.filter(Subscription.exclude == False)
                 ws_topic = 'user:{}'.format(flask_login.current_user.id)
 
             entry_query = entry_query.order_by(Entry.retrieved.desc(),
@@ -226,6 +228,7 @@ def edit_subscription():
         subsc.tags = ' '.join(t.strip() for t in tag_list if t.strip())
     else:
         subsc.tags = None
+    subsc.exclude = flask.request.form.get('exclude') == 'true'
 
     db.session.commit()
     flask.flash('Edited {}'.format(subsc.name))
@@ -609,13 +612,29 @@ def add_preview(content):
     
 @views.app_template_filter()
 def proxy_image(url):
+    proxy_url = flask.current_app.config.get('IMAGEPROXY_URL')
+    proxy_key = flask.current_app.config.get('IMAGEPROXY_KEY')
+    if proxy_url and proxy_key:
+        sig = base64.urlsafe_b64encode(
+            hmac.new(proxy_key.encode(), url.encode(), hashlib.sha256).digest()
+        ).decode()
+        return '/'.join((proxy_url.rstrip('/'), 's' + sig, url))
+
+    pilbox_url = flask.current_app.config.get('PILBOX_URL')
+    pilbox_key = flask.current_app.config.get('PILBOX_KEY')
+    if pilbox_url and pilbox_key:
+        query = urllib.parse.urlencode({'url': url, 'op': 'noop'})
+        sig = hmac.new(pilbox_key.encode(), query.encode(), hashlib.sha1).hexdigest()
+        query += '&sig=' + sig
+        return pilbox_url + '?' + query
+
     camo_url = flask.current_app.config.get('CAMO_URL')
     camo_key = flask.current_app.config.get('CAMO_KEY')
-    if not camo_url or not camo_key:
-        return url
-    digest = hmac.new(camo_key.encode(), url.encode(), hashlib.sha1).hexdigest()
-    return (urllib.parse.urljoin(camo_url, digest)
-            + '?url=' + urllib.parse.quote_plus(url))
+    if camo_url and camo_key:
+        digest = hmac.new(camo_key.encode(), url.encode(), hashlib.sha1).hexdigest()
+        return (urllib.parse.urljoin(camo_url, digest)
+                + '?url=' + urllib.parse.quote_plus(url))
+    return url
     
         
 @views.app_template_filter()
