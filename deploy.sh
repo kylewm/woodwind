@@ -12,6 +12,6 @@ cd $REMOTE_PATH
 git pull origin master \
 && source venv/bin/activate \
 && pip install --upgrade -r requirements.txt \
-&& sudo restart silopub
+&& sudo restart woodwind
 
 '"

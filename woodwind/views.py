@@ -12,6 +12,7 @@ import hashlib
 import hmac
 import mf2py
 import mf2util
+import pyquerystring
 import requests
 import re
 import urllib
@@ -319,7 +320,9 @@ def update_micropub_syndicate_to():
             'Unexpected response querying micropub endpoint %s: %s',
             resp, resp.text)
         return
-    syndicate_tos = urllib.parse.parse_qs(resp.text).get('syndicate-to[]', [])
+    syndicate_tos = pyquerystring.parse(resp.text).get('syndicate-to', [])
+    if syndicate_tos and not isinstance(syndicate_tos, list):
+        syndicate_tos = list(syndicate_tos)
     flask_login.current_user.set_setting('syndicate-to', syndicate_tos)
     db.session.commit()
 
@@ -498,8 +501,9 @@ def domain_for_url(url):
 
 @views.app_template_filter()
 def favicon_for_url(url):
-    return '//www.google.com/s2/favicons?' + urllib.parse.urlencode(
-        {'domain': url})
+    return '//www.google.com/s2/favicons?' + urllib.parse.urlencode({
+        'domain': url,
+    })
 
 
 @views.app_template_filter()
