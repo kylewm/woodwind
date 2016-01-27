@@ -10,9 +10,9 @@ Werkzeug==0.10.4
 asyncio-redis==0.13.4
 beautifulsoup4==4.3.2
 bleach==1.4.1
-feedparser>=5.2.0
+feedparser==5.2.1
 html5lib==0.99999
-mf2py==0.2.7
+mf2py==1.0.2
 mf2util==0.2.6
 psycopg2==2.6
 pyOpenSSL==0.15.1
@@ -22,3 +22,4 @@ requests==2.7.0
 rq==0.5.2
 uWSGI==2.0.10
 websockets==2.4
+pyquerystring==1.0.2
