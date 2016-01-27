@@ -7,7 +7,7 @@ Jinja2==2.8
 MarkupSafe==0.23
 SQLAlchemy==1.0.0
 Werkzeug==0.11.3
-asyncio-redis==0.13.4
+asyncio-redis==0.14.2
 beautifulsoup4==4.4.1
 bleach==1.4.1
 blinker==1.4
