@@ -502,21 +502,24 @@ button {
   vertical-align: middle; }
 
 .syndication-toggle {
-  display: inline-block;
+  display: block;
   margin-top: 0.25em;
-  height: 32px;
-  width: 32px; }
+  overflow: visible; }
   .syndication-toggle input {
     display: none; }
   .syndication-toggle label {
     display: inline-block;
     vertical-align: middle;
-    height: 16px;
-    width: 16px;
     padding: 4px;
     border-radius: 3px;
     background-color: #eee;
     margin: 0;
+    width: 240px;
+    text-align: left;
+    font-weight: normal;
+    font-size: 0.8em;
+    overflow: visible;
+    white-space: nowrap;
     color: #666;
     cursor: pointer; }
     .syndication-toggle label img {
@@ -529,8 +532,6 @@ button {
 .reply-area {
   text-align: center;
   margin-top: 0.5em; }
-  .reply-area .content {
-    height: 4em; }
   .reply-area .reply-link {
     display: inline-block;
     padding: 0.2em;
