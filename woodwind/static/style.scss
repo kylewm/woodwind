@@ -209,10 +209,12 @@ button {
     }
 }
 
+.syndication-toggles {
+
+}
+
 .syndication-toggle {
-    display: block;
-    margin-top: 0.25em;
-    overflow: visible;
+    display: inline-block;
 
     input {
         display: none;
@@ -225,14 +227,9 @@ button {
         border-radius: 3px;
         background-color: #eee;
         margin: 0;
-        width: 240px;
         text-align: left;
-
         font-weight: normal;
-        font-size: 0.8em;
-        overflow: visible;
-        white-space: nowrap;
-
+        font-size: 1em;
         color: #666;
         cursor: pointer;
 
@@ -250,7 +247,6 @@ button {
 
 
 .reply-area {
-    text-align: center;
     margin-top: 0.5em;
 
     .reply-link {

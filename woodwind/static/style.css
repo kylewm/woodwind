@@ -398,8 +398,8 @@ ul#navigation {
   .button-link a {
     padding: 0.5em;
     background-color: #353129;
-    color: #ecebf0;
-    border: 1px solid #ecebf0;
+    color: #ECEBF0;
+    border: 1px solid #ECEBF0;
     border-radius: 4px;
     display: inline-block; }
 
@@ -432,8 +432,8 @@ article {
   article img, article video {
     max-width: 100%; }
   article header {
-    color: #484a47;
-    border-bottom: 1px solid #687d77;
+    color: #484A47;
+    border-bottom: 1px solid #687D77;
     margin-bottom: 0.5em;
     overflow: auto; }
     article header img {
@@ -502,9 +502,7 @@ button {
   vertical-align: middle; }
 
 .syndication-toggle {
-  display: block;
-  margin-top: 0.25em;
-  overflow: visible; }
+  display: inline-block; }
   .syndication-toggle input {
     display: none; }
   .syndication-toggle label {
@@ -514,12 +512,9 @@ button {
     border-radius: 3px;
     background-color: #eee;
     margin: 0;
-    width: 240px;
     text-align: left;
     font-weight: normal;
-    font-size: 0.8em;
-    overflow: visible;
-    white-space: nowrap;
+    font-size: 1em;
     color: #666;
     cursor: pointer; }
     .syndication-toggle label img {
@@ -530,16 +525,15 @@ button {
     color: #fff; }
 
 .reply-area {
-  text-align: center;
   margin-top: 0.5em; }
   .reply-area .reply-link {
     display: inline-block;
     padding: 0.2em;
-    border: 1px solid #687d77;
+    border: 1px solid #687D77;
     border-radius: 4px;
-    background-color: #ecebf0;
+    background-color: #ECEBF0;
     text-decoration: none;
-    color: #484a47;
+    color: #484A47;
     min-width: 50px;
     text-align: center; }
 
@@ -552,3 +546,5 @@ button {
     max-height: 1.2em;
     min-width: inherit;
     min-height: inherit; } }
+
+/*# sourceMappingURL=style.css.map */

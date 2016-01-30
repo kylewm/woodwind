@@ -314,15 +314,31 @@ def update_micropub_syndicate_to():
         'q': 'syndicate-to',
     }, headers={
         'Authorization': 'Bearer ' + token,
+        'Accept': 'application/json',
     })
     if resp.status_code // 100 != 2:
         flask.current_app.logger.warn(
             'Unexpected response querying micropub endpoint %s: %s',
             resp, resp.text)
         return
-    syndicate_tos = pyquerystring.parse(resp.text).get('syndicate-to', [])
-    if syndicate_tos and not isinstance(syndicate_tos, list):
-        syndicate_tos = list(syndicate_tos)
+
+    flask.current_app.logger.debug('response from micropub endpoint: {}, {}',
+                                   resp, resp.text)
+
+    content_type = resp.headers['content-type']
+    if content_type:
+        content_type = content_type.split(';', 1)[0]
+
+    if content_type == 'application/json':
+        blob = resp.json()
+        syndicate_tos = blob.get('syndicate-to-expanded')
+        if not syndicate_tos:
+            syndicate_tos = blob.get('syndicate-to')
+    else:  # try to parse query string
+        syndicate_tos = pyquerystring.parse(resp.text).get('syndicate-to', [])
+        if isinstance(syndicate_tos, list):
+            syndicate_tos = list(syndicate_tos)
+
     flask_login.current_user.set_setting('syndicate-to', syndicate_tos)
     db.session.commit()
 
@@ -689,10 +705,55 @@ def dedupe_copies(entries):
     return [e for e in entries if e not in all_copies]
 
 
+def font_awesome_class_for_service(service):
+    service = service.lower()
+    if service == 'facebook':
+        return 'fa fa-facebook'
+    if service == 'twitter':
+        return 'fa fa-twitter'
+    if service == 'instagram':
+        return 'fa fa-instagram'
+    if service == 'flickr':
+        return 'fa fa-flickr'
+    if service == 'googleplus' or service == 'g+' or service == 'google plus' or service == 'google+':
+        return 'fa fa-google-plus'
+    if service == 'hacker news' or service == 'hackernews':
+        return 'fa fa-hacker-news'
+    if service == 'indienews':
+        return 'fa fa-newspaper-o'
+    if service == 'linkedin':
+        return 'fa fa-linkedin'
+    if service == 'foursquare' or service == 'swarm':
+        return 'fa fa-foursquare'
+    return 'fa fa-send'
+
+
+@views.app_template_filter('syndication_target_id')
+def syndication_target_id(target):
+    if isinstance(target, dict):
+        return target.get('id')
+    return target
+
+
+@views.app_template_filter('render_syndication_target')
+def render_syndication_target(target):
+    if isinstance(target, dict):
+        service = target.get('service')
+        name = target.get('name')
+        return '<i class="{}"></i>&nbsp;{}'.format(
+            font_awesome_class_for_service(service), name)
+
+    return '<img src="{}" alt="{}" />&nbsp;{}'.format(
+        favicon_for_url(target), target, prettify_url(target))
+
+
 @views.app_template_test('syndicated_to')
 def is_syndicated_to(entry, target):
     def same_domain(u1, u2):
         return domain_for_url(u1) == domain_for_url(u2)
+
+    if isinstance(target, dict):
+        return False  # TODO
 
     return same_domain(entry.permalink, target) or any(
         same_domain(syndurl, target)
