@@ -5,7 +5,7 @@
 {% endblock head %}
 
 {% block header %}
-  {% if current_user.is_authenticated() %}
+  {% if current_user.is_authenticated %}
     <form action="{{ url_for('.subscribe') }}" method="POST">
       <input type="url" id="origin" name="origin" placeholder="Subscribe to URL" />
     </form>
@@ -40,7 +40,7 @@
         <input type="text" name="feed" value="{{ s.feed.feed }}" readonly />
 
         <label style="display: block; font-weight: normal;">
-          <input type="checkbox" name="exclude" value="true" {% if s.exclude %}checked{% endif %} /> 
+          <input type="checkbox" name="exclude" value="true" {% if s.exclude %}checked{% endif %} />
           Exclude from primary feed
         </label>
 

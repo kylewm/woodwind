@@ -15,7 +15,7 @@
 {% endblock head %}
 
 {% block header %}
-  {% if current_user.is_authenticated() %}
+  {% if current_user.is_authenticated %}
     <form action="{{ url_for('.subscribe') }}" method="POST">
       <input type="url" id="origin" name="origin" placeholder="Subscribe to URL" />
     </form>

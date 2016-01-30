@@ -34,7 +34,7 @@ def index():
     solo = False
     all_tags = set()
 
-    if flask_login.current_user.is_authenticated():
+    if flask_login.current_user.is_authenticated:
         for subsc in flask_login.current_user.subscriptions:
             if subsc.tags:
                 all_tags.update(subsc.tags.split())
@@ -322,7 +322,7 @@ def update_micropub_syndicate_to():
             resp, resp.text)
         return
 
-    flask.current_app.logger.debug('response from micropub endpoint: {}, {}',
+    flask.current_app.logger.debug('syndicate-to response: {}, {}',
                                    resp, resp.text)
 
     content_type = resp.headers['content-type']

@@ -19,12 +19,15 @@ class User(db.Model):
     settings = db.Column(JSON)
 
     # Flask-Login integration
+    @property
     def is_authenticated(self):
         return True
 
+    @property
     def is_active(self):
         return True
 
+    @property
     def is_anonymous(self):
         return False
 
@@ -101,7 +104,7 @@ class Subscription(db.Model):
     tags = db.Column(db.String(256))
     # exclude from the front page
     exclude = db.Column(db.Boolean, default=False)
-    
+
     user = db.relationship(User, backref='subscriptions')
     feed = db.relationship(Feed, backref='subscriptions')
 
