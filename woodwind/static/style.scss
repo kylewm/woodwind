@@ -17,8 +17,9 @@ $box-shadow: 0 0 2px $sirocco;
 
 body {
     font: 12pt $body-font;
-    /*background: $athens-gray;*/
-    background: #f4f4f4;
+    line-height: 1.4em;
+    background: $athens-gray;
+    /*background: #f4f4f4;*/
     padding-top: 1em;
 }
 
@@ -43,7 +44,7 @@ p {
 }
 
 header, main {
-    max-width: 600px;
+    max-width: 800px;
     margin: 0 auto;
 }
 
@@ -86,14 +87,15 @@ ul#navigation {
 }
 
 article {
-    margin-bottom: 2em;
-    /*box-shadow: $box-shadow;
-    background-color: white;*/
+    margin-bottom: 1em;
+    box-shadow: $box-shadow;
+    background-color: white;
+    border-radius: 3px;
     padding: 0.5em;
 
     &.reply-context {
         margin-bottom: 0;
-        background-color: #e0e0e0;
+        background-color: #f3f3f3;
         color: #555;
         .content img {
             max-height: 240px;
