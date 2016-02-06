@@ -5,7 +5,7 @@ from flask_debugtoolbar import DebugToolbarExtension
 
 
 db = SQLAlchemy()
-micropub = MicropubClient(client_id='https://reader.kylewm.com')
+micropub = MicropubClient(client_id='https://woodwind.xyz/')
 login_mgr = LoginManager()
 login_mgr.login_view = 'views.index'
 toolbar = DebugToolbarExtension()
