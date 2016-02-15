@@ -13,7 +13,7 @@ bleach==1.4.2
 feedparser==5.2.1
 html5lib==0.9999999
 mf2py==1.0.2
-mf2util==0.2.11
+mf2util==0.2.12
 ndg-httpsclient==0.4.0
 psycopg2==2.6.1
 pyOpenSSL==0.15.1
