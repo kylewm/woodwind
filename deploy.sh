@@ -2,7 +2,7 @@
 
 REMOTE_USER=kmahan
 HOST=orin.kylewm.com
-REMOTE_PATH=/srv/www/kylewm.com/woodwind
+REMOTE_PATH=/srv/www/woodwind.xyz/woodwind
 
 ssh $REMOTE_USER@$HOST bash -c "'
 

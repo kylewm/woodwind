@@ -506,7 +506,7 @@ def hentry_to_entry(hentry, feed, backfill, now):
                                       if 'url' in value])
 
     # simple properties, just transfer them over wholesale
-    for prop in ('syndication', 'location'):
+    for prop in ('syndication', 'location', 'photo'):
         value = hentry.get(prop)
         if value:
             entry.set_property(prop, value)
