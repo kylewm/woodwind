@@ -429,8 +429,15 @@ def process_html_feed_for_new_entries(feed, content, backfill, now):
     # strip noscript tags before parsing, since we definitely aren't
     # going to preserve js
     content = re.sub('</?noscript[^>]*>', '', content, flags=re.IGNORECASE)
+
+    # look for a <base> element
+    doc = bs4.BeautifulSoup(content, 'html5lib')
+    base_el = doc.find('base')
+    base_href = base_el.get('href') if base_el else None
+
     parsed = mf2util.interpret_feed(
-        mf2py.parse(url=feed.feed, doc=content), feed.feed)
+        mf2py.parse(doc, feed.feed),
+        source_url=feed.feed, base_href=base_href)
     hfeed = parsed.get('entries', [])
 
     for hentry in hfeed:
