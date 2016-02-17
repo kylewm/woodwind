@@ -25,7 +25,7 @@ UPDATE_INTERVAL_PUSH = datetime.timedelta(days=1)
 
 TWITTER_RE = re.compile(
     r'https?://(?:www\.|mobile\.)?twitter\.com/(\w+)/status(?:es)?/(\w+)')
-TAG_RE = re.compile(r'</?\w+[^>]*?>')
+TAG_RE = re.compile(r'</?(div|span)[^>]*?>')
 COMMENT_RE = re.compile(r'<!--[^>]*?-->')
 JAM_RE = re.compile(
     '\s*\u266b (?:https?://)?[a-z0-9._\-]+\.[a-z]{2,9}(?:/\S*)?')
