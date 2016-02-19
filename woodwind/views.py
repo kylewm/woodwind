@@ -453,6 +453,10 @@ def find_possible_feeds(origin):
         'text/rss+xml',
         'text/atom+xml',
     ]
+    html_feed_types = [
+        'text/html',
+        'application/xhtml+xml',
+    ]
 
     content_type = resp.headers['content-type']
     content_type = content_type.split(';', 1)[0].strip()
@@ -464,7 +468,7 @@ def find_possible_feeds(origin):
             'title': 'untitled xml feed',
         })
 
-    elif content_type == 'text/html':
+    elif content_type in html_feed_types:
         parsed = mf2py.parse(doc=resp.text, url=origin)
         # if text/html, then parse and look for h-entries
         hfeed = mf2util.interpret_feed(parsed, origin)
@@ -480,7 +484,7 @@ def find_possible_feeds(origin):
         # look for link="feed"
         for furl in parsed.get('rels', {}).get('feed', []):
             fprops = parsed.get('rel-urls', {}).get(furl, {})
-            if not fprops.get('type') or fprops.get('type') == 'text/html':
+            if not fprops.get('type') or fprops.get('type') in html_feed_types:
                 feeds.append({
                     'origin': origin,
                     'feed': furl,
