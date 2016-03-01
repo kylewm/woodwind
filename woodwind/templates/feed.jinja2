@@ -23,7 +23,7 @@
 
   {% if all_tags %}
     <i class="fa fa-tags"></i>
-    {% for tag in all_tags %}
+    {% for tag in all_tags|sort %}
       <a href="{{ url_for('.index', tag=tag) }}">{{ tag }}</a>{% if not loop.last %}, {% endif %}
     {% endfor %}
   {% endif %}
