@@ -2,10 +2,10 @@ asyncio-redis==0.14.2
 beautifulsoup4==4.4.1
 bleach==1.4.2
 blinker==1.4
-certifi==14.05.14  # rq.filter: <=2015.04.28
-cffi==1.5.0
-click==6.2
-cryptography==1.2.1
+certifi==2015.04.28  # rq.filter: <=2015.04.28
+cffi==1.5.2
+click==6.3
+cryptography==1.2.3
 feedparser==5.2.1
 Flask==0.10.1
 Flask-DebugToolbar==0.10.0
@@ -30,8 +30,8 @@ requests==2.9.1
 rq==0.5.6
 sgmllib3k==1.0.0
 six==1.10.0
-SQLAlchemy==1.0.11
+SQLAlchemy==1.0.12
 uWSGI==2.0.12
 websockets==3.0
-Werkzeug==0.11.3
-wheel==0.24.0
+Werkzeug==0.11.4
+wheel==0.29.0
