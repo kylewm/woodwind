@@ -17,6 +17,7 @@ import requests
 import rq
 import sys
 import time
+import traceback
 import urllib.parse
 
 # normal update interval for polling feeds
@@ -92,6 +93,8 @@ def tick():
                 'Feed %s last checked %s', feed, feed.last_checked)
             if should_update(feed, now):
                 q.enqueue(update_feed, feed.id)
+
+
 
 
 def update_feed(feed_id, content=None,
@@ -224,10 +227,6 @@ def update_feed(feed_id, content=None,
             db.session.commit()
 
             if new_entries:
-
-                for e in new_entries:
-                    current_app.logger.debug('entry %s state: %s', e.uid, sqlalchemy.inspect(e))
-
                 notify_feed_updated(app, feed_id, new_entries)
 
 
@@ -545,23 +544,22 @@ def hentry_to_entry(hentry, feed, backfill, now):
 
 
 def fetch_reply_context(entry, in_reply_to, now):
-    with flask_app():
-        context = Entry.query\
-                       .join(Entry.feed)\
-                       .filter(Entry.permalink==in_reply_to, Feed.type == 'html')\
-                       .first()
+    context = Entry.query\
+                   .join(Entry.feed)\
+                   .filter(Entry.permalink==in_reply_to, Feed.type == 'html')\
+                   .first()
 
-        if not context:
-            current_app.logger.info('fetching in-reply-to url: %s',
-                                    in_reply_to)
-            parsed = mf2util.interpret(
-                mf2py.parse(url=proxy_url(in_reply_to)), in_reply_to)
-            if parsed:
-                context = hentry_to_entry(parsed, None, False, now)
-                db.session.add(context)
+    if not context:
+        current_app.logger.info('fetching in-reply-to url: %s',
+                                in_reply_to)
+        parsed = mf2util.interpret(
+            mf2py.parse(url=proxy_url(in_reply_to)), in_reply_to)
+        if parsed:
+            context = hentry_to_entry(parsed, None, False, now)
+            db.session.add(context)
 
-        if context:
-            entry.reply_context.append(context)
+    if context:
+        entry.reply_context.append(context)
 
 
 def proxy_url(url):
