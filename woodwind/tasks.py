@@ -556,9 +556,9 @@ def fetch_reply_context(entry, in_reply_to, now):
             mf2py.parse(url=proxy_url(in_reply_to)), in_reply_to)
         if parsed:
             context = hentry_to_entry(parsed, None, False, now)
-            db.session.add(context)
 
     if context:
+        db.session.add(context)
         entry.reply_context.append(context)
 
 
