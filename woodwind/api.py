@@ -16,6 +16,7 @@ def publish():
     data = {
         'h': 'entry',
         'syndicate-to[]': syndicate_to,
+        'access_token': flask_login.current_user.access_token,
     }
 
     if action == 'like':
