@@ -19,7 +19,11 @@ def publish():
         'access_token': flask_login.current_user.access_token,
     }
 
-    if action == 'like':
+    if action.startswith('rsvp-'):
+        data['in-reply-to'] = target
+        data['content'] = content
+        data['rsvp'] = action.split('-', 1)[-1]
+    elif action == 'like':
         data['like-of'] = target
     elif action == 'repost':
         data['repost-of'] = target

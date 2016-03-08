@@ -4,11 +4,20 @@
 {% if reply_method == 'micropub' and current_user.micropub_endpoint %}
   <form class="micropub-form" action="{{ url_for('api.publish') }}" method="POST">
     <input type="hidden" name="target" value="{{ entry.permalink }}"/>
+
+    {% if entry.get_property('event') %}
+      <div class="rsvps">
+        <button type="submit" name="action" value="rsvp-yes">Going</button>
+        <button type="submit" name="action" value="rsvp-maybe">Interested</button>
+        <button type="submit" name="action" value="rsvp-no">Not Going</button>
+      </div>
+    {% endif %}
+
     <div>
       <textarea class="content" name="content"></textarea>
-      <button type="submit" name="action" value="reply"><i class="fa fa-reply"></i></button>
-      <button type="submit" name="action" value="repost"><i class="fa fa-retweet"></i></button>
-      <button type="submit" name="action" value="like"><i class="fa fa-star"></i></button>
+      <button type="submit" name="action" value="reply" class="small"><i class="fa fa-reply"></i></button>
+      <button type="submit" name="action" value="repost" class="small"><i class="fa fa-retweet"></i></button>
+      <button type="submit" name="action" value="like" class="small"><i class="fa fa-star"></i></button>
     </div>
     <div class="syndication-toggles">
       {% for target in current_user.get_setting('syndicate-to', []) %}
