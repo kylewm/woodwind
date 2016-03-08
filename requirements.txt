@@ -2,7 +2,7 @@ asyncio-redis==0.14.2
 beautifulsoup4==4.4.1
 bleach==1.4.2
 blinker==1.4
-certifi==14.05.14  # rq.filter: <=2015.04.28
+certifi==2015.04.28  # rq.filter: <=2015.04.28
 cffi==1.5.0
 click==6.2
 cryptography==1.2.1
