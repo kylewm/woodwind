@@ -43,13 +43,18 @@ p {
     }
 }
 
-header, main {
+header, main, .footer {
     max-width: 800px;
     margin: 0 auto;
 }
 
 header {
     margin-bottom: 1em;
+}
+
+.footer {
+    font-size: 0.8em;
+    text-align: center;
 }
 
 ul#navigation {
