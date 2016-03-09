@@ -534,6 +534,12 @@ def hentry_to_entry(hentry, feed, backfill, now):
         if value:
             entry.set_property(prop, value)
 
+    if 'start-str' in hentry:
+        entry.set_property('start', hentry.get('start-str'))
+
+    if 'end-str' in hentry:
+        entry.set_property('end', hentry.get('end-str'))
+
     # set a flag for events so we can show RSVP buttons
     if hentry.get('type') == 'event':
         entry.set_property('event', True)

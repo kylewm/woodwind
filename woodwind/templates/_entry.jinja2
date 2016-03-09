@@ -46,6 +46,18 @@
     <h1>{{ entry.title }}</h1>
   {% endif %}
 
+  {% if entry.get_property('event') %}
+    <p>
+      {% if entry.get_property('start') %}
+        <strong>start:</strong> {{ entry.get_property('start') }}
+      {% endif %}
+      <br/>
+      {% if entry.get_property('end') %}
+        <strong>end:</strong> {{ entry.get_property('end') }}
+      {% endif %}
+    </p>
+  {% endif %}
+
   {% set photo = entry.get_property('photo') %}
   {% if photo and (not entry.content or '<img' not in entry.content) %}
     <div class="photo">
