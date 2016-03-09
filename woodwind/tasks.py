@@ -349,12 +349,14 @@ def is_content_equal(e1, e2):
             content = COMMENT_RE.sub('', content)
         return content
 
-    return (e1.title == e2.title
-            and normalize(e1.content) == normalize(e2.content)
-            and e1.author_name == e2.author_name
-            and e1.author_url == e2.author_url
-            and e1.author_photo == e2.author_photo
-            and e1.properties == e2.properties)
+    return (
+        e1.title == e2.title
+        and normalize(e1.content) == normalize(e2.content)
+        and e1.author_name == e2.author_name
+        and e1.author_url == e2.author_url
+        and e1.author_photo == e2.author_photo
+        and e1.properties == e2.properties
+    )
 
 
 def process_xml_feed_for_new_entries(feed, content, backfill, now):
@@ -478,7 +480,7 @@ def hentry_to_entry(hentry, feed, backfill, now):
 
     title = hentry.get('name')
     content = hentry.get('content')
-    if not content:
+    if not content and hentry.get('type') == 'entry':
         content = title
         title = None
 
