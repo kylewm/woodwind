@@ -569,8 +569,10 @@ def fetch_reply_context(entry, in_reply_to, now):
                 mf2py.parse(url=proxied_reply_url), in_reply_to)
             if parsed:
                 context = hentry_to_entry(parsed, None, False, now)
-        except requests.exceptions.SSLError:
-            current_app.logger.warn('SSLError fetching: %s', proxied_reply_url)
+        except requests.exceptions.RequestException as err:
+            current_app.logger.warn(
+                '%s fetching reply context: %s for entry: %s',
+                type(err).__name__, proxied_reply_url, entry.permalink)
 
     if context:
         db.session.add(context)
