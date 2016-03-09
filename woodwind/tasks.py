@@ -562,12 +562,15 @@ def fetch_reply_context(entry, in_reply_to, now):
                    .first()
 
     if not context:
-        current_app.logger.info('fetching in-reply-to url: %s',
-                                in_reply_to)
-        parsed = mf2util.interpret(
-            mf2py.parse(url=proxy_url(in_reply_to)), in_reply_to)
-        if parsed:
-            context = hentry_to_entry(parsed, None, False, now)
+        current_app.logger.info('fetching in-reply-to: %s', in_reply_to)
+        try:
+            proxied_reply_url = proxy_url(in_reply_to)
+            parsed = mf2util.interpret(
+                mf2py.parse(url=proxied_reply_url), in_reply_to)
+            if parsed:
+                context = hentry_to_entry(parsed, None, False, now)
+        except requests.exceptions.SSLError:
+            current_app.logger.warn('SSLError fetching: %s', proxied_reply_url)
 
     if context:
         db.session.add(context)
