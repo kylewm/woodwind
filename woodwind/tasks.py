@@ -1,5 +1,5 @@
 from contextlib import contextmanager
-from flask import current_app
+from flask import current_app, url_for
 from redis import StrictRedis
 from woodwind import util
 from woodwind.extensions import db
@@ -231,21 +231,17 @@ def update_feed(feed_id, content=None,
 
 
 def check_push_subscription(feed, response):
-    def build_callback_url():
-        return '{}://{}/_notify/{}'.format(
-            getattr(current_app.config, 'PREFERRED_URL_SCHEME', 'http'),
-            current_app.config['SERVER_NAME'],
-            feed.id)
-
     def send_request(mode, hub, topic):
         hub = urllib.parse.urljoin(feed.feed, hub)
         topic = urllib.parse.urljoin(feed.feed, topic)
+        callback = url_for('push.notify', feed_id=feed.id, _external=True)
         current_app.logger.debug(
-            'sending %s request for hub=%r, topic=%r', mode, hub, topic)
+            'sending %s request for hub=%r, topic=%r, callback=%r',
+            mode, hub, topic, callback)
         r = requests.post(hub, data={
             'hub.mode': mode,
             'hub.topic': topic,
-            'hub.callback': build_callback_url(),
+            'hub.callback': callback,
             'hub.secret': feed.get_or_create_push_secret(),
             'hub.verify': 'sync',  # backcompat with 0.3
         })
