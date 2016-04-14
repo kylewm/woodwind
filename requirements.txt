@@ -33,5 +33,5 @@ six==1.10.0
 SQLAlchemy==1.0.12
 uWSGI==2.0.12
 websockets==3.0
-Werkzeug==0.11.6
+Werkzeug==0.11.7
 wheel==0.29.0
