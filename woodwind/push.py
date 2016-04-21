@@ -31,13 +31,14 @@ def notify(feed_id):
             if not feed:
                 current_app.logger.warn(
                     'could not find feed corresponding to %d', feed_id)
-                abort(404)
+                return make_response('no feed with id %d' % feed_id, 400)
 
             if topic != feed.push_topic:
                 current_app.logger.warn(
                     'feed topic (%s) does not match subscription request (%s)',
                     feed.push_topic, topic)
-                abort(404)
+                return make_response(
+                    'topic %s does not match subscription request %s' % (feed.push_topic, topic), 400)
 
             current_app.logger.debug(
                 'PuSH verify subscribe for feed=%r, topic=%s', feed, topic)
@@ -48,18 +49,28 @@ def notify(feed_id):
             db.session.commit()
             return challenge
 
-        elif mode == 'unsubscribe' and (not feed or topic != feed.push_topic):
-            current_app.logger.debug(
-                'PuSH verify unsubscribe for feed=%r, topic=%s', feed, topic)
-            return challenge
-        current_app.logger.debug('PuSH cannot verify %s for feed=%r, topic=%s',
-                                 mode, feed, topic)
-        abort(404)
+        elif mode == 'unsubscribe':
+            if not feed or topic != feed.push_topic:
+                current_app.logger.debug(
+                    'PuSH verify unsubscribe for feed=%r, topic=%s', feed, topic)
+                return challenge
+            else:
+                current_app.logger.debug(
+                    'PuSH denying unsubscribe for feed=%r, topic=%s', feed, topic)
+                return make_response('unsubscribe denied', 400)
+
+        elif mode:
+            current_app.logger.debug('PuSH request with unknown mode %s', mode)
+            return make_response('unrecognized hub.mode=%s' % mode, 400)
+
+        else:
+            current_app.logger.debug('PuSH request with no mode')
+            return make_response('missing requred parameter hub.mode', 400)
 
     if not feed:
         current_app.logger.warn(
             'could not find feed corresponding to %d', feed_id)
-        abort(404)
+        return make_response('no feed with id %d' % feed_id, 400)
 
     # could it be? an actual push notification!?
     current_app.logger.debug(
@@ -83,7 +94,7 @@ def notify(feed_id):
         content = request.data.decode('utf-8')
 
     tasks.q_high.enqueue(tasks.update_feed, feed.id,
-                         content=content, content_type=content_type, 
+                         content=content, content_type=content_type,
                          is_polling=False)
     feed.last_pinged = datetime.datetime.utcnow()
     db.session.commit()

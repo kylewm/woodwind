@@ -39,20 +39,30 @@ $(function(){
     function submitMicropubForm(evt) {
         evt.preventDefault();
 
-        var form = $(this).closest('form');
+        var button = this;
+        var form = $(button).closest('form');
         var replyArea = form.parent();
         var endpoint = form.attr('action');
         var responseArea = $('.micropub-response', replyArea);
         var formData = form.serializeArray();
-        formData.push({name: this.name, value: this.value});
+        formData.push({name: button.name, value: button.value});
 
         $.post(
-            form.attr('action'),
+            endpoint,
             formData,
             function(result) {
                 if (Math.floor(result.code / 100) == 2) {
                     responseArea.html('<a target="_blank" href="' + result.location + '">Success!</a>');
-                    $(".micropub-form textarea").val("");
+                    $("textarea", form).val("");
+
+                    if (button.value === 'rsvp-yes') {
+                        $(".rsvps", form).html('✓ Going');
+                    } else if (button.value === 'rsvp-maybe') {
+                        $(".rsvps", form).html('? Interested');
+                    } else if (button.value === 'rsvp-no') {
+                        $(".rsvps", form).html('✗ Not Going');
+                    }
+
                 } else {
                     responseArea.html('Failure');
                 }

@@ -305,7 +305,38 @@ def micropub_callback(resp):
 
 
 @flask_login.login_required
+@views.route('/micropub-update')
+def micropub_update():
+    update_micropub_syndicate_to()
+
+    syndicate_to = flask_login.current_user.get_setting('syndicate-to', [])
+
+    flask.flash('Updated syndication targets: {}'.format(', '.join([
+        t.get('name') if isinstance(t, dict) else t for t in syndicate_to])))
+
+    return flask.redirect(flask.request.args.get('next')
+                          or flask.url_for('.index'))
+
+
+@flask_login.login_required
 def update_micropub_syndicate_to():
+
+    def adapt_expanded(targets):
+        """Backcompat support for old-style "syndicate-to-expanded" properties,
+        e.g.,
+        {
+          "id": "twitter::kylewmahan",
+          "name": "@kylewmahan",
+          "service": "Twitter"
+        }
+        """
+        if targets:
+            return [{
+                'uid': t.get('id'),
+                'name': '{} on {}'.format(t.get('name'), t.get('service')),
+            } for t in targets]
+        return targets
+
     endpt = flask_login.current_user.micropub_endpoint
     token = flask_login.current_user.access_token
     if not endpt or not token:
@@ -331,9 +362,10 @@ def update_micropub_syndicate_to():
 
     if content_type == 'application/json':
         blob = resp.json()
-        syndicate_tos = blob.get('syndicate-to-expanded')
+        syndicate_tos = adapt_expanded(blob.get('syndicate-to-expanded'))
         if not syndicate_tos:
             syndicate_tos = blob.get('syndicate-to')
+
     else:  # try to parse query string
         syndicate_tos = pyquerystring.parse(resp.text).get('syndicate-to', [])
         if isinstance(syndicate_tos, list):
@@ -735,17 +767,15 @@ def font_awesome_class_for_service(service):
 @views.app_template_filter('syndication_target_id')
 def syndication_target_id(target):
     if isinstance(target, dict):
-        return target.get('id')
+        return target.get('uid') or target.get('id')
     return target
 
 
 @views.app_template_filter('render_syndication_target')
 def render_syndication_target(target):
     if isinstance(target, dict):
-        service = target.get('service')
-        name = target.get('name')
-        return '<i class="{}"></i>&nbsp;{}'.format(
-            font_awesome_class_for_service(service), name)
+        full_name = target.get('name')
+        return full_name
 
     return '<img src="{}" alt="{}" />&nbsp;{}'.format(
         favicon_for_url(target), target, prettify_url(target))

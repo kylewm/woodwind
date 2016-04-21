@@ -1,9 +1,10 @@
 from contextlib import contextmanager
-from flask import current_app
+from flask import current_app, url_for
 from redis import StrictRedis
 from woodwind import util
 from woodwind.extensions import db
 from woodwind.models import Feed, Entry
+import sqlalchemy
 import bs4
 import datetime
 import feedparser
@@ -16,6 +17,7 @@ import requests
 import rq
 import sys
 import time
+import traceback
 import urllib.parse
 
 # normal update interval for polling feeds
@@ -112,12 +114,12 @@ def update_feed(feed_id, content=None,
 
     with flask_app() as app:
         feed = Feed.query.get(feed_id)
-        current_app.logger.info('Updating {}'.format(feed))
+        current_app.logger.info('Updating {}'.format(str(feed)[:32]))
 
         now = datetime.datetime.utcnow()
 
-        new_ids = []
-        updated_ids = []
+        new_entries = []
+        updated_entries = []
         reply_pairs = []
 
         try:
@@ -125,7 +127,7 @@ def update_feed(feed_id, content=None,
                 current_app.logger.info('using provided content. size=%d',
                                         len(content))
             else:
-                current_app.logger.info('fetching feed: %s', feed)
+                current_app.logger.info('fetching feed: %s', str(feed)[:32])
 
                 try:
                     response = util.requests_get(feed.feed)
@@ -163,24 +165,30 @@ def update_feed(feed_id, content=None,
                 result = []
 
             for entry in result:
+                current_app.logger.debug('searching for entry with uid=%s', entry.uid)
                 old = Entry.query\
                            .filter(Entry.feed == feed)\
                            .filter(Entry.uid == entry.uid)\
                            .order_by(Entry.id.desc())\
                            .first()
+                current_app.logger.debug('done searcing: %s', 'found' if old else 'not found')
+
                 # have we seen this post before
                 if not old:
+                    current_app.logger.debug('this is a new post, saving a new entry')
                     # set a default value for published if none is provided
                     entry.published = entry.published or now
                     in_reply_tos = entry.get_property('in-reply-to', [])
+                    db.session.add(entry)
                     feed.entries.append(entry)
-                    db.session.commit()
 
-                    new_ids.append(entry.id)
+                    new_entries.append(entry)
                     for irt in in_reply_tos:
-                        reply_pairs.append((entry.id, irt))
+                        reply_pairs.append((entry, irt))
 
                 elif not is_content_equal(old, entry):
+                    current_app.logger.debug('this post content has changed, updating entry')
+
                     entry.published = entry.published or old.published
                     in_reply_tos = entry.get_property('in-reply-to', [])
                     # we're updating an old entriy, use the original
@@ -190,46 +198,48 @@ def update_feed(feed_id, content=None,
                     # punt on deleting for now, learn about cascade
                     # and stuff later
                     # session.delete(old)
+                    db.session.add(entry)
                     feed.entries.append(entry)
-                    db.session.commit()
 
-                    updated_ids.append(entry.id)
+                    updated_entries.append(entry)
                     for irt in in_reply_tos:
-                        reply_pairs.append((entry.id, irt))
+                        reply_pairs.append((entry, irt))
 
                 else:
                     current_app.logger.debug(
                         'skipping previously seen post %s', old.permalink)
 
-            for entry_id, in_reply_to in reply_pairs:
-                fetch_reply_context(entry_id, in_reply_to, now)
+            for entry, in_reply_to in reply_pairs:
+                fetch_reply_context(entry, in_reply_to, now)
+
+            db.session.commit()
+        except:
+            db.session.rollback()
+            raise
 
         finally:
             if is_polling:
                 feed.last_checked = now
-            if new_ids or updated_ids:
+            if new_entries or updated_entries:
                 feed.last_updated = now
             db.session.commit()
-            if new_ids:
-                notify_feed_updated(app, feed_id, new_ids)
+
+            if new_entries:
+                notify_feed_updated(app, feed_id, new_entries)
 
 
 def check_push_subscription(feed, response):
-    def build_callback_url():
-        return '{}://{}/_notify/{}'.format(
-            getattr(current_app.config, 'PREFERRED_URL_SCHEME', 'http'),
-            current_app.config['SERVER_NAME'],
-            feed.id)
-
     def send_request(mode, hub, topic):
         hub = urllib.parse.urljoin(feed.feed, hub)
         topic = urllib.parse.urljoin(feed.feed, topic)
+        callback = url_for('push.notify', feed_id=feed.id, _external=True)
         current_app.logger.debug(
-            'sending %s request for hub=%r, topic=%r', mode, hub, topic)
+            'sending %s request for hub=%r, topic=%r, callback=%r',
+            mode, hub, topic, callback)
         r = requests.post(hub, data={
             'hub.mode': mode,
             'hub.topic': topic,
-            'hub.callback': build_callback_url(),
+            'hub.callback': callback,
             'hub.secret': feed.get_or_create_push_secret(),
             'hub.verify': 'sync',  # backcompat with 0.3
         })
@@ -267,6 +277,8 @@ def check_push_subscription(feed, response):
     if ((expiry and expiry - datetime.datetime.utcnow()
             <= UPDATE_INTERVAL_PUSH)
             or hub != old_hub or topic != old_topic or not feed.push_verified):
+        current_app.logger.debug('push subscription expired or hub/topic changed')
+
         feed.push_hub = hub
         feed.push_topic = topic
         feed.push_verified = False
@@ -274,29 +286,24 @@ def check_push_subscription(feed, response):
         db.session.commit()
 
         if old_hub and old_topic and hub != old_hub and topic != old_topic:
+            current_app.logger.debug('unsubscribing hub=%s, topic=%s', old_hub, old_topic)
             send_request('unsubscribe', old_hub, old_topic)
 
         if hub and topic:
+            current_app.logger.debug('subscribing hub=%s, topic=%s', hub, topic)
             send_request('subscribe', hub, topic)
 
         db.session.commit()
 
 
-def notify_feed_updated(app, feed_id, entry_ids):
+def notify_feed_updated(app, feed_id, entries):
     """Render the new entries and publish them to redis
     """
     from flask import render_template
     import flask.ext.login as flask_login
-    current_app.logger.debug(
-        'notifying feed updated for entries %r', entry_ids)
+    current_app.logger.debug('notifying feed updated: %s', feed_id)
 
     feed = Feed.query.get(feed_id)
-    entries = Entry.query\
-                   .filter(Entry.id.in_(entry_ids))\
-                   .order_by(Entry.retrieved.desc(),
-                             Entry.published.desc())\
-                   .all()
-
     for s in feed.subscriptions:
         with app.test_request_context():
             flask_login.login_user(s.user, remember=True)
@@ -336,16 +343,18 @@ def is_content_equal(e1, e2):
             content = COMMENT_RE.sub('', content)
         return content
 
-    return (e1.title == e2.title
-            and normalize(e1.content) == normalize(e2.content)
-            and e1.author_name == e2.author_name
-            and e1.author_url == e2.author_url
-            and e1.author_photo == e2.author_photo
-            and e1.properties == e2.properties)
+    return (
+        e1.title == e2.title
+        and normalize(e1.content) == normalize(e2.content)
+        and e1.author_name == e2.author_name
+        and e1.author_url == e2.author_url
+        and e1.author_photo == e2.author_photo
+        and e1.properties == e2.properties
+    )
 
 
 def process_xml_feed_for_new_entries(feed, content, backfill, now):
-    current_app.logger.debug('fetching xml feed: %s', feed)
+    current_app.logger.debug('fetching xml feed: %s', str(feed)[:32])
     parsed = feedparser.parse(content, response_headers={
         'content-location': feed.feed,
     })
@@ -354,12 +363,11 @@ def process_xml_feed_for_new_entries(feed, content, backfill, now):
     default_author_name = feed_props.get('author_detail', {}).get('name')
     default_author_photo = feed_props.get('logo')
 
-    current_app.logger.debug('found {} entries'.format(len(parsed.entries)))
+    current_app.logger.debug('found %d entries', len(parsed.entries))
 
     # work from the bottom up (oldest first, usually)
     for p_entry in reversed(parsed.entries):
-        current_app.logger.debug('processing entry {}'.format(
-            str(p_entry)[:256]))
+        current_app.logger.debug('processing entry %s', str(p_entry)[:32])
         permalink = p_entry.get('link')
         uid = p_entry.get('id') or permalink
 
@@ -406,6 +414,8 @@ def process_xml_feed_for_new_entries(feed, content, backfill, now):
                 video = VIDEO_ENCLOSURE_TMPL.format(href=link.get('href'))
                 content = (content or '') + video
 
+        current_app.logger.debug('building entry')
+
         entry = Entry(
             published=published,
             updated=updated,
@@ -421,6 +431,8 @@ def process_xml_feed_for_new_entries(feed, content, backfill, now):
             or default_author_url,
             author_photo=default_author_photo
             or fallback_photo(feed.origin))
+
+        current_app.logger.debug('yielding entry')
 
         yield entry
 
@@ -462,7 +474,7 @@ def hentry_to_entry(hentry, feed, backfill, now):
 
     title = hentry.get('name')
     content = hentry.get('content')
-    if not content:
+    if not content and hentry.get('type') == 'entry':
         content = title
         title = None
 
@@ -518,6 +530,16 @@ def hentry_to_entry(hentry, feed, backfill, now):
         if value:
             entry.set_property(prop, value)
 
+    if 'start-str' in hentry:
+        entry.set_property('start', hentry.get('start-str'))
+
+    if 'end-str' in hentry:
+        entry.set_property('end', hentry.get('end-str'))
+
+    # set a flag for events so we can show RSVP buttons
+    if hentry.get('type') == 'event':
+        entry.set_property('event', True)
+
     # does it look like a jam?
     plain = hentry.get('content-plain')
     if plain and JAM_RE.match(plain):
@@ -527,25 +549,28 @@ def hentry_to_entry(hentry, feed, backfill, now):
     return entry
 
 
-def fetch_reply_context(entry_id, in_reply_to, now):
-    with flask_app():
-        entry = Entry.query.get(entry_id)
-        context = Entry.query\
-                       .join(Entry.feed)\
-                       .filter(Entry.permalink==in_reply_to, Feed.type == 'html')\
-                       .first()
+def fetch_reply_context(entry, in_reply_to, now):
+    context = Entry.query\
+                   .join(Entry.feed)\
+                   .filter(Entry.permalink==in_reply_to, Feed.type == 'html')\
+                   .first()
 
-        if not context:
-            current_app.logger.info('fetching in-reply-to url: %s',
-                                    in_reply_to)
+    if not context:
+        current_app.logger.info('fetching in-reply-to: %s', in_reply_to)
+        try:
+            proxied_reply_url = proxy_url(in_reply_to)
             parsed = mf2util.interpret(
-                mf2py.parse(url=proxy_url(in_reply_to)), in_reply_to)
+                mf2py.parse(url=proxied_reply_url), in_reply_to)
             if parsed:
                 context = hentry_to_entry(parsed, None, False, now)
+        except requests.exceptions.RequestException as err:
+            current_app.logger.warn(
+                '%s fetching reply context: %s for entry: %s',
+                type(err).__name__, proxied_reply_url, entry.permalink)
 
-        if context:
-            entry.reply_context.append(context)
-            db.session.commit()
+    if context:
+        db.session.add(context)
+        entry.reply_context.append(context)
 
 
 def proxy_url(url):

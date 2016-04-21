@@ -13,6 +13,9 @@
       <input type="text" value="{{ current_user.micropub_endpoint }}" readonly />
       <input type="text" value="{{ current_user.access_token }}" readonly />
       <p>
+        <a href="{{url_for('.micropub_update', next=request.path)}}">Update Syndication Targets</a>
+      </p>
+      <p>
         <a href="{{url_for('.authorize', next=request.path)}}">Reauthorize Micropub</a>
       </p>
       <p>

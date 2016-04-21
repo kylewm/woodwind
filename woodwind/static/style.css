@@ -361,7 +361,7 @@ th {
 body {
   font: 12pt Helvetica, Arial, sans-serif;
   line-height: 1.4em;
-  background: #ECEBF0;
+  background: #ecebf0;
   /*background: #f4f4f4;*/
   padding-top: 1em; }
 
@@ -377,12 +377,16 @@ p:first-child {
 p:last-child {
   margin-bottom: 0; }
 
-header, main {
+header, main, .footer {
   max-width: 800px;
   margin: 0 auto; }
 
 header {
   margin-bottom: 1em; }
+
+.footer {
+  font-size: 0.8em;
+  text-align: center; }
 
 ul#navigation {
   list-style-type: none;
@@ -399,8 +403,8 @@ ul#navigation {
   .button-link a {
     padding: 0.5em;
     background-color: #353129;
-    color: #ECEBF0;
-    border: 1px solid #ECEBF0;
+    color: #ecebf0;
+    border: 1px solid #ecebf0;
     border-radius: 4px;
     display: inline-block; }
 
@@ -412,7 +416,7 @@ ul#navigation {
 
 article {
   margin-bottom: 1em;
-  box-shadow: 0 0 2px #687D77;
+  box-shadow: 0 0 2px #687d77;
   background-color: white;
   border-radius: 3px;
   padding: 0.5em; }
@@ -434,8 +438,8 @@ article {
   article img, article video {
     max-width: 100%; }
   article header {
-    color: #484A47;
-    border-bottom: 1px solid #687D77;
+    color: #484a47;
+    border-bottom: 1px solid #687d77;
     margin-bottom: 0.5em;
     overflow: auto; }
     article header img {
@@ -494,14 +498,17 @@ button {
   margin: 0;
   vertical-align: middle; }
 .micropub-form button {
-  height: 24px;
-  width: 24px;
-  padding: 4px;
   background-color: #eee;
   border-radius: 3px;
-  border: 0;
-  line-height: 1;
-  vertical-align: middle; }
+  vertical-align: middle;
+  border: 0; }
+  .micropub-form button.small {
+    width: 24px;
+    height: 24px;
+    padding: 4px;
+    line-height: 1; }
+.micropub-form .rsvps {
+  text-align: center; }
 
 .syndication-toggle {
   display: inline-block; }
@@ -531,11 +538,11 @@ button {
   .reply-area .reply-link {
     display: inline-block;
     padding: 0.2em;
-    border: 1px solid #687D77;
+    border: 1px solid #687d77;
     border-radius: 4px;
-    background-color: #ECEBF0;
+    background-color: #ecebf0;
     text-decoration: none;
-    color: #484A47;
+    color: #484a47;
     min-width: 50px;
     text-align: center; }
 
@@ -548,5 +555,3 @@ button {
     max-height: 1.2em;
     min-width: inherit;
     min-height: inherit; } }
-
-/*# sourceMappingURL=style.css.map */

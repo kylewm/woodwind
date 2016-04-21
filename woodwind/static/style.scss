@@ -43,13 +43,18 @@ p {
     }
 }
 
-header, main {
+header, main, .footer {
     max-width: 800px;
     margin: 0 auto;
 }
 
 header {
     margin-bottom: 1em;
+}
+
+.footer {
+    font-size: 0.8em;
+    text-align: center;
 }
 
 ul#navigation {
@@ -201,13 +206,20 @@ button {
     }
 
     button {
-        height: 24px;width: 24px;
-        padding: 4px;
         background-color: #eee;
         border-radius: 3px;
-        border: 0;
-        line-height: 1;
         vertical-align: middle;
+        border: 0;
+        &.small {
+            width: 24px;
+            height: 24px;
+            padding: 4px;
+            line-height: 1;
+        }
+    }
+
+    .rsvps {
+        text-align: center;
     }
 }
 
