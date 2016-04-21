@@ -95,8 +95,6 @@ def tick():
                 q.enqueue(update_feed, feed.id)
 
 
-
-
 def update_feed(feed_id, content=None,
                 content_type=None, is_polling=True):
 
