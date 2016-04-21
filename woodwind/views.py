@@ -308,6 +308,12 @@ def micropub_callback(resp):
 @views.route('/micropub-update')
 def micropub_update():
     update_micropub_syndicate_to()
+
+    syndicate_to = flask_login.current_user.get_setting('syndicate-to', [])
+
+    flask.flash('Updated syndication targets: {}'.format(', '.join([
+        t.get('name') if isinstance(t, dict) else t for t in syndicate_to])))
+
     return flask.redirect(flask.request.args.get('next')
                           or flask.url_for('.index'))
 
