@@ -305,9 +305,17 @@ def micropub_callback(resp):
 
 
 @flask_login.login_required
+@views.route('/micropub-update')
+def micropub_update():
+    update_micropub_syndicate_to()
+    return flask.redirect(flask.request.args.get('next')
+                          or flask.url_for('.index'))
+
+
+@flask_login.login_required
 def update_micropub_syndicate_to():
 
-    def adapt_expanded(exp):
+    def adapt_expanded(targets):
         """Backcompat support for old-style "syndicate-to-expanded" properties,
         e.g.,
         {
@@ -316,12 +324,12 @@ def update_micropub_syndicate_to():
           "service": "Twitter"
         }
         """
-        if isinstance(exp, dict):
-            return {
-                'uid': exp.get('id'),
-                'name': '{} on {}'.format(exp.get('name'), exp.get('service')),
-            }
-        return exp
+        if targets:
+            return [{
+                'uid': t.get('id'),
+                'name': '{} on {}'.format(t.get('name'), t.get('service')),
+            } for t in targets]
+        return targets
 
     endpt = flask_login.current_user.micropub_endpoint
     token = flask_login.current_user.access_token
