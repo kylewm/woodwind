@@ -474,6 +474,12 @@ def hentry_to_entry(hentry, feed, backfill, now):
 
     title = hentry.get('name')
     content = hentry.get('content')
+    summary = hentry.get('summary')
+
+    if not content and summary:
+        content = '{}<br/><br/><a href="{}">Read more</a>'.format(
+            summary, permalink)
+
     if not content and hentry.get('type') == 'entry':
         content = title
         title = None
