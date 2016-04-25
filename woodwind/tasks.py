@@ -438,6 +438,15 @@ def process_xml_feed_for_new_entries(feed, content, backfill, now):
 
 
 def process_html_feed_for_new_entries(feed, content, backfill, now):
+    mf2_cache = {}
+
+    def fetch_mf2(url):
+        if url in mf2_cache:
+            return mf2_cache[url]
+        p = mf2py.parse(url=url)
+        mf2_cache[url] = p
+        return p
+
     # strip noscript tags before parsing, since we definitely aren't
     # going to preserve js
     content = re.sub('</?noscript[^>]*>', '', content, flags=re.IGNORECASE)
@@ -449,7 +458,8 @@ def process_html_feed_for_new_entries(feed, content, backfill, now):
 
     parsed = mf2util.interpret_feed(
         mf2py.parse(doc, feed.feed),
-        source_url=feed.feed, base_href=base_href)
+        source_url=feed.feed, base_href=base_href,
+        fetch_mf2_func=fetch_mf2)
     hfeed = parsed.get('entries', [])
 
     for hentry in hfeed:
