@@ -568,7 +568,7 @@ def hentry_to_entry(hentry, feed, backfill, now):
 def fetch_reply_context(entry, in_reply_to, now):
     context = Entry.query\
                    .join(Entry.feed)\
-                   .filter(Entry.permalink==in_reply_to, Feed.type == 'html')\
+                   .filter(Entry.permalink == in_reply_to, Feed.type == 'html')\
                    .first()
 
     if not context:
@@ -576,7 +576,8 @@ def fetch_reply_context(entry, in_reply_to, now):
         try:
             proxied_reply_url = proxy_url(in_reply_to)
             parsed = mf2util.interpret(
-                mf2py.parse(url=proxied_reply_url), in_reply_to)
+                mf2py.parse(url=proxied_reply_url), in_reply_to,
+                fetch_mf2_func=lambda url: mf2py.parse(url=url))
             if parsed:
                 context = hentry_to_entry(parsed, None, False, now)
         except requests.exceptions.RequestException as err:
