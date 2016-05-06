@@ -16,7 +16,6 @@ import pyquerystring
 import requests
 import re
 import urllib
-import cgi
 import sqlalchemy
 import sqlalchemy.sql.expression
 
@@ -257,11 +256,11 @@ def login():
 @micropub.authenticated_handler
 def login_callback(resp):
     if not resp.me:
-        flask.flash(cgi.escape('Login error: ' + resp.error))
+        flask.flash(util.html_escape('Login error: ' + resp.error))
         return flask.redirect(flask.url_for('.index'))
 
     if resp.error:
-        flask.flash(cgi.escape('Warning: ' + resp.error))
+        flask.flash(util.html_escape('Warning: ' + resp.error))
 
     user = load_user(resp.me)
     if not user:
@@ -287,12 +286,12 @@ def authorize():
 @micropub.authorized_handler
 def micropub_callback(resp):
     if not resp.me or resp.error:
-        flask.flash(cgi.escape('Authorize error: ' + resp.error))
+        flask.flash(util.html_escape('Authorize error: ' + resp.error))
         return flask.redirect(flask.url_for('.index'))
 
     user = load_user(resp.me)
     if not user:
-        flask.flash(cgi.escape('Unknown user for url: ' + resp.me))
+        flask.flash(util.html_escape('Unknown user for url: ' + resp.me))
         return flask.redirect(flask.url_for('.index'))
 
     user.micropub_endpoint = resp.micropub_endpoint
@@ -764,21 +763,25 @@ def font_awesome_class_for_service(service):
     return 'fa fa-send'
 
 
-@views.app_template_filter('syndication_target_id')
-def syndication_target_id(target):
+@views.app_template_filter('render_syndication_target_id')
+def render_syndication_target_id(target):
     if isinstance(target, dict):
-        return target.get('uid') or target.get('id')
-    return target
+        id = target.get('uid') or target.get('id')
+    else:
+        id = target
+    return util.html_escape(id)
 
 
 @views.app_template_filter('render_syndication_target')
 def render_syndication_target(target):
     if isinstance(target, dict):
         full_name = target.get('name')
-        return full_name
+        return util.html_escape(full_name)
 
     return '<img src="{}" alt="{}" />&nbsp;{}'.format(
-        favicon_for_url(target), target, prettify_url(target))
+        favicon_for_url(target),
+        util.html_escape(target),
+        util.html_escape(prettify_url(target)))
 
 
 @views.app_template_test('syndicated_to')

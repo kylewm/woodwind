@@ -1,7 +1,7 @@
 import flask
 import flask.ext.login as flask_login
 import requests
-
+from woodwind import util
 
 api = flask.Blueprint('api', __name__)
 
@@ -12,6 +12,9 @@ def publish():
     target = flask.request.form.get('target')
     content = flask.request.form.get('content')
     syndicate_to = flask.request.form.getlist('syndicate-to[]')
+
+    if syndicate_to:
+        syndicate_to = [util.html_unescape(id) for id in syndicate_to]
 
     data = {
         'h': 'entry',

@@ -1,5 +1,6 @@
 import pickle
 import re
+from xml.sax import saxutils
 
 from flask import current_app
 from redis import StrictRedis
@@ -56,3 +57,13 @@ def clean(text):
     if text is not None:
         text = re.sub('<script.*?</script>', '', text, flags=re.DOTALL)
         return bleach.clean(text, strip=True)
+
+
+def html_escape(text):
+    # https://wiki.python.org/moin/EscapingHtml
+    return saxutils.escape(text, {'"': '&quot;', "'": '&apos;'})
+
+
+def html_unescape(text):
+    # https://wiki.python.org/moin/EscapingHtml
+    return saxutils.unescape(text, {'&quot;': '"', '&apos;': "'"})
