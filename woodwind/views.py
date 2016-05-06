@@ -778,10 +778,7 @@ def render_syndication_target(target):
         full_name = target.get('name')
         return util.html_escape(full_name)
 
-    return '<img src="{}" alt="{}" />&nbsp;{}'.format(
-        favicon_for_url(target),
-        util.html_escape(target),
-        util.html_escape(prettify_url(target)))
+    return util.html_escape(prettify_url(target))
 
 
 @views.app_template_test('syndicated_to')
