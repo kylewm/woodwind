@@ -18,7 +18,7 @@ itsdangerous==0.24
 Jinja2==2.8
 MarkupSafe==0.23
 mf2py==1.0.4
-mf2util==0.4.1
+mf2util==0.4.2
 psycopg2==2.6.1
 pyasn1==0.1.9
 pycparser==2.14
