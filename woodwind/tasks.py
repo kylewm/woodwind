@@ -350,6 +350,9 @@ def is_content_equal(e1, e2):
         and e1.author_url == e2.author_url
         and e1.author_photo == e2.author_photo
         and e1.properties == e2.properties
+        and e1.published == e2.published
+        and e1.updated == e2.updated
+        and e1.deleted == e2.deleted
     )
 
 
