@@ -32,6 +32,7 @@ def index():
     ws_topic = None
     solo = False
     all_tags = set()
+    now = datetime.datetime.now()
 
     if flask_login.current_user.is_authenticated:
         for subsc in flask_login.current_user.subscriptions:
@@ -48,7 +49,9 @@ def index():
             .join(Entry.feed)\
             .join(Feed.subscriptions)\
             .join(Subscription.user)\
-            .filter(User.id == flask_login.current_user.id)
+            .filter(User.id == flask_login.current_user.id)\
+            .filter(db.or_(Entry.deleted == None,
+                           Entry.deleted >= now))
 
         if 'entry' in flask.request.args:
             entry_url = flask.request.args.get('entry')

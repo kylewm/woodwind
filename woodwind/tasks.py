@@ -471,6 +471,18 @@ def process_html_feed_for_new_entries(feed, content, backfill, now):
 
 
 def hentry_to_entry(hentry, feed, backfill, now):
+    def normalize_datetime(dt):
+        if (dt and hasattr(dt, 'year') and hasattr(dt, 'month')
+                and hasattr(dt, 'day')):
+            # make sure published is in UTC and strip the timezone
+            if hasattr(dt, 'tzinfo') and dt.tzinfo:
+                return dt.astimezone(datetime.timezone.utc).replace(
+                    tzinfo=None)
+            # convert datetime.date to datetime.datetime
+            elif not hasattr(dt, 'hour'):
+                return datetime.datetime(year=dt.year, month=dt.month,
+                                         day=dt.day)
+
     permalink = url = hentry.get('url')
     uid = hentry.get('uid') or url
     if not uid:
@@ -494,20 +506,9 @@ def hentry_to_entry(hentry, feed, backfill, now):
         content = title
         title = None
 
-    published = hentry.get('published')
-    updated = hentry.get('updated')
-
-    if published:
-        # make sure published is in UTC and strip the timezone
-        if hasattr(published, 'tzinfo') and published.tzinfo:
-            published = published.astimezone(datetime.timezone.utc)\
-                                 .replace(tzinfo=None)
-        # convert datetime.date to datetime.datetime
-        elif not hasattr(published, 'hour'):
-            published = datetime.datetime(
-                year=published.year,
-                month=published.month,
-                day=published.day)
+    published = normalize_datetime(hentry.get('published'))
+    updated = normalize_datetime(hentry.get('updated'))
+    deleted = normalize_datetime(hentry.get('deleted'))
 
     # retrieved time is now unless we're backfilling old posts
     retrieved = now
@@ -525,6 +526,7 @@ def hentry_to_entry(hentry, feed, backfill, now):
         permalink=permalink,
         published=published,
         updated=updated,
+        deleted=deleted,
         title=title,
         content=content,
         content_cleaned=util.clean(content),
