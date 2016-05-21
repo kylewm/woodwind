@@ -10,8 +10,8 @@ Supports mf2 h-feed and xml feeds (thanks to Universal Feed Parser).
 Installation
 ----------
 
-How to run your own instance of Woodwind. The default configuration
-uses SQLite, so no database setup is necessary.
+How to run your own instance of Woodwind. You'll first need to make
+sure you have *Postgres* and *Redis* installed and running.
 
 ```bash
 git clone https://github.com/kylewm/woodwind.git
@@ -22,14 +22,24 @@ Set up the virtualenv and install dependencies.
 
 ```bash
 virtualenv --python=/usr/bin/python3 venv
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Use the basic SQLite configuration, create database tables and run Woodwind.
+Copy woodwind.cfg.template to woodwind.cfg and edit it to check the
+Postgres connection string.
+
+Then create database tables and run Woodwind.
 
 ```bash
+# create the postgres database
+createdb woodwind
+# copy and edit the configuration file
 cp woodwind.cfg.template woodwind.cfg
+nano woodwind.cfg
+# create the database tables
 python init_db.py
+# finally run the application
 uwsgi woodwind-dev.ini
 ```
 
