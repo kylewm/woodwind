@@ -78,6 +78,14 @@ $(function(){
         $("#older-link").off('click').click(clickOlderLink);
         $(".micropub-form button[type='submit']").off('click').click(submitMicropubForm);
 
+        // Post by ctrl/cmd + enter in the text area
+        $(".micropub-form textarea.content").keyup(function(e) {
+            if ((e.ctrlKey || e.metaKey) && (e.keyCode == 13 || e.keyCode == 10)) {
+                var button = $(e.target).closest('form').find('button[value=reply]');
+                button[0].click();
+            }
+        });
+
         $(".micropub-form .content").focus(function () {
             $(this).animate({ height: "4em" }, 200);
             var $target = $(evt.target);
