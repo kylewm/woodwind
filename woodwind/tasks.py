@@ -203,7 +203,7 @@ def update_feed(feed_id, content=None,
                     # we're updating an old entriy, use the original
                     # retrieved time
                     entry.retrieved = old.retrieved
-                    feed.entries.remove(old)
+                    old.feed = None  # feed.entries.remove(old)
                     # punt on deleting for now, learn about cascade
                     # and stuff later
                     # session.delete(old)
