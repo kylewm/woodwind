@@ -164,14 +164,23 @@ def update_feed(feed_id, content=None,
             else:
                 result = []
 
+            # realize list, only look at the first 30 entries
+            result = list(itertools.islice(result, 30))
+
+            old_entries = {}
+            all_uids = [e.uid for e in result]
+            if all_uids:
+                for entry in (Entry.query
+                              .filter(Entry.feed == feed,
+                                      Entry.uid.in_(all_uids))
+                              .order_by(Entry.id.desc())):
+                    old_entries[entry.uid] = entry
+
             for entry in result:
-                current_app.logger.debug('searching for entry with uid=%s', entry.uid)
-                old = Entry.query\
-                           .filter(Entry.feed == feed)\
-                           .filter(Entry.uid == entry.uid)\
-                           .order_by(Entry.id.desc())\
-                           .first()
-                current_app.logger.debug('done searcing: %s', 'found' if old else 'not found')
+                old = old_entries.get(entry.uid)
+                current_app.logger.debug(
+                    'entry for uid %s: %s', entry.uid,
+                    'found' if old else 'not found')
 
                 # have we seen this post before
                 if not old:
@@ -209,9 +218,7 @@ def update_feed(feed_id, content=None,
                     current_app.logger.debug(
                         'skipping previously seen post %s', old.permalink)
 
-            for entry, in_reply_to in reply_pairs:
-                fetch_reply_context(entry, in_reply_to, now)
-
+            fetch_reply_contexts(reply_pairs, now)
             db.session.commit()
         except:
             db.session.rollback()
@@ -344,15 +351,15 @@ def is_content_equal(e1, e2):
         return content
 
     return (
-        e1.title == e2.title
-        and normalize(e1.content) == normalize(e2.content)
-        and e1.author_name == e2.author_name
-        and e1.author_url == e2.author_url
-        and e1.author_photo == e2.author_photo
-        and e1.properties == e2.properties
-        and e1.published == e2.published
-        and e1.updated == e2.updated
-        and e1.deleted == e2.deleted
+        e1.title == e2.title and
+        normalize(e1.content) == normalize(e2.content) and
+        e1.author_name == e2.author_name and
+        e1.author_url == e2.author_url and
+        e1.author_photo == e2.author_photo and
+        e1.properties == e2.properties and
+        e1.published == e2.published and
+        e1.updated == e2.updated and
+        e1.deleted == e2.deleted
     )
 
 
@@ -411,15 +418,12 @@ def process_xml_feed_for_new_entries(feed, content, backfill, now):
             if link.type == 'audio/mpeg' or link.type == 'audio/mp3':
                 audio = AUDIO_ENCLOSURE_TMPL.format(href=link.get('href'))
                 content = (content or '') + audio
-            if (link.type == 'video/x-m4v'
-                    or link.type == 'video/x-mp4'
-                    or link.type == 'video/mp4'):
+            if (link.type == 'video/x-m4v' or link.type == 'video/x-mp4' or
+                    link.type == 'video/mp4'):
                 video = VIDEO_ENCLOSURE_TMPL.format(href=link.get('href'))
                 content = (content or '') + video
 
-        current_app.logger.debug('building entry')
-
-        entry = Entry(
+        yield Entry(
             published=published,
             updated=updated,
             uid=uid,
@@ -428,16 +432,12 @@ def process_xml_feed_for_new_entries(feed, content, backfill, now):
             title=p_entry.get('title'),
             content=content,
             content_cleaned=util.clean(content),
-            author_name=p_entry.get('author_detail', {}).get('name')
-            or default_author_name,
-            author_url=p_entry.get('author_detail', {}).get('href')
-            or default_author_url,
-            author_photo=default_author_photo
-            or fallback_photo(feed.origin))
-
-        current_app.logger.debug('yielding entry')
-
-        yield entry
+            author_name=p_entry.get('author_detail', {}).get('name') or
+            default_author_name,
+            author_url=p_entry.get('author_detail', {}).get('href') or
+            default_author_url,
+            author_photo=default_author_photo or
+            fallback_photo(feed.origin))
 
 
 def process_html_feed_for_new_entries(feed, content, backfill, now):
@@ -475,8 +475,8 @@ def process_html_feed_for_new_entries(feed, content, backfill, now):
 
 def hentry_to_entry(hentry, feed, backfill, now):
     def normalize_datetime(dt):
-        if (dt and hasattr(dt, 'year') and hasattr(dt, 'month')
-                and hasattr(dt, 'day')):
+        if (dt and hasattr(dt, 'year') and hasattr(dt, 'month') and
+                hasattr(dt, 'day')):
             # make sure published is in UTC and strip the timezone
             if hasattr(dt, 'tzinfo') and dt.tzinfo:
                 return dt.astimezone(datetime.timezone.utc).replace(
@@ -570,34 +570,40 @@ def hentry_to_entry(hentry, feed, backfill, now):
     return entry
 
 
-def fetch_reply_context(entry, in_reply_to, now):
-    context = Entry.query\
-                   .join(Entry.feed)\
-                   .filter(Entry.permalink == in_reply_to, Feed.type == 'html')\
-                   .first()
+def fetch_reply_contexts(reply_pairs, now):
+    old_contexts = {}
+    in_reply_tos = [url for _, url in reply_pairs]
+    if in_reply_tos:
+        for entry in (Entry.query
+                      .join(Entry.feed)
+                      .filter(Entry.permalink.in_(in_reply_tos),
+                              Feed.type == 'html')):
+            old_contexts[entry.permalink] = entry
 
-    if not context:
-        current_app.logger.info('fetching in-reply-to: %s', in_reply_to)
-        try:
-            proxied_reply_url = proxy_url(in_reply_to)
-            parsed = mf2util.interpret(
-                mf2py.parse(url=proxied_reply_url), in_reply_to,
-                fetch_mf2_func=lambda url: mf2py.parse(url=url))
-            if parsed:
-                context = hentry_to_entry(parsed, None, False, now)
-        except requests.exceptions.RequestException as err:
-            current_app.logger.warn(
-                '%s fetching reply context: %s for entry: %s',
-                type(err).__name__, proxied_reply_url, entry.permalink)
+    for entry, in_reply_to in reply_pairs:
+        context = old_contexts.get(in_reply_to)
+        if not context:
+            current_app.logger.info('fetching in-reply-to: %s', in_reply_to)
+            try:
+                proxied_reply_url = proxy_url(in_reply_to)
+                parsed = mf2util.interpret(
+                    mf2py.parse(url=proxied_reply_url), in_reply_to,
+                    fetch_mf2_func=lambda url: mf2py.parse(url=url))
+                if parsed:
+                    context = hentry_to_entry(parsed, None, False, now)
+            except requests.exceptions.RequestException as err:
+                current_app.logger.warn(
+                    '%s fetching reply context: %s for entry: %s',
+                    type(err).__name__, proxied_reply_url, entry.permalink)
 
-    if context:
-        db.session.add(context)
-        entry.reply_context.append(context)
+        if context:
+            db.session.add(context)
+            entry.reply_context.append(context)
 
 
 def proxy_url(url):
-    if ('TWITTER_AU_KEY' in current_app.config
-            and 'TWITTER_AU_SECRET' in current_app.config):
+    if ('TWITTER_AU_KEY' in current_app.config and
+            'TWITTER_AU_SECRET' in current_app.config):
         # swap out the a-u url for twitter urls
         match = TWITTER_RE.match(url)
         if match:
