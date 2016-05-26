@@ -44,6 +44,17 @@ q = rq.Queue('low', connection=redis)
 
 _app = None
 
+class Mf2Fetcher:
+    def __init__(self):
+        self.cache = {}
+
+    def __call__(self, url):
+        if url in self.cache:
+            return self.cache[url]
+        p = mf2py.parse(url=url)
+        self.cache[url] = p
+        return p
+
 
 @contextmanager
 def flask_app():
@@ -122,6 +133,7 @@ def update_feed(feed_id, content=None,
         updated_entries = []
         reply_pairs = []
 
+        fetch_mf2 = Mf2Fetcher()
         try:
             if content and is_expected_content_type(feed.type):
                 current_app.logger.info('using provided content. size=%d',
@@ -160,7 +172,7 @@ def update_feed(feed_id, content=None,
                     feed, content, backfill, now)
             elif feed.type == 'html':
                 result = process_html_feed_for_new_entries(
-                    feed, content, backfill, now)
+                    feed, content, backfill, now, fetch_mf2)
             else:
                 result = []
 
@@ -218,7 +230,7 @@ def update_feed(feed_id, content=None,
                     current_app.logger.debug(
                         'skipping previously seen post %s', old.permalink)
 
-            fetch_reply_contexts(reply_pairs, now)
+            fetch_reply_contexts(reply_pairs, now, fetch_mf2)
             db.session.commit()
         except:
             db.session.rollback()
@@ -440,16 +452,7 @@ def process_xml_feed_for_new_entries(feed, content, backfill, now):
             fallback_photo(feed.origin))
 
 
-def process_html_feed_for_new_entries(feed, content, backfill, now):
-    mf2_cache = {}
-
-    def fetch_mf2(url):
-        if url in mf2_cache:
-            return mf2_cache[url]
-        p = mf2py.parse(url=url)
-        mf2_cache[url] = p
-        return p
-
+def process_html_feed_for_new_entries(feed, content, backfill, now, fetch_mf2_func):
     # strip noscript tags before parsing, since we definitely aren't
     # going to preserve js
     content = re.sub('</?noscript[^>]*>', '', content, flags=re.IGNORECASE)
@@ -462,7 +465,7 @@ def process_html_feed_for_new_entries(feed, content, backfill, now):
     parsed = mf2util.interpret_feed(
         mf2py.parse(doc, feed.feed),
         source_url=feed.feed, base_href=base_href,
-        fetch_mf2_func=fetch_mf2)
+        fetch_mf2_func=fetch_mf2_func)
     hfeed = parsed.get('entries', [])
 
     for hentry in hfeed:
@@ -570,7 +573,7 @@ def hentry_to_entry(hentry, feed, backfill, now):
     return entry
 
 
-def fetch_reply_contexts(reply_pairs, now):
+def fetch_reply_contexts(reply_pairs, now, fetch_mf2_func):
     old_contexts = {}
     in_reply_tos = [url for _, url in reply_pairs]
     if in_reply_tos:
@@ -588,7 +591,7 @@ def fetch_reply_contexts(reply_pairs, now):
                 proxied_reply_url = proxy_url(in_reply_to)
                 parsed = mf2util.interpret(
                     mf2py.parse(url=proxied_reply_url), in_reply_to,
-                    fetch_mf2_func=lambda url: mf2py.parse(url=url))
+                    fetch_mf2_func=fetch_mf2_func)
                 if parsed:
                     context = hentry_to_entry(parsed, None, False, now)
             except requests.exceptions.RequestException as err:
