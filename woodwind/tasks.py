@@ -427,11 +427,11 @@ def process_xml_feed_for_new_entries(feed, content, backfill, now):
                 title = None
 
         for link in p_entry.get('links', []):
-            if link.type == 'audio/mpeg' or link.type == 'audio/mp3':
+            link_type = link.get('type')
+            if link_type in ['audio/mpeg', 'audio/mp3']:
                 audio = AUDIO_ENCLOSURE_TMPL.format(href=link.get('href'))
                 content = (content or '') + audio
-            if (link.type == 'video/x-m4v' or link.type == 'video/x-mp4' or
-                    link.type == 'video/mp4'):
+            if link_type in ['video/x-m4v', 'video/x-mp4', 'video/mp4']:
                 video = VIDEO_ENCLOSURE_TMPL.format(href=link.get('href'))
                 content = (content or '') + video
 
