@@ -24,6 +24,10 @@ IMAGE_TAG_RE = re.compile(r'<img([^>]*) src="(https?://[^">]+)"')
 
 views = flask.Blueprint('views', __name__)
 
+@views.route('/offline')
+def offline():
+    return flask.render_template('offline.jinja2')
+
 
 @views.route('/')
 def index():

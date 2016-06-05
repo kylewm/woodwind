@@ -10,9 +10,11 @@
 
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css', version='2016-03-08') }}"/>
   <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css"/>
-  <script src="//code.jquery.com/jquery-2.1.3.min.js"></script>
-  <script src="{{ url_for('static', filename='moment.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='cassis.js') }}"></script>
+  
+  <link rel="manifest" href="/manifest.json"/>
+
+  <script src="/node_modules/jquery/dist/jquery.js"></script>
+  <script src="/node_modules/moment/moment.js"></script>
 
   {% block head %}{% endblock %}
 </head>
@@ -52,15 +54,18 @@
       <div class="flash">{{ message }}</div>
     {% endfor %}
 
-    {% if not current_user.is_authenticated %}
-      <form action="{{ url_for('.login') }}" method="POST">
-        <input type="url" name="me" placeholder="https://yourdomain.com" />
-        <input type="hidden" name="next" placeholder="{{ request.path }}" />
-        <button style="text-align: right;" type="submit">Login</button>
-      </form>
-      Your Woodwind account is tied to your personal domain name. Check out IndieWebCamp's <a href="http://indiewebcamp.com/Getting_Started" target="_blank">Getting Started</a> page for details.
+    {% block login %}
 
-    {% endif %}
+      {% if not current_user.is_authenticated %}
+        <form action="{{ url_for('.login') }}" method="POST">
+          <input type="url" name="me" placeholder="https://yourdomain.com" />
+          <input type="hidden" name="next" placeholder="{{ request.path }}" />
+          <button style="text-align: right;" type="submit">Login</button>
+        </form>
+        Your Woodwind account is tied to your personal domain name. Check out IndieWebCamp's <a href="http://indiewebcamp.com/Getting_Started" target="_blank">Getting Started</a> page for details.
+      {% endif %}
+
+    {% endblock login %}
 
     {% block header %}{% endblock %}
 
