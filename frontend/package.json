@@ -1,0 +1,33 @@
+{
+  "name": "woodwind-fe",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kylewm/woodwind.git"
+  },
+  "keywords": [
+    "indieweb",
+    "reader"
+  ],
+  "author": "Kyle Mahan",
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/kylewm/woodwind/issues"
+  },
+  "homepage": "https://github.com/kylewm/woodwind#readme",
+  "devDependencies": {
+    "babel": "^6.5.2",
+    "babel-cli": "^6.9.0",
+    "babel-preset-es2015": "^6.9.0",
+    "mocha": "^2.5.3"
+  },
+  "dependencies": {
+    "jquery": "^2.2.4",
+    "moment": "^2.13.0"
+  }
+}

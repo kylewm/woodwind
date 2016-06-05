@@ -1,5 +1,8 @@
-$(function(){
+if (navigator.serviceWorker) {
+    navigator.serviceWorker.register('./sw.js')
+}
 
+$(function(){
     function updateTimestamps() {
         $(".permalink time").each(function() {
             var absolute = $(this).attr('datetime');
@@ -18,22 +21,6 @@ $(function(){
             });
             attachListeners();
         });
-    }
-
-    function clickShowReplyForm(evt) {
-        var a = $(this);
-        evt.preventDefault();
-        $(".like-form", a.parent()).hide();
-        $(".reply-form", a.parent()).toggle();//css('display', 'inherit');
-        //a.css('display', 'none');
-    }
-
-    function clickShowLikeForm(evt) {
-        var a = $(this);
-        evt.preventDefault();
-        $(".reply-form", a.parent()).hide();
-        $(".like-form", a.parent()).toggle();
-        //a.css('display', 'none');
     }
 
     function submitMicropubForm(evt) {

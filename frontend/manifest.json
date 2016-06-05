@@ -1,0 +1,16 @@
+{
+	"name": "Woodwind",
+	"short_name": "Woodwind",
+	"start_url": "/",
+	"scope": "/",
+	"display": "standalone",
+	"theme_color": "#9b6137",
+	"background_color": "#9b6137",
+	"icons": [
+		{
+			"src": "/static/logo.png",
+			"sizes": "512x512",
+			"type": "image/png",
+		}
+	]
+}
