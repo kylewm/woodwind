@@ -40,6 +40,9 @@ def requests_get(url, **kwargs):
         if 'Last-Modified' in lastresp.headers:
             headers['If-Modified-Since'] = lastresp.headers['Last-Modified']
 
+    if 'timeout' not in kwargs:
+        kwargs['timeout'] = (9.1, 30)
+
     current_app.logger.debug('fetching %s with args %s', url, kwargs)
     resp = requests.get(url, **kwargs)
 

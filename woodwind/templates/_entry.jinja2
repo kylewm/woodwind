@@ -85,6 +85,7 @@
         {{ entry.published | relative_time }}
       </time>
     </a>
+
     <a href="{{ url_for('.index', entry=entry.permalink) }}" target="_blank">
       <i class="fa fa-external-link"></i>
     </a>

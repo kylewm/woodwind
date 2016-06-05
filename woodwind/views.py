@@ -355,7 +355,7 @@ def update_micropub_syndicate_to():
             resp, resp.text)
         return
 
-    flask.current_app.logger.debug('syndicate-to response: {}, {}',
+    flask.current_app.logger.debug('syndicate-to response: %s %s',
                                    resp, resp.text)
 
     content_type = resp.headers['content-type']
