@@ -3,7 +3,7 @@ beautifulsoup4==4.4.1
 bleach==1.4.3
 blinker==1.4
 certifi==2015.04.28  # rq.filter: <=2015.04.28
-cffi==1.6.0
+cffi==1.7.0
 click==6.6
 cryptography==1.4
 feedparser==5.2.1
