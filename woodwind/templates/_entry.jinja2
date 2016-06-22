@@ -1,6 +1,6 @@
 {% for context in entry.reply_context %}
   <article class="reply-context">
-    <details><summary><header>
+    <header>
       {% if context.author_photo %}
         <img src="{{context.author_photo|proxy_image}}"/>
       {% endif %}
@@ -8,7 +8,7 @@
         {{ context.author_name }} -
       {% endif %}
       {{ context.permalink | domain_for_url }}
-    </header></summary>
+    </header>
     {% if context.title %}
       <h1>{{ context.title|e }}</h1>
     {% endif %}
@@ -17,7 +17,7 @@
         {{ context.content_cleaned | proxy_all | add_preview }}
       </div>
     {% endif %}
-    </details><footer>
+    <footer>
       <a class="permalink" href="{{ context.permalink }}">
         <time datetime="{{ context.published | isoformat }}">
           {{ context.published | relative_time }}
@@ -28,7 +28,7 @@
 {% endfor %}
 
 <article>
-  <header>
+  <details><summary><header>
     {% if entry.author_photo %}
       <img src="{{entry.author_photo|proxy_image}}"/>
     {% endif %}
@@ -45,7 +45,7 @@
   {% if entry.title %}
     <h1>{{ entry.title }}</h1>
   {% endif %}
-
+  </summary>
   {% if entry.get_property('event') %}
     <p>
       {% if entry.get_property('start') %}
@@ -71,7 +71,7 @@
     </div>
   {% endif %}
 
-
+ </details>
   <footer>
     {% set location = entry.get_property('location') %}
     {% if location and 'name' in location %}
