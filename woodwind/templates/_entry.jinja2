@@ -43,7 +43,7 @@
     {% endif %}
   </header>
   {% if entry.title %}
-    <h1>{{ entry.title }}</h1>
+    <h1>{{ entry.title|e }}</h1>
   {% endif %}
   </summary>
   {% if entry.get_property('event') %}
