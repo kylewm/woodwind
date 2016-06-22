@@ -73,7 +73,7 @@ $(function(){
             }
         });
 
-        $(".micropub-form .content").focus(function () {
+        $(".micropub-form .content").focus(function (evt) {
             $(this).animate({ height: "4em" }, 200);
             var $target = $(evt.target);
         });
