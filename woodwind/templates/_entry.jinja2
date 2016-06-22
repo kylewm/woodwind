@@ -28,7 +28,7 @@
 {% endfor %}
 
 <article>
-  <details><summary><header>
+  <details open><summary><header>
     {% if entry.author_photo %}
       <img src="{{entry.author_photo|proxy_image}}"/>
     {% endif %}
@@ -71,7 +71,6 @@
     </div>
   {% endif %}
 
- </details>
   <footer>
     {% set location = entry.get_property('location') %}
     {% if location and 'name' in location %}
@@ -98,4 +97,5 @@
       {% include '_reply.jinja2' with context %}
     </div>
   </footer>
+ </details>
 </article>
