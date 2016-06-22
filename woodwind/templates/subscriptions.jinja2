@@ -48,13 +48,6 @@
         <button type="submit">Save Edits</button> <span class="save-status"></span>
       </form>
 
-
-      <div>
-        <a target="_blank" href="{{ url_for('.index', subscription=s.id) }}">View Posts</a>
-        <br/>
-        <a class="show-details" data-target="details-{{loop.index}}" href="#">Show Details</a>
-      </div>
-
       <div class="feed-details" id="details-{{loop.index}}">
         <details><summary><strong>Details</strong></summary>
         <ul>
@@ -80,6 +73,7 @@
         <input type="hidden" name="id" value="{{ s.id }}"/>
         <button type="submit">Unsubscribe</button> <span class="unsubscribe-status"></span>
       </form>
+      <a target="_blank" href="{{ url_for('.index', subscription=s.id) }}">View Posts</a>
 
 
     </article>
