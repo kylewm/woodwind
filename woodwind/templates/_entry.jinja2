@@ -10,7 +10,7 @@
       {{ context.permalink | domain_for_url }}
     </header>
     {% if context.title %}
-      <h1>{{ context.title }}</h1>
+      <h1>{{ context.title|e }}</h1>
     {% endif %}
     {% if context.content %}
       <div class="content">
@@ -28,7 +28,7 @@
 {% endfor %}
 
 <article>
-  <header>
+  <details><summary><header>
     {% if entry.author_photo %}
       <img src="{{entry.author_photo|proxy_image}}"/>
     {% endif %}
@@ -43,9 +43,9 @@
     {% endif %}
   </header>
   {% if entry.title %}
-    <h1>{{ entry.title }}</h1>
+    <h1>{{ entry.title|e }}</h1>
   {% endif %}
-
+  </summary>
   {% if entry.get_property('event') %}
     <p>
       {% if entry.get_property('start') %}
@@ -71,7 +71,7 @@
     </div>
   {% endif %}
 
-
+ </details>
   <footer>
     {% set location = entry.get_property('location') %}
     {% if location and 'name' in location %}
