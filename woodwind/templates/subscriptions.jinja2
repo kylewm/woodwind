@@ -30,7 +30,8 @@
           <i class="fa fa-warning"></i> Last {{ s.feed.failure_count }} Attempt(s) Failed
         </div>
       {% endif %}
-      <form class="edit-subscription" action="{{ url_for('.edit_subscription') }}" method="POST">
+      <details><summary><b>{{ s.name }}</b> checked {{s.feed.last_checked | relative_time}}</summary>
+        <form class="edit-subscription" action="{{ url_for('.edit_subscription') }}" method="POST">
         <input type="hidden" name="id" value="{{ s.id }}"/>
         <label>Name</label>
         <input type="text" name="name" value="{{ s.name }}"/>
@@ -55,7 +56,7 @@
       </div>
 
       <div class="feed-details" id="details-{{loop.index}}">
-        <strong>Details</strong>
+        <details><summary><strong>Details</strong></summary>
         <ul>
           <li>Last checked: {{s.feed.last_checked | relative_time}}</li>
           <li>Last updated: {{s.feed.last_updated | relative_time}}</li>
@@ -66,9 +67,10 @@
           <li>PuSH last ping: {{s.feed.last_pinged | relative_time}}</li>
           <li>PuSH expiry: {{s.feed.push_expiry | relative_time}}</li>
         </ul>
+        </details>
       </div>
 
-
+     </details>
       <form class="poll-now" action="{{ url_for('.update_feed') }}" method="POST" style="display:inline">
         <input type="hidden" name="id" value="{{ s.feed.id }}"/>
         <button type="submit">Poll Now</button> <span class="poll-status"></span>
