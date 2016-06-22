@@ -1,6 +1,6 @@
 {% for context in entry.reply_context %}
   <article class="reply-context">
-    <header>
+    <details><summary><header>
       {% if context.author_photo %}
         <img src="{{context.author_photo|proxy_image}}"/>
       {% endif %}
@@ -8,16 +8,16 @@
         {{ context.author_name }} -
       {% endif %}
       {{ context.permalink | domain_for_url }}
-    </header>
+    </header></summary>
     {% if context.title %}
-      <h1>{{ context.title }}</h1>
+      <h1>{{ context.title|e }}</h1>
     {% endif %}
     {% if context.content %}
       <div class="content">
         {{ context.content_cleaned | proxy_all | add_preview }}
       </div>
     {% endif %}
-    <footer>
+    </details><footer>
       <a class="permalink" href="{{ context.permalink }}">
         <time datetime="{{ context.published | isoformat }}">
           {{ context.published | relative_time }}
