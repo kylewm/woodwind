@@ -12,7 +12,7 @@ Flask-DebugToolbar==0.10.0
 Flask-Login==0.3.2
 Flask-Micropub==0.2.6
 Flask-SQLAlchemy==2.1
-html5lib==0.99999999
+html5lib==0.999999999
 idna==2.1
 itsdangerous==0.24
 Jinja2==2.8
