@@ -26,12 +26,12 @@ pyOpenSSL==16.0.0
 pyquerystring==1.0.2
 pytz==2016.6.1
 redis==2.10.5
-requests==2.11.0
+requests==2.11.1
 rq==0.6.0
 sgmllib3k==1.0.0
 six==1.10.0
 SQLAlchemy==1.0.14
 uWSGI==2.0.12  # rq.filter: <=2.0.12
-websockets==3.1
+websockets==3.2
 Werkzeug==0.11.10
 wheel==0.29.0
