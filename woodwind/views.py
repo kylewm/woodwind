@@ -366,19 +366,23 @@ def update_micropub_syndicate_to():
     if content_type:
         content_type = content_type.split(';', 1)[0]
 
-    if content_type == 'application/json':
-        blob = resp.json()
-        syndicate_tos = adapt_expanded(blob.get('syndicate-to-expanded'))
-        if not syndicate_tos:
-            syndicate_tos = blob.get('syndicate-to')
+    try:
+        if content_type == 'application/json':
+                blob = resp.json()
+                syndicate_tos = adapt_expanded(blob.get('syndicate-to-expanded'))
+                if not syndicate_tos:
+                    syndicate_tos = blob.get('syndicate-to')
 
-    else:  # try to parse query string
-        syndicate_tos = pyquerystring.parse(resp.text).get('syndicate-to', [])
-        if isinstance(syndicate_tos, list):
-            syndicate_tos = list(syndicate_tos)
+        else:  # try to parse query string
+            syndicate_tos = pyquerystring.parse(resp.text).get('syndicate-to', [])
+            if isinstance(syndicate_tos, list):
+                syndicate_tos = list(syndicate_tos)
 
-    flask_login.current_user.set_setting('syndicate-to', syndicate_tos)
-    db.session.commit()
+        flask_login.current_user.set_setting('syndicate-to', syndicate_tos)
+        db.session.commit()
+    except ValueError as e:
+        flask.flash('Could not parse syndicate-to response: {}'.format(e)
+
 
 
 @views.route('/deauthorize')
