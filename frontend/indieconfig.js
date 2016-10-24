@@ -5,7 +5,7 @@ window.loadIndieConfig = (function () {
   // Indie-Config Loading script
   // by Pelle Wessman, voxpelli.com
   // MIT-licensed
-  // http://indiewebcamp.com/indie-config
+  // https://indieweb.org/indie-config
 
   var config, configFrame, configTimeout,
     callbacks = [],

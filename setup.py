@@ -7,5 +7,5 @@ setup(name='Woodwind',
       description='Stream-style indieweb reader',
       author='Kyle Mahan',
       author_email='kyle@kylewm.com',
-      url='https://indiewebcamp.com/Woodwind',
+      url='https://indieweb.org/Woodwind',
       packages=['woodwind'])
