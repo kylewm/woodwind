@@ -9,7 +9,7 @@ cryptography==1.5.2
 feedparser==5.2.1
 Flask==0.11.1
 Flask-DebugToolbar==0.10.0
-Flask-Login==0.3.2
+Flask-Login==0.4.0
 Flask-Micropub==0.2.6
 Flask-SQLAlchemy==2.1
 html5lib==0.999999999
