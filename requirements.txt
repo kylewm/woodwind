@@ -1,6 +1,6 @@
 asyncio-redis==0.14.3
 beautifulsoup4==4.5.1
-bleach==1.4.3
+bleach==1.5.0
 blinker==1.4
 certifi==2015.04.28  # rq.filter: <=2015.04.28
 cffi==1.8.3
