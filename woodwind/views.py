@@ -381,8 +381,7 @@ def update_micropub_syndicate_to():
         flask_login.current_user.set_setting('syndicate-to', syndicate_tos)
         db.session.commit()
     except ValueError as e:
-        flask.flash('Could not parse syndicate-to response: {}'.format(e)
-
+        flask.flash('Could not parse syndicate-to response: {}'.format(e))
 
 
 @views.route('/deauthorize')
