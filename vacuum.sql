@@ -6,4 +6,4 @@ USING (
   FROM entry
 ) AS numbered
 WHERE entry.id = numbered.id
-  AND (row > 2000 OR retrieved < CURRENT_DATE - INTERVAL '365 days')
+  AND (row > 2000 OR retrieved < CURRENT_DATE - INTERVAL '365 days');
