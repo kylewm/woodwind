@@ -7,7 +7,7 @@ cffi==1.10.0
 click==6.7
 cryptography==1.8.1
 feedparser==5.2.1
-Flask==0.12.1
+Flask==0.12.2
 Flask-DebugToolbar==0.10.1
 Flask-Login==0.4.0
 Flask-Micropub==0.2.6
@@ -33,5 +33,5 @@ six==1.10.0
 SQLAlchemy==1.1.9
 uWSGI==2.0.12  # rq.filter: <=2.0.12
 websockets==3.3
-Werkzeug==0.12.1
+Werkzeug==0.12.2
 wheel==0.29.0
