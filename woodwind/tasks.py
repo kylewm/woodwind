@@ -397,14 +397,21 @@ def process_xml_feed_for_new_entries(feed, content, backfill, now):
             continue
 
         if 'updated_parsed' in p_entry and p_entry.updated_parsed:
-            updated = datetime.datetime.fromtimestamp(
-                time.mktime(p_entry.updated_parsed))
+            try:
+                updated = datetime.datetime.fromtimestamp(
+                    time.mktime(p_entry.updated_parsed))
+            except:
+                current_app.logger.debug('mktime failed with updated timestamp: %v', p_entry.updated_parsed)
         else:
             updated = None
 
         if 'published_parsed' in p_entry and p_entry.published_parsed:
-            published = datetime.datetime.fromtimestamp(
-                time.mktime(p_entry.published_parsed))
+            try:
+                published = datetime.datetime.fromtimestamp(
+                    time.mktime(p_entry.published_parsed))
+            except:
+                current_app.logger.debug('mktime failed with published timestamp: %v', p_entry.published_parsed)
+                published = updated
         else:
             published = updated
 
