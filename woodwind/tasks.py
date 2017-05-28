@@ -526,6 +526,13 @@ def hentry_to_entry(hentry, feed, backfill, now):
     author_photo = author.get('photo')
     author_url = author.get('url')
 
+    if author_name and len(author_name) > Entry.author_name.property.columns[0].type.length:
+        author_name = None
+    if author_photo and len(author_photo) > Entry.author_photo.property.columns[0].type.length:
+        author_photo = None
+    if author_url and len(author_url) > Entry.author_url.property.columns[0].type.length:
+        author_url = None
+
     entry = Entry(
         uid=uid,
         retrieved=retrieved,
