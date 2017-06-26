@@ -1,3 +1,4 @@
+from raven.contrib.flask import Sentry
 from woodwind import extensions
 from woodwind.api import api
 from woodwind.push import push
@@ -20,6 +21,8 @@ Message:
 %(message)s
 '''
 
+sentry = Sentry()
+
 
 def create_app(config_path='../woodwind.cfg'):
     app = flask.Flask('woodwind')
@@ -37,6 +40,8 @@ def configure_logging(app):
         return
 
     app.logger.setLevel(logging.DEBUG)
+
+    sentry.init_app(app, dsn=app.config.get('SENTRY_DSN'), logging=True, level=logging.WARNING)
 
     handler = logging.StreamHandler(sys.stdout)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
