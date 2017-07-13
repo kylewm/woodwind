@@ -65,6 +65,25 @@
     </div>
   {% endif %}
 
+  {% set ofs = ['like', 'bookmark', 'repost', 'listen'] %}
+  {% for of in ofs %}
+    {% set properties = entry.get_property(of + "-of") %}
+    {% if properties %}
+      <div class="{{ of }}s">
+      {% for property in properties %}
+        <p>
+          {% if of == "like" %}
+             Liked:
+          {% else %}
+             {{ of | title }}ed:
+          {% endif %}
+          <a href="{{ property }}">{{ property }}</a>
+        </p>
+      {% endfor %}
+      </div>
+    {% endif %}
+  {% endfor %}
+
   {% if entry.content %}
     <div class="content">
       {{ entry.content_cleaned | proxy_all | add_preview }}
