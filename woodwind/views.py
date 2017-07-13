@@ -55,7 +55,8 @@ def index():
             .join(Subscription.user)\
             .filter(User.id == flask_login.current_user.id)\
             .filter(db.or_(Entry.deleted == None,
-                           Entry.deleted >= now))
+                           Entry.deleted >= now))\
+            .order_by(Entry.published.desc())
 
         if 'entry' in flask.request.args:
             entry_url = flask.request.args.get('entry')
@@ -125,6 +126,21 @@ def subscriptions():
     return flask.render_template('subscriptions.jinja2',
                                  subscriptions=subscs)
 
+
+@views.route('/subscriptions_opml.xml')
+@flask_login.login_required
+def subscriptions_opml():
+    subscs = Subscription\
+             .query\
+             .filter_by(user_id=flask_login.current_user.id)\
+             .options(sqlalchemy.orm.subqueryload(Subscription.feed))\
+             .order_by(db.func.lower(Subscription.name))\
+             .all()
+    template = flask.render_template('subscriptions_opml.xml',
+                                 subscriptions=subscs)
+    response = flask.make_response(template)
+    response.headers['Content-Type'] = 'application/xml'
+    return response
 
 @views.route('/settings', methods=['GET', 'POST'])
 @flask_login.login_required
