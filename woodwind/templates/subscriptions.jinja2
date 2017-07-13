@@ -19,6 +19,7 @@
 
     <form action="{{ url_for('.update_all') }}" method="POST">
       <button type="submit">Poll All</button>
+      <a href="{{ url_for('.subscriptions_opml')}}">Export as OPML</a>
     </form>
   </article>
 
