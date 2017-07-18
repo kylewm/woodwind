@@ -1,6 +1,6 @@
 asyncio-redis==0.14.2
 beautifulsoup4==4.6.0
-bleach==1.4.3
+bleach==2.0.0
 blinker==1.4
 certifi==2015.04.28  # rq.filter: <=2015.04.28
 cffi==1.6.0
@@ -31,7 +31,8 @@ rq==0.5.6
 sgmllib3k==1.0.0
 six==1.10.0
 SQLAlchemy==1.0.13
-uWSGI==2.0.12  # rq.filter: <=2.0.12
+uWSGI==2.0.15
 websockets==3.1
 Werkzeug==0.11.9
 wheel==0.29.0
+raven==6.1.0
