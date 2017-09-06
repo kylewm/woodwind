@@ -30,7 +30,7 @@ requests==2.18.4
 rq==0.8.2
 sgmllib3k==1.0.0
 six==1.10.0
-SQLAlchemy==1.1.13
+SQLAlchemy==1.1.14
 uWSGI==2.0.12  # rq.filter: <=2.0.12
 websockets==3.4
 Werkzeug==0.12.2
