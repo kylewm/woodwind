@@ -5,7 +5,7 @@ blinker==1.4
 certifi==2015.04.28  # rq.filter: <=2015.04.28
 cffi==1.11.2
 click==6.7
-cryptography==2.1.1
+cryptography==2.1.2
 feedparser==5.2.1
 Flask==0.12.2
 Flask-DebugToolbar==0.10.1
