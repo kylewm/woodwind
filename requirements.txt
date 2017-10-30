@@ -24,7 +24,7 @@ pyasn1==0.3.7
 pycparser==2.18
 pyOpenSSL==17.3.0
 pyquerystring==1.0.2
-pytz==2017.2
+pytz==2017.3
 redis==2.10.6
 requests==2.18.4
 rq==0.8.2
