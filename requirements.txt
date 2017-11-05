@@ -10,7 +10,7 @@ feedparser==5.2.1
 Flask==0.12.2
 Flask-DebugToolbar==0.10.1
 Flask-Login==0.4.0
-Flask-Micropub==0.2.6
+Flask-Micropub==0.2.8
 Flask-SQLAlchemy==2.3.2
 html5lib==0.999999999
 idna==2.6
