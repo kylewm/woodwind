@@ -1,6 +1,6 @@
 asyncio-redis==0.14.3
 beautifulsoup4==4.6.0
-bleach==2.1.1
+bleach==2.1.2
 blinker==1.4
 certifi==2015.04.28  # rq.filter: <=2015.04.28
 cffi==1.11.2
@@ -12,7 +12,7 @@ Flask-DebugToolbar==0.10.1
 Flask-Login==0.4.1
 Flask-Micropub==0.2.8
 Flask-SQLAlchemy==2.3.2
-html5lib==1.0
+html5lib==1.0.1
 idna==2.6
 itsdangerous==0.24
 Jinja2==2.10
