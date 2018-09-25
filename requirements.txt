@@ -4,7 +4,7 @@ bleach==2.1.4
 blinker==1.4
 certifi==2015.04.28  # rq.filter: <=2015.04.28
 cffi==1.11.5
-click==6.7
+click==7.0
 cryptography==2.3.1
 feedparser==5.2.1
 Flask==1.0.2
