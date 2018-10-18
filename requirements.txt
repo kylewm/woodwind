@@ -14,7 +14,7 @@ Flask-Micropub==0.2.8
 Flask-SQLAlchemy==2.3.2
 html5lib==1.0.1
 idna==2.7
-itsdangerous==0.24
+itsdangerous==1.0.0
 Jinja2==2.10
 MarkupSafe==1.0
 mf2py==1.1.2
