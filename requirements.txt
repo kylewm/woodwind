@@ -19,7 +19,7 @@ Jinja2==2.10
 MarkupSafe==1.1.0
 mf2py==1.1.2
 mf2util==0.5.1
-psycopg2==2.7.6
+psycopg2==2.7.6.1
 pyasn1==0.4.4
 pycparser==2.19
 pyOpenSSL==18.0.0
