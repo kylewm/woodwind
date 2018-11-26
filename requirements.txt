@@ -23,7 +23,7 @@ psycopg2==2.7.6.1
 pyasn1==0.4.4
 pycparser==2.19
 pyOpenSSL==18.0.0
-pyquerystring==1.0.2
+pyquerystring==1.1
 pytz==2018.7
 redis==3.0.1
 requests==2.20.1
