@@ -11,7 +11,7 @@ Flask==1.0.2
 Flask-DebugToolbar==0.10.1
 Flask-Login==0.4.1
 Flask-Micropub==0.2.8
-Flask-SQLAlchemy==2.3.2
+Flask-SQLAlchemy==2.4.0
 html5lib==1.0.1
 idna==2.8
 itsdangerous==1.1.0
