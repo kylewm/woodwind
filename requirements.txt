@@ -7,7 +7,7 @@ cffi==1.12.3
 click==7.0
 cryptography==2.7
 feedparser==5.2.1
-Flask==1.0.3
+Flask==1.0.4
 Flask-DebugToolbar==0.10.1
 Flask-Login==0.4.1
 Flask-Micropub==0.2.8
