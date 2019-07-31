@@ -20,7 +20,7 @@ MarkupSafe==1.1.1
 mf2py==1.1.2
 mf2util==0.5.1
 psycopg2==2.8.3
-pyasn1==0.4.5
+pyasn1==0.4.6
 pycparser==2.19
 pyOpenSSL==19.0.0
 pyquerystring==1.1
