@@ -33,5 +33,5 @@ six==1.10.0
 SQLAlchemy==1.0.13
 uWSGI==2.0.12  # rq.filter: <=2.0.12
 websockets==3.1
-Werkzeug==0.11.9
+Werkzeug==0.15.3
 wheel==0.29.0
