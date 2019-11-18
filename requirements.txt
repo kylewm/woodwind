@@ -22,7 +22,7 @@ mf2util==0.5.1
 psycopg2==2.8.4
 pyasn1==0.4.8
 pycparser==2.19
-pyOpenSSL==19.0.0
+pyOpenSSL==19.1.0
 pyquerystring==1.1
 pytz==2019.3
 redis==3.3.11
