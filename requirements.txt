@@ -27,7 +27,7 @@ pyquerystring==1.1
 pytz==2019.3
 redis==3.4.0
 requests==2.22.0
-rq==1.2.1
+rq==1.2.2
 sgmllib3k==1.0.0
 six==1.14.0
 SQLAlchemy==1.3.13
