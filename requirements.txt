@@ -1,4 +1,4 @@
-asyncio-redis==0.15.1
+asyncio-redis==0.16.0
 beautifulsoup4==4.9.1
 bleach==3.1.5
 blinker==1.4
