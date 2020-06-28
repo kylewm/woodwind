@@ -13,7 +13,7 @@ Flask-Login==0.5.0
 Flask-Micropub==0.2.8
 Flask-SQLAlchemy==2.4.3
 html5lib==1.1
-idna==2.9
+idna==2.10
 itsdangerous==1.1.0
 Jinja2==2.11.2
 MarkupSafe==1.1.1
